@@ -23,6 +23,11 @@ Imports: Rcpp (>= 1.0.4.6),
     BiocParallel,
     robustbase,
     BiocStyle
+    RColorBrewer,
+    stringi,
+    stringr,
+    minpack.lm,
+    broom
 Suggests: pheatmap,
     viridis
 VignetteBuilder: knitr
