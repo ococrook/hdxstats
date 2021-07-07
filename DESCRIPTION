@@ -1,11 +1,32 @@
 Package: hdxstats
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Statistical analysis of hydrogen deuterium exchange mass spectrometry
+Version: 1.0
+Author: c(person("Crook", "Oliver M.",
+		    email = "oliver.crook@stats.ox.ac.uk",
+		    comment = c(ORCID = "0000-0001-5669-8506"),
+		    role = c("aut", "cre")))
+Maintainer: Oliver Crook <oliver.crook@stats.ox.ac.uk>
+Description: The hdxstats package enables the analysis and visualisation
+of hydrogen deuterium exchange mass spectromery experiments. It supports
+all types of HDX-MS experiments but provides additional support for epitope
+mapping experiments. 
+License: Artistic-2.0
 Encoding: UTF-8
-LazyData: true
+Depends: R (>= 4.0), S4Vectors, Biobase, QFeatures
+Imports: Rcpp (>= 1.0.4.6),
+    ggplot2,
+    dplyr,
+    plyr,
+    knitr,
+    methods,
+    BiocParallel,
+    robustbase,
+    BiocStyle
+Suggests: pheatmap,
+    viridis
+VignetteBuilder: knitr
+LinkingTo: Rcpp, RcppArmadillo
+Roxygen: list(markdown=TRUE)
+RoxygenNote: 7.1.1
+biocViews: Infrastructure, MassSpectrometry, Proteomics, Metabolomics
