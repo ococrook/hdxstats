@@ -1,4 +1,4 @@
-## uptake kinetics 
+##' documentation here
 differentialUptakeKinetics <- function(object,
                                        feature = NULL,
                                        design = NULL,
@@ -111,8 +111,13 @@ differentialUptakeKinetics <- function(object,
             
             
             
-            
-            .out <- list(model_null = nonlin_mod, model_alt = nlmod, gg = gg)
+            # Construct a HdxStatmodel
+            .nlmod <- .nlsList(nlsmodels = nlmod)
+            .out <- .hdxstatmodel(nullmodel = nonlin_mod,
+                                  alternative = .nlmod,
+                                  vis = gg,
+                                  method = "Functional Model", 
+                                  formula = formula)
             
         }
         

@@ -1,3 +1,5 @@
+setOldClass("nls")
+setOldClass("gg")
 ##' @slot nlsmodels A `list()` containing nls models results in `nls` instances.
 ##' Each element must be a valid `nls` instance.
 ##' @md
@@ -20,11 +22,12 @@
 .hdxstatmodel <- setClass("HdxStatModel",
                           slots = c(nullmodel = "nls",
                                     alternative = "nlsList",
-                                    vis = "ggplot",
-                                    method = "character"),
+                                    vis = "gg",
+                                    method = "character",
+                                    formula = "formula"),
                           validity = function(object){
                               msg <- validMsg(NULL, NULL)
-                              sl <- sapply(object@nlsList, function(x) inherits(x, "nls"))
+                              sl <- sapply(object@alternative@nlsmodels, function(x) inherits(x, "nls"))
                               if (!all(sl))
                                   msg <- validMsg(msg, "Not all alternative models are nls")
                               if (is.null(msg)) TRUE
@@ -51,7 +54,7 @@ setMethod("show", "HdxStatModel",
           function(object){
               cat("Object of class \"", class(object), "\"\n", sep = "")
               cat("Method:", object@method, "\n")
-              cat("Fitted", length(objective@alternative), "\n")
+              cat("Fitted", length(object@alternative), "\n")
               invisible(NULL)
           })
 
@@ -67,3 +70,27 @@ setMethod("length", "HdxStatModel",
 setMethod("length", "HdxStatModels",
           function(x) length(x@statmodels))
 
+##' @param x Object to be subset.
+##' @param i An `integer()`. Should be of length 1 for `[[`.
+##' @param j Missing.
+##' @param drop Missing.
+##' 
+##' @md
+##' @rdname hdxstat-class
+setMethod("[[", "nlsList",
+          function(x, i, j = "missing", drop = "missing") x@nlsmodels[[i]])
+
+##' @param x Object to be subset.
+##' @param i An `integer()`. Should be of length 1 for `[[`.
+##' @param j Missing.
+##' @param drop Missing.
+##' 
+##' @md
+##' @rdname hdxstat-class
+setMethod("[", "nlsList",
+          function(x, i, j = "missing", drop = "missing") {
+              if (any(i > length(x)))
+                  stop("Index out of bounds. Only ", length(x), " param(s) available.")
+              x@nlsmodels <- x@nlsmodels[i]
+              x
+          })
