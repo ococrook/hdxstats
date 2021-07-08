@@ -17,7 +17,7 @@
 ##' @slot method A `character` string indicating the model fitted
 ##' @md
 ##' @rdname hdxstat-class
-.hdxstatmodel <- setClass("hdxstatmodel",
+.hdxstatmodel <- setClass("HdxStatModel",
                           slots = c(nullmodel = "nls",
                                     alternative = "nlsList",
                                     vis = "ggplot",
@@ -30,9 +30,24 @@
                               if (is.null(msg)) TRUE
                               else msg
                           })
+##' @slot statmodels A `list` of models. Each instance must a valid `HdxStatModel`.
 ##' @md
 ##' @rdname hdxstat-class
-setMethod("show", "hdxstatmodel",
+.hdxstatmodels <- setClass("HdxStatModels", 
+                           slots = c(statmodels = "list"),
+                           validity = function(object){
+                               msg <- validMsg(NULL, NULL)
+                               ms <- sapply(object@statmodels, function(x) inherits(x, "HdxStatModel"))
+                               if (!all(ms))
+                                   msg <- validMsg(msg, "Not all elements are valid HdxStatModels")
+                               if (is.null(ms)) TRUE
+                               else msg
+                           })
+
+
+##' @md
+##' @rdname hdxstat-class
+setMethod("show", "HdxStatModel",
           function(object){
               cat("Object of class \"", class(object), "\"\n", sep = "")
               cat("Method:", object@method, "\n")
@@ -45,5 +60,10 @@ setMethod("length", "nlsList",
           function(x) length(x@nlsmodels))
 
 ##' @rdname hdxstat-class
-setMethod("length", "hdxstatmodel",
+setMethod("length", "HdxStatModel",
           function(x) length(x@alternative))
+
+##' @rdname hdxstat-class
+setMethod("length", "HdxStatModels",
+          function(x) length(x@statmodels))
+
