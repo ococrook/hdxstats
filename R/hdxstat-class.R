@@ -47,7 +47,21 @@ setOldClass("gg")
                                else msg
                            })
 
-
+##' @slot results A `DataFrame` contains summarised results from an hdx experiment.
+##' @slot method The statistical method applied method applied. 
+##' @md
+##' @rdname hdxstat-class
+.hdxstatres <- setClass("HdxStatRes", 
+                         slots = c(results = "DataFrame",
+                                   method = "character"),
+                         validity = function(object){
+                             msg <- validMsg(NULL, NULL)
+                             ms <- inherits(object@results, "DataFrame")
+                             if (!all(ms))
+                                 msg <- validMsg(msg, "Results must be provided as a DataFrame")
+                             if (is.null(ms)) TRUE
+                             else msg
+                           })
 ##' @md
 ##' @rdname hdxstat-class
 setMethod("show", "HdxStatModel",
@@ -57,6 +71,25 @@ setMethod("show", "HdxStatModel",
               cat("Fitted", length(object@alternative), "\n")
               invisible(NULL)
           })
+
+##' @md
+##' @rdname hdxstat-class
+setMethod("show", "HdxStatModels",
+          function(object){
+              cat("Object of class \"", class(object), "\"\n", sep = "")
+              cat("Number of models", length(object@statmodels), "\n")
+              invisible(NULL)
+          })
+
+##' @md
+##' @rdname hdxstat-class
+setMethod("show", "HdxStatRes",
+          function(object){
+              cat("Object of class \"", class(object), "\"\n", sep = "")
+              cat("Analysed using", object@method, "\n")
+              invisible(NULL)
+          })
+
 
 ##' @rdname hdxstat-class
 setMethod("length", "nlsList", 

@@ -126,8 +126,14 @@ differentialUptakeKinetics <- function(object,
     return(.out)
 }
 
-computeRSS <- function(nlmod_null,
-                       nlmod_alt){
+computeRSS <- function(object){
+    
+    # checks
+    stopifnot("Object is not an instance of HdxStatModel"=class(object) == "HdxStatModel")
+    
+    # extract
+    nlmod_null <- object@nullmodel
+    nlmod_alt <- object@alternative@nlsmodels
     
     # compute residual sum of squares
     RSS0 <- sum(resid(nlmod_null)^2)
@@ -294,16 +300,19 @@ lmUptakeKinetics <- function(object,
 
 
 processFunctional <- function(object,
-                              qfeature){
+                              params){
     
+    stopifnot("Object in not an instance of Qfeatures"=class(object) == "QFeatures")
+    stopifnot("Object is not an insance of HdxStatModels"=class(params) == "HdxStatModels")
 
+    
+    
     # object compute from running non-linear models models
-    res <- lapply(1:length(object),
-                  function(z) try(computeRSS(nlmod_null = object[[z]]$model_null,
-                                             nlmod_alt = object[[z]]$model_alt)))
+    res <- lapply(1:length(params),
+                  function(z) try(computeRSS(object = params@statmodels[[z]])))
     
     # get rownames
-    rw <- rownames(qfeature)[[1]][which(!sapply(res, function(x) class(x)) == "try-error")]
+    rw <- rownames(object)[[1]][which(!sapply(res, function(x) class(x)) == "try-error")]
 
     # remove data with error
     res_filtered <- res[which(!sapply(res, function(x) class(x)) == "try-error")]
@@ -342,7 +351,17 @@ processFunctional <- function(object,
                  fdr = fdr,
                  ebayesres = ebayesres,
                  fitcomplete = which(!sapply(res, function(x) class(x)) == "try-error"))
-    return(.out)
+    
+    .out <- DataFrame(Fstat = do.call("rbind", Fstats),
+                      pvals = unlist(pvals),
+                      fdr = fdr,
+                      ebayes.pvals = ebayesres$pvalues,
+                      ebayes.fdr = ebayesres$fdr,
+                      fitcomplete = which(!sapply(res, function(x) class(x)) == "try-error"), row.names = rw)
+    
+    .res <- .hdxstatres(results = .out, method = "Functional model") 
+    
+    return(.res)
     
 }
 

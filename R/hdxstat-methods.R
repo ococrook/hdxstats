@@ -65,3 +65,23 @@ setMethod("summary", "HdxStatModel",
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })
+
+
+
+setMethod("fitUptakeKinetics", "QFeatures",
+          function(object, 
+                   feature = NULL,
+                   design = NULL,
+                   formula = NULL,
+                   start = list(a = NULL, b = 0.001,  d = NULL, p = 1)){
+              .res <- lapply(feature,
+                             function(x) differentialUptakeKinetics(object = object,
+                                                                    feature = x,
+                                                                    start = start,
+                                                                    formula = formula,
+                                                                    design = design))
+              .res <- .res[which(!sapply(.res, function(x) class(x)) == "try-error")]
+              .res2 <- .hdxstatmodels(statmodels = .res)
+              .res2
+          })
+

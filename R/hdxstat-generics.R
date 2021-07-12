@@ -3,3 +3,6 @@ setGeneric("likRatio", function(object, ...)
 
 setGeneric("wilk", function(object, ...)
     standardGeneric("wilk"))
+
+setGeneric("fitUptakeKinetics", function(object, ...)
+    standardGeneric("fitUptakeKinetics"))
