@@ -2,9 +2,6 @@
 require(S4Vectors)
 require(Spectra)
 
-source("../2020-HDXraw/hdxutils.R")
-source("../2020-HDXraw/hdxincoperation.R")
-
 ## Number of peptides
 n <-  500
 
@@ -92,55 +89,3 @@ for (j in 1:n){
 
  return(res <- list(centroids = centroids, valuesz = valuesz))   
 }
-
-out <- simHDXdata(n = n,
-                  minL = minL,
-                  maxL = maxL,
-                  AA = AA, 
-                  Tp = Tp,
-                  R = R,
-                  probz = probz)
-
-saveRDS(out, file = "simulatedHDXR2T4.rds")
-
-out2 <- simHDXdata(n = n,
-                   minL = minL,
-                   maxL = maxL,
-                   AA = AA, 
-                   Tp = Tp,
-                   R = 3,
-                   probz = probz)
-
-saveRDS(out2, file = "simulateHDXR3T4.rds")
-
-
-out3 <- simHDXdata(n = n,
-                   minL = minL,
-                   maxL = maxL,
-                   AA = AA, 
-                   Tp = 4,
-                   R = 2,
-                   probz = probz)
-
-saveRDS(out3, file = "simulateHDXR2T5.rds")
-
-out4 <- simHDXdata(n = n,
-                   minL = minL,
-                   maxL = maxL,
-                   AA = AA, 
-                   Tp = 5,
-                   R = 2,
-                   probz = probz)
-
-saveRDS(out4, file = "simulateHDXR2T6.rds")
-
-out5 <- simHDXdata(n = 500,
-                   minL = minL,
-                   maxL = maxL,
-                   AA = AA, 
-                   Tp = 5,
-                   R = 2,
-                   probz = 0.01)
-
-saveRDS(out5, file = "simulateHDXR2T6n2.rds")
-

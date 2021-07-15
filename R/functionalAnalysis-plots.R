@@ -507,3 +507,51 @@ plotAverageMaps <- function(averageMaps,
     
     return(plot.list)
 }
+
+
+forestPlot <- function(params, condition = c(1,2)) {
+    
+    stopifnot("params must be an HdxStatModel"=class(params)=="HdxStatModel")
+    
+    model1 <- params@alternative@nlsmodels[[condition[1]]]
+    model2 <- params@alternative@nlsmodels[[condition[2]]]
+    
+    tmp <- summary(model1)$parameters
+    tmp2 <- summary(model1)$parameters
+    
+    df <- data.frame(tmp)
+    df$rownames <- rownames(df)
+    df2 <- data.frame(tmp2)
+    df2$rownames <- rownames(df2)
+    df$condition <- condition[1]
+    df2$condition <- condition[2]
+    
+    # now need predictions
+    data <- params@vis$data
+    
+    # compute quantities of interest
+    out <- data %>% group_by(timepoint) %>% do(tidy(t.test(value ~ condition, data = .)))
+    df3 <- data.frame(cbind(out$estimate, out$conf.low, out$conf.high))
+    df3$rownames <- paste0("Timepoint ", out$timepoint)
+    df3$condition <- rep(c("Deuterium Difference"), nrow(df3))
+    colnames(df3) <- c("Estimate", "confL", "confU", "rownames", "condition")
+    
+    #Compute confidence intervals
+    df$confL <- df$Estimate - 1.96*df$Std..Error
+    df$confU <- df$Estimate + 1.96*df$Std..Error
+    df2$confL <- df2$Estimate - 1.96*df2$Std..Error
+    df2$confU <- df2$Estimate + 1.96*df2$Std..Error
+    
+    # data frame or ggplot
+    mydf <- rbind(df[,colnames(df3)], df2[,colnames(df3)], df3)
+    
+    gg <- ggplot(mydf, aes(x = Estimate, y = rownames, xmin = confL,
+                           xmax = confU, col = factor(condition))) + 
+        geom_point(size = 2, position = position_dodge(width = 0.5)) + 
+        theme_classic() + labs(x = "Effect Size", y = "Effect", col = "condition", title = "Forest plot for Effect sizes") + 
+        geom_errorbarh(height=0.3, position = position_dodge(width = 0.5), lwd = 1.5) + 
+        scale_color_viridis(discrete = TRUE, begin = 0.2, direction = 1) + theme(text = element_text(size = 16)) + 
+        geom_vline(xintercept = 0, linetype = "dashed")
+    
+    print(gg)
+}

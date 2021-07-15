@@ -1,4 +1,19 @@
-##' documentation here
+##' This is the main function for fitting functional kinetics to hdx-ms data.
+##' Fitting is performed using the minpack library. By default the model will fit
+##' a Weibull type model but it is possible to provide a formula for more flexibility.
+##' The method using regular expresions to extract the design from the column names
+##' or these can be provided.
+##' 
+##' @param object An object of class `QFeatures`
+##' @param feature The feature name of which to fit the model
+##' @param design A character vector indicating replicates, conditions,
+##'  chargestates, timepoints ete. Default is NULL and design is extract from column names
+##' @param formula The nonlinear formula used. Default is NULL, in which a weibull model is used.
+##' @param start The initial guess for the parameters
+##' @return Returns an instance of class `HdxStatmodel`
+##' @md 
+##' 
+##' @rdname hdxstat-functions
 differentialUptakeKinetics <- function(object,
                                        feature = NULL,
                                        design = NULL,
@@ -126,6 +141,12 @@ differentialUptakeKinetics <- function(object,
     return(.out)
 }
 
+##' Computes the residual sum of squares for an `HdxStatModel`
+##' @param object An instance of class `HdxStatModel`
+##' @return A list containing degrees of freedom and residual sums of squares
+##' @md
+##' 
+##' @rdname hdxstat-fucntions
 computeRSS <- function(object){
     
     # checks
@@ -154,7 +175,15 @@ computeRSS <- function(object){
     return(.res)
 }
 
-
+##' Compute the F statistics 
+##' @param RSS0 Residual sum of squares for null model
+##' @param RSS1 Residual sum of squares for altenative model
+##' @param d1 The first degrees of freedom for the F-test
+##' @param d2 The second degrees of freedom for the F-test
+##' @return A list of the relevent statistics
+##' @md
+##' 
+##' @rdname hdxstat-functions
 computeFstat <- function(RSS0,
                          RSS1,
                          d1,
@@ -167,7 +196,14 @@ computeFstat <- function(RSS0,
     return(list(Fstat = Fstat, numerator = numerator, denomenator = denomenator))   
 }
 
-
+##' Compute p-value based on the F-test
+##' @param Fstat The f-statistic
+##' @param d1 The 1st degree of freedom
+##' @param d2 The 2nd degree of freedom
+##' @return A p-value according to the F-test
+##' @md
+##' 
+##' @rdname hdxstat-functions
 computePval <- function(Fstat,
                        d1,
                        d2){
@@ -177,6 +213,15 @@ computePval <- function(Fstat,
     return(res)
 }
 
+##' Empirical Bayes computations
+##' @param RSS0 Residual sum of squares for null model
+##' @param RSS1 Residual sum of squares for altenative model
+##' @param d1 The first degrees of freedom for the F-test
+##' @param d2 The second degrees of freedom for the F-test
+##' @return p-values and FDR from empirical Bayes method
+##' @md
+##' 
+##' @rdname hdxstat-functions
 hdxEbayes <- function(RSS0,
                       RSS1,
                       d1,
@@ -191,8 +236,6 @@ hdxEbayes <- function(RSS0,
     # compute moderated F statistic
     modFstat <- numerator/newvar$var.post
     
-    # Estimate new degrees of freedom empirically
-
     # compute pvalues
     pvalues <- pf(q = modFstat, df1 = d1, df2 = d2, lower.tail = FALSE)
     
@@ -202,6 +245,19 @@ hdxEbayes <- function(RSS0,
     return(list(pvalues = pvalues, fdr = fdr))
 }
 
+##' This is the main function for using t-tests for hdx-ms data.
+##' The method using regular expresions to extract the design from the column names
+##' or these can be provided.
+##' 
+##' @param object An object of class `QFeatures`
+##' @param feature The feature name of which to fit the model
+##' @param design A character vector indicating replicates, conditions,
+##'  chargestates, timepoints ete. Default is NULL and design is extract from column names
+##' @param formula The formula used. Default is NULL.
+##' @return Returns an instance of class `HdxStatmodel`
+##' @md 
+##' 
+##' @rdname hdxstat-functions
 ttestUptakeKinetics <- function(object,
                                 feature = NULL,
                                 design = NULL,
@@ -242,9 +298,25 @@ ttestUptakeKinetics <- function(object,
     res <- do.call(rbind, tres)
     res$fdr <- p.adjust(res$p.value, method = "BH")
     
-    return(res)
+    .out <- DataFrame(tres = res)
+    
+    .res <- .hdxstatres(results = .out, method = "t-test") 
+    
+    return(.res)
 }
-
+##' This is the main function for using linear mixed models for hdx-ms data.
+##' The method using regular expresions to extract the design from the column names
+##' or these can be provided.
+##' 
+##' @param object An object of class `QFeatures`
+##' @param feature The feature name of which to fit the model
+##' @param design A character vector indicating replicates, conditions,
+##'  chargestates, timepoints ete. Default is NULL and design is extract from column names
+##' @param formula The formula used. Default is NULL.
+##' @return Returns an instance of class `HdxStatmodel`
+##' @md 
+##' 
+##' @rdname hdxstat-functions
 lmUptakeKinetics <- function(object,
                              feature = NULL,
                              design = NULL,
@@ -295,10 +367,20 @@ lmUptakeKinetics <- function(object,
     rownames(fdr) <- rownames(pvals)
     colnames(fdr) <- colnames(pvals)
     
-    return(fdr)
+    .res <- DataFrame(t(fdr))
+    .out <- .hdxstatres(results = .res, method = "Linear mixed model")
+    
+    return(.out)
 }
 
-
+##' This function process the functional fits for hdx-ms data.
+##' @param object An object of class `QFeatures`
+##' @param params An object of class `HdxStatModels`
+##' @return An instance of class `HdxStatRes` which contains p-values and important
+##' quantities
+##' @md
+##' 
+##' @rdname hdxstats-functions
 processFunctional <- function(object,
                               params){
     
@@ -346,12 +428,6 @@ processFunctional <- function(object,
     names(pvals) <- rw
     names(ebayesres$pvalues) <- rw
     
-    .out <- list(Fstats = lapply(Fstats, unlist),
-                 pvals = pvals,
-                 fdr = fdr,
-                 ebayesres = ebayesres,
-                 fitcomplete = which(!sapply(res, function(x) class(x)) == "try-error"))
-    
     .out <- DataFrame(Fstat = do.call("rbind", Fstats),
                       pvals = unlist(pvals),
                       fdr = fdr,
@@ -362,50 +438,6 @@ processFunctional <- function(object,
     .res <- .hdxstatres(results = .out, method = "Functional model") 
     
     return(.res)
-    
-}
-
-forestPlot <- function(params, condition = c(1,2)) {
-    
-    
-    tmp <- summary(params$model_alt[[1]])$parameters
-    tmp2 <- summary(params$model_alt[[2]])$parameters
-    
-    df <- data.frame(tmp)
-    df$rownames <- rownames(df)
-    df2 <- data.frame(tmp2)
-    df2$rownames <- rownames(df2)
-    df$condition <- condition[1]
-    df2$condition <- condition[2]
-    
-    # now need predictions
-    data <- params$gg$data
-    
-    # compute quantities of interest
-    out <- data %>% group_by(timepoint) %>% do(tidy(t.test(value ~ condition, data = .)))
-    df3 <- data.frame(cbind(out$estimate, out$conf.low, out$conf.high))
-    df3$rownames <- paste0("Timepoint ", out$timepoint)
-    df3$condition <- rep(c("Deuterium Difference"), nrow(df3))
-    colnames(df3) <- c("Estimate", "confL", "confU", "rownames", "condition")
-    
-    #Compute confidence intervals
-    df$confL <- df$Estimate - 1.96*df$Std..Error
-    df$confU <- df$Estimate + 1.96*df$Std..Error
-    df2$confL <- df2$Estimate - 1.96*df2$Std..Error
-    df2$confU <- df2$Estimate + 1.96*df2$Std..Error
-    
-    # data frame or ggplot
-    mydf <- rbind(df[,colnames(df3)], df2[,colnames(df3)], df3)
-    
-    gg <- ggplot(mydf, aes(x = Estimate, y = rownames, xmin = confL,
-                           xmax = confU, col = factor(condition))) + 
-        geom_point(size = 2, position = position_dodge(width = 0.5)) + 
-        theme_classic() + labs(x = "Effect Size", y = "Effect", col = "condition", title = "Forest plot for Effect sizes") + 
-        geom_errorbarh(height=0.3, position = position_dodge(width = 0.5), lwd = 1.5) + 
-        scale_color_viridis(discrete = TRUE, begin = 0.2, direction = 1) + theme(text = element_text(size = 16)) + 
-        geom_vline(xintercept = 0, linetype = "dashed")
-    
-    print(gg)
 }
 
 
