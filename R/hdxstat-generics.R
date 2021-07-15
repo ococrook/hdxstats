@@ -1,3 +1,5 @@
+##' Generics for hdxstats package
+##' 
 #' @rdname hidden_aliases
 setGeneric("likRatio", function(object, ...)
     standardGeneric("likRatio"))

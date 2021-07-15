@@ -1,1 +1,7 @@
 exportPattern("^[[:alpha:]]+")
+    importFrom("methods", "new")
+    importFrom("stats", "coef", "filter", "logLik", "na.exclude",
+               "na.omit", "p.adjust", "pchisq", "pf", "predict", "resid",
+               "residuals", "t.test", "vcov")
+    importFrom("limma", "squeezeVar")
+    importFrom("lmerTest", "lmer")

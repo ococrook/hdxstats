@@ -146,7 +146,7 @@ differentialUptakeKinetics <- function(object,
 ##' @return A list containing degrees of freedom and residual sums of squares
 ##' @md
 ##' 
-##' @rdname hdxstat-fucntions
+##' @rdname hdxstat-functions
 computeRSS <- function(object){
     
     # checks
@@ -380,7 +380,7 @@ lmUptakeKinetics <- function(object,
 ##' quantities
 ##' @md
 ##' 
-##' @rdname hdxstats-functions
+##' @rdname hdxstat-functions
 processFunctional <- function(object,
                               params){
     

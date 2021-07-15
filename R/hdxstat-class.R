@@ -1,5 +1,7 @@
 setOldClass("nls")
 setOldClass("gg")
+##' Classes for hdxstats package
+##' 
 ##' @slot nlsmodels A `list()` containing nls models results in `nls` instances.
 ##' Each element must be a valid `nls` instance.
 ##' @md
