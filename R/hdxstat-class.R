@@ -1,9 +1,16 @@
+##' The nls class
+##' @md
+##' @rdname 
 setOldClass("nls")
+##' The ggplot class
+##' @md
+##' @rdname 
 setOldClass("gg")
 ##' Classes for hdxstats package
 ##' 
 ##' @slot nlsmodels A `list()` containing nls models results in `nls` instances.
 ##' Each element must be a valid `nls` instance.
+##' @param object An instance of class `nlsmodel`
 ##' @md
 ##' @rdname hdxstat-class
 .nlsList <- setClass("nlsList",
@@ -19,6 +26,7 @@ setOldClass("gg")
 ##' @slot alternative An `nlsList` object described the fitted alternative models
 ##' @slot vis A `ggplot` object visualising the fitted objects
 ##' @slot method A `character` string indicating the model fitted
+##' @slot formula An instance of `formula` class
 ##' @md
 ##' @rdname hdxstat-class
 .hdxstatmodel <- setClass("HdxStatModel",

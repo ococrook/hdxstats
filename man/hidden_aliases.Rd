@@ -12,6 +12,11 @@ wilk(object, ...)
 
 fitUptakeKinetics(object, ...)
 }
+\arguments{
+\item{object}{An object of class \code{HdxStatModel}}
+
+\item{...}{Additional arguments to \code{likRatio}}
+}
 \description{
 Generics for hdxstats package
 }

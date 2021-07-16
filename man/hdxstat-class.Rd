@@ -37,6 +37,8 @@
 \S4method{[}{nlsList,ANY,ANY,ANY}(x, i, j = "missing", drop = "missing")
 }
 \arguments{
+\item{object}{An instance of class \code{nlsmodel}}
+
 \item{x}{Object to be subset.}
 
 \item{i}{An \code{integer()}. Should be of length 1 for \code{[[}.}
@@ -61,6 +63,8 @@ Each element must be a valid \code{nls} instance.}
 \item{\code{vis}}{A \code{ggplot} object visualising the fitted objects}
 
 \item{\code{method}}{A \code{character} string indicating the model fitted}
+
+\item{\code{formula}}{An instance of \code{formula} class}
 
 \item{\code{statmodels}}{A \code{list} of models. Each instance must a valid \code{HdxStatModel}.}
 

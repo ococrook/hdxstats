@@ -27,7 +27,8 @@ Imports: Rcpp (>= 1.0.4.6),
     stringr,
     minpack.lm,
     broom,
-    methods
+    limma,
+    lmerTest
 Suggests: pheatmap,
     viridis
 VignetteBuilder: knitr
