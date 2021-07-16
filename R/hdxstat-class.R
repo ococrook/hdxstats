@@ -1,10 +1,10 @@
 ##' The nls class
 ##' @md
-##' @rdname 
+##' @rdname hdxstat-class
 setOldClass("nls")
 ##' The ggplot class
 ##' @md
-##' @rdname 
+##' @rdname hdxstat-class
 setOldClass("gg")
 ##' Classes for hdxstats package
 ##' 
