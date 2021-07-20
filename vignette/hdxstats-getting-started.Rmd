@@ -4,15 +4,15 @@ author:
 - name: Oliver M. Crook
 package: hdxstats
 output:
-  html_document:
-    df_print: paged
   BiocStyle::html_document:
     toc_float: yes
 abstract: "This vignette describes how to analyse a mass-spectrometry based  hydrogen
   deuterium exchange experiment, in particular we focus on empirical Bayes functional
   models and visualisations. \n"
 vignette: |
-  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data} %\VignetteEngine{knitr::rmarkdown} %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
 ---
 
 ```{r style, echo = FALSE, results = 'asis'}
