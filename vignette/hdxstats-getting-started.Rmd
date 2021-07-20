@@ -1,0 +1,46 @@
+---
+title: "Analysing differential hydrogen deuterium exchange mass spectrometry data"
+author:
+- name: Oliver M. Crook
+package: hdxstats
+output:
+  html_document:
+    df_print: paged
+  BiocStyle::html_document:
+    toc_float: yes
+abstract: "This vignette describes how to analyse a mass-spectrometry based  hydrogen
+  deuterium exchange experiment, in particular we focus on empirical Bayes functional
+  models and visualisations. \n"
+vignette: |
+  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data} %\VignetteEngine{knitr::rmarkdown} %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
+---
+
+```{r style, echo = FALSE, results = 'asis'}
+BiocStyle::markdown()
+```
+
+```{r env, message = FALSE, warning = FALSE, echo = FALSE}
+library("hdxstats")
+```
+
+# A well-defined HDX-MS experiment
+
+This vignette describeds how to analyse time-resolved differential HDX-MS
+experiments. The key elements are at least two conditions i.e. apo + antibody,
+apo + small molecule or protein closed + protien open, etc. The experiment can
+be replicated, though if there are sufficient time points analysed (>=3) then
+occasionally signficant results can be obtained. The data provided should be
+centroid-centric data. This package does not yet support analysis straight
+from raw spectra. Typically this will be provided as a .csv from tools such as
+dynamiX or HDExaminer.
+
+# Main elements of the package
+
+The package relies of Bioconductor infrastructure so that it integrates with
+out datatypes and can benifit from advantages in other fields of mass-spectrometry.
+There are package specific object, classes and methods but importantly there is
+reuse of classes found in quantitative proteomics data, mainly the `QFeatures`
+object which extends the `summarisedExperiment` class for mass spectrometry data.
+The focus of this package is on testing and visualisation of the testing results.
+
+
