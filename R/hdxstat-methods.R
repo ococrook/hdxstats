@@ -39,7 +39,7 @@ setMethod("logLik", "HdxStatModel",
 ##' @rdname hdxstat-methods
 setMethod("likRatio", "HdxStatModel",
           function(object){
-              .loglik <- logLik(object)
+              .loglik <- hdxstats::logLik(object)
               .lr <- 2 * (sum(.loglik[-1]) - .loglik[1])
               names(.lr) <- "logLR"
               .lr
