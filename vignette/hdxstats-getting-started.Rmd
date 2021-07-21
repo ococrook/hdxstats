@@ -21,6 +21,10 @@ BiocStyle::markdown()
 
 ```{r env, message = FALSE, warning = FALSE, echo = FALSE}
 library("hdxstats")
+library("dplyr")
+library("ggplot2")
+library("RColorBrewer")
+library("tidyr")
 ```
 
 # A well-defined HDX-MS experiment
@@ -37,10 +41,98 @@ dynamiX or HDExaminer.
 # Main elements of the package
 
 The package relies of Bioconductor infrastructure so that it integrates with
-out datatypes and can benifit from advantages in other fields of mass-spectrometry.
+other data types and can benefit from advantages in other fields of mass-spectrometry.
 There are package specific object, classes and methods but importantly there is
 reuse of classes found in quantitative proteomics data, mainly the `QFeatures`
 object which extends the `summarisedExperiment` class for mass spectrometry data.
 The focus of this package is on testing and visualisation of the testing results.
+
+# Data
+
+We will begin with a structural variant experiment in which MHP and a structural
+variant were mixed in different proportions. HDX-MS was performed on these samples
+and we expect to see reproducible but subtle differences. We first load the data
+from the package and it is .csv format.
+
+```{r,}
+MBPpath <- system.file("extdata", "MBP.csv", package = "hdxstats")
+```
+
+We can now read in the .csv file and have a quick look at the .csv.
+```{r,}
+MBP <- read.csv(MBPpath)
+head(MBP) # have a look
+length(unique(MBP$pep_sequence)) # peptide sequences
+```
+
+Let us have a quick visualisation of some the data so that we can see some of
+the features
+
+```{r,}
+filter(MBP, pep_sequence == unique(MBP$pep_sequence[1]), pep_charge == 2) %>%
+    ggplot(aes(x = hx_time, y = d, group = factor(replicate_cnt),
+               color = factor(hx_sample,
+                              unique(MBP$hx_sample)[c(7,5,1,2,3,4,6)]))) + 
+    theme_classic() + geom_point(size = 2) + 
+    scale_color_manual(values = brewer.pal(n = 7, name = "Set2")) + 
+    labs(color = "experiment", x = "Deuterium Exposure", y = "Deuterium incoperation")
+```
+We can see that the units of the time dimension are in seconds and that
+Deuterium incoperation has been normalized into Daltons.
+
+# Parsing to an object of class QFeatures
+
+Working from a .csv is likely to cause issues downstream. Indeed, we run
+the risk of accidently changing the data or corrupting the file in some way.
+Secondly, all .csvs will be formatted slightly different and so making extensible
+tools for these files will be inefficient. Furthermore, working with a generic
+class used in other mass-spectrometry fields can speed up analysis and adoption
+of new methods. We will work the class `QFeatures` from the `QFeatures` class
+as it is a powerful and scalable way to store quantitative mass-spectrometry data.
+
+Firstly, the data is storted in long format rather than wide format. We first 
+switch the data to wide format. 
+```{r,}
+MBP_wide <- pivot_wider(data.frame(MBP),
+                        values_from = d,
+                        names_from = c("hx_time", "replicate_cnt", "hx_sample"),
+                        id_cols = c("pep_sequence", "pep_charge"))
+head(MBP_wide)
+
+```
+
+We notice that there are many columns with `NA`s. The follow code chunk removes
+these columns.
+```{r,}
+MBP_wide <- MBP_wide[, colSums(is.na(MBP_wide)) != nrow(MBP_wide)]
+```
+
+We also note that the colnames are not very informative. We are going to format
+in a very specific way so that later functions can automatically infer the design
+from the column names. We provide in the format X(time)rep(replicate)cond(condition)
+```{r,}
+colnames(MBP_wide)[-c(1,2)]
+
+new.colnames <- gsub("0_", "0rep", paste0("X", colnames(MBP_wide)[-c(1,2)]))
+new.colnames <- gsub("_", "cond", new.colnames)
+
+# remove annoying % signs
+new.colnames <- gsub("%", "", new.colnames)
+
+# remove space (NULL could get confusing later and WT is clear)
+new.colnames <- gsub(" .*", "", new.colnames)
+
+new.colnames
+```
+We will now parse the data into an object of class `QFeatures`, we have provided
+a function to assist with this in the package. If you want to do this yourself
+use the `readQFeatures` function from the `QFeatures` package.
+```{r.}
+MBPqDF <- parseDeutData(object = DataFrame(MBP_wide),
+                        design = new.colnames,
+                        quantcol = 3:102)
+
+```
+```
 
 

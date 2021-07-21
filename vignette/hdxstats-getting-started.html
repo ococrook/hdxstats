@@ -10,7 +10,7 @@
 
 
 
-<meta name="date" content="2021-07-20" />
+<meta name="date" content="2021-07-21" />
 
 <title>Analysing differential hydrogen deuterium exchange mass spectrometry data</title>
 
@@ -1862,7 +1862,7 @@ function toggle_visibility(id1) {
 
 <h1 class="title toc-ignore">Analysing differential hydrogen deuterium exchange mass spectrometry data</h1>
 <p class="author-name">Oliver M. Crook</p>
-<h4 class="date">20 July 2021</h4>
+<h4 class="date">21 July 2021</h4>
 <h4 class="abstract">Abstract</h4>
 <p>This vignette describes how to analyse a mass-spectrometry based hydrogen deuterium exchange experiment, in particular we focus on empirical Bayes functional models and visualisations.</p>
 <h4 class="package">Package</h4>
@@ -1898,11 +1898,38 @@ dynamiX or HDExaminer.</p>
 <div id="main-elements-of-the-package" class="section level1">
 <h1><span class="header-section-number">2</span> Main elements of the package</h1>
 <p>The package relies of Bioconductor infrastructure so that it integrates with
-out datatypes and can benifit from advantages in other fields of mass-spectrometry.
+other data types and can benefit from advantages in other fields of mass-spectrometry.
 There are package specific object, classes and methods but importantly there is
 reuse of classes found in quantitative proteomics data, mainly the <code>QFeatures</code>
 object which extends the <code>summarisedExperiment</code> class for mass spectrometry data.
 The focus of this package is on testing and visualisation of the testing results.</p>
+</div>
+<div id="data" class="section level1">
+<h1><span class="header-section-number">3</span> Data</h1>
+<p>We will begin with a structural variant experiment in which MHP and a structural
+variant were mixed in different proportions. HDX-MS was performed on these samples
+and we expect to see reproducible but subtle differences. We first load the data
+from the package and it is .csv format.</p>
+<pre class="r"><code>MBPpath &lt;- system.file(&quot;extdata&quot;, &quot;MBP.csv&quot;, package = &quot;hdxstats&quot;)</code></pre>
+<p>We can now read in the .csv file and have a quick look at the .csv.</p>
+<pre class="r"><code>MBP &lt;- read.csv(MBPpath)
+head(MBP) # have a look</code></pre>
+<pre><code>##   hx_sample pep_start pep_end pep_sequence pep_charge     d confidence  score
+## 1       10%        19      30 VIWINGDKGYNG          2 2.120     medium 0.8686
+## 2       10%        19      30 VIWINGDKGYNG          2 2.146     medium 0.8173
+## 3       10%        19      30 VIWINGDKGYNG          2 2.143     medium 0.8839
+## 4       10%        19      30 VIWINGDKGYNG          2    NA       &lt;NA&gt;     NA
+## 5       10%        19      30 VIWINGDKGYNG          2    NA       &lt;NA&gt;     NA
+## 6       10%        19      30 VIWINGDKGYNG          2    NA       &lt;NA&gt;     NA
+##   hx_time time_unit replicate_cnt
+## 1      30         s             1
+## 2      30         s             2
+## 3      30         s             3
+## 4      30         s             4
+## 5      30         s             5
+## 6      30         s             6</code></pre>
+<pre class="r"><code>length(unique(MBP$pep_sequence)) # peptide sequences</code></pre>
+<pre><code>## [1] 115</code></pre>
 </div>
 
 
