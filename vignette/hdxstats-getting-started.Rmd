@@ -26,6 +26,7 @@ library("ggplot2")
 library("RColorBrewer")
 library("tidyr")
 library("pheatmap")
+library("viridis")
 ```
 
 # A well-defined HDX-MS experiment
@@ -140,7 +141,7 @@ MBPqDF <- parseDeutData(object = DataFrame(MBP_wide),
 To help us get used to the `QFeatures` we show how to generate a heatmap
 of these data from this object:
 
-```{r,}
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
 pheatmap(t(assay(MBPqDF)),
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
@@ -156,14 +157,46 @@ pheatmap(t(assay(MBPqDF)),
 
 The `hdxstats` package uses an empirical Bayes functional approach to analyse
 the data. We explain this idea in steps so that we can get an idea of the approach.
-First we fit the parametric model to the data.
+First we fit the parametric model to the data. This will allow us to explore
+the `HdxStatModel` class. 
 
 ```{r,}
-res <- differentialUptakeKinetics(object = MBPqDF[,1:100],
-                                  feature = rownames(MBPqDF)[[1]][37],
-                                  start = list(a = NULL, b = 0.0001,  d = NULL, p = 1))
+res <- differentialUptakeKinetics(object = MBPqDF[,1:100], #provide a QFeature object
+                                  feature = rownames(MBPqDF)[[1]][37], # which peptide to do we fit
+                                  start = list(a = NULL, b = 0.0001,  d = NULL, p = 1)) # what are the starting parameter guesses
 ```
+Here, we see the `HdxStatModel` class, and that a Functional Model was applied
+to the data and a total of 7 models were fitted.
+```{r,}
+res
+```
+The `nullmodel` and `alternative` slots of an instance of `HdxStatModel` provide
+the underlying fitted models. The `method` and `formula` slots provide vital 
+information about what analysis was performed. The `vis` slot provides a `ggplot`
+object so that we can visualise the functional fits.
+```{r,}
+res@vis
 ```
 
+Since this is a ggplot object, we can customise in the usual grammatical ways.
+```{r,}
+res@vis + scale_color_manual(values = brewer.pal(n = 8, name = "Set2"))
+```
+A number of standard methods are available and can be applied to a `HdxStatModels`,
+these extend the usual `base` stats methods
+
+```{r,}
+anova(res)
+logLik(res)
+residuals(res)
+vcov(res)
+likRatio(res)
+wilk(res)
+coef(res)
+deviance(res)
+residuals(res)
+summary(res)
+
+```
 
 

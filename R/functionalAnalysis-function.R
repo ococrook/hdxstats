@@ -19,7 +19,7 @@ differentialUptakeKinetics <- function(object,
                                        design = NULL,
                                        formula = NULL,
                                        start = list(a = NULL, b = 0.001,  d = NULL, p = 1),
-                                       mycolours = brewer.pal(n = 9, name = "Set2")){
+                                       mycolours = brewer.pal(n = 8, name = "Set2")){
     
     .out <- NULL
     

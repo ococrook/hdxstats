@@ -87,7 +87,7 @@ setMethod("deviance", "HdxStatModel",
 ##' @rdname hdxstat-methods
 setMethod("residuals", "HdxStatModel",
           function(object) {
-              .out <- lapply(c(list(.out@nullmodel), .out@alternative@nlsmodels), residuals)
+              .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), residuals)
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })
@@ -98,7 +98,7 @@ setMethod("residuals", "HdxStatModel",
 ##' @rdname hdxstat-methods
 setMethod("summary", "HdxStatModel",
           function(object) {
-              .out <- lapply(c(list(.out@nullmodel), .out@alternative@nlsmodels), summary)
+              .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), summary)
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })
