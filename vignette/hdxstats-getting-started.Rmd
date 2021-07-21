@@ -25,6 +25,7 @@ library("dplyr")
 library("ggplot2")
 library("RColorBrewer")
 library("tidyr")
+library("pheatmap")
 ```
 
 # A well-defined HDX-MS experiment
@@ -127,12 +128,41 @@ new.colnames
 We will now parse the data into an object of class `QFeatures`, we have provided
 a function to assist with this in the package. If you want to do this yourself
 use the `readQFeatures` function from the `QFeatures` package.
-```{r.}
+```{r,}
 MBPqDF <- parseDeutData(object = DataFrame(MBP_wide),
                         design = new.colnames,
                         quantcol = 3:102)
 
 ```
+
+# Heatmap visualisations of HDX data
+
+To help us get used to the `QFeatures` we show how to generate a heatmap
+of these data from this object:
+
+```{r,}
+pheatmap(t(assay(MBPqDF)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "Stuctural variant deuterium incoperation heatmap", 
+         fontsize = 14,
+         legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(MBPqDF))),
+         legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"))
 ```
+
+
+# Functional data analysis of HDX-MS data
+
+The `hdxstats` package uses an empirical Bayes functional approach to analyse
+the data. We explain this idea in steps so that we can get an idea of the approach.
+
+```{r,}
+res <- differentialUptakeKinetics(object = MBPqDF[,1:100],
+                                  feature = rownames(qDF)[[1]][37],
+                                  start = list(a = NULL, b = 0.0001,  d = NULL, p = 1))
+```
+```
+
 
 
