@@ -21,7 +21,7 @@ setMethod("anova", "HdxStatModel",
           function(object){
               do.call("anova", c(list(object@nullmodel), object@alternative@nlsmodels))  
           })
-##' @exportMethod 
+##' @exportMethod logLik
 ##' @param object An instance of `HdxStatModel`
 ##' @return The log likelihod of the fitted model assuming normally distributed residuals.
 ##' 
