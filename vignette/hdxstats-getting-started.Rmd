@@ -183,7 +183,17 @@ Since this is a ggplot object, we can customise in the usual grammatical ways.
 res@vis + scale_color_manual(values = brewer.pal(n = 8, name = "Set2"))
 ```
 A number of standard methods are available and can be applied to a `HdxStatModels`,
-these extend the usual `base` stats methods
+these extend the usual `base` stats methods. These include
+
+1. `anova`: An analysis of variance
+2. `logLik`: The log-likelihood of all the fitted models
+3. `residuals`: The residuals for the fitted models
+4. `vcov`: The variance-covariance matrix between parameters of the models
+5. `likRatio`: The likelihood ratio between null and alternative models
+6. `wilk`: Applies wilk's theorem to obtain a p-value from the liklihood ratio
+7. `coef`: The fitted model coefficients
+8. `deviance`: The deviance of the fitted models
+9. `summary`: The statistical summary of the models.
 
 ```{r,}
 anova(res)
@@ -194,7 +204,6 @@ likRatio(res)
 wilk(res)
 coef(res)
 deviance(res)
-residuals(res)
 summary(res)
 
 ```
