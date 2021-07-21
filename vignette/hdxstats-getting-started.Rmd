@@ -156,10 +156,11 @@ pheatmap(t(assay(MBPqDF)),
 
 The `hdxstats` package uses an empirical Bayes functional approach to analyse
 the data. We explain this idea in steps so that we can get an idea of the approach.
+First we fit the parametric model to the data.
 
 ```{r,}
 res <- differentialUptakeKinetics(object = MBPqDF[,1:100],
-                                  feature = rownames(qDF)[[1]][37],
+                                  feature = rownames(MBPqDF)[[1]][37],
                                   start = list(a = NULL, b = 0.0001,  d = NULL, p = 1))
 ```
 ```
