@@ -2095,12 +2095,13 @@ of these data from this object:</p>
 <div id="functional-data-analysis-of-hdx-ms-data" class="section level1">
 <h1><span class="header-section-number">6</span> Functional data analysis of HDX-MS data</h1>
 <p>The <code>hdxstats</code> package uses an empirical Bayes functional approach to analyse
-the data. We explain this idea in steps so that we can get an idea of the approach.</p>
+the data. We explain this idea in steps so that we can get an idea of the approach.
+First we fit the parametric model to the data.</p>
 <pre class="r"><code>res &lt;- differentialUptakeKinetics(object = MBPqDF[,1:100],
                                   feature = rownames(MBPqDF)[[1]][37],
                                   start = list(a = NULL, b = 0.0001,  d = NULL, p = 1))</code></pre>
-<pre><code>## Error in nlsLM(data = data, formula = formula, start = start, control = nls.lm.control(maxiter = 500,  : 
-##   could not find function &quot;nlsLM&quot;
+<pre><code>## Error in nls.lm.control(maxiter = 500, ftol = 10^{ : 
+##   could not find function &quot;nls.lm.control&quot;
 ## [1] &quot;model fit failed, likely exessive missing values&quot;</code></pre>
 <p>```</p>
 </div>
