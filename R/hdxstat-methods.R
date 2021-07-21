@@ -32,7 +32,7 @@ setMethod("logLik", "HdxStatModel",
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })
-##' @exportMethod  likRatio
+##' @exportMethod likRatio
 ##' @param object An instance of `HdxStatModel`
 ##' @return The log likelihood ratio between the alternative and null models
 ##' 

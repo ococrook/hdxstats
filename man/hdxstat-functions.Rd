@@ -20,7 +20,8 @@ differentialUptakeKinetics(
   feature = NULL,
   design = NULL,
   formula = NULL,
-  start = list(a = NULL, b = 0.001, d = NULL, p = 1)
+  start = list(a = NULL, b = 0.001, d = NULL, p = 1),
+  mycolours = brewer.pal(n = 8, name = "Set2")
 )
 
 computeRSS(object)
