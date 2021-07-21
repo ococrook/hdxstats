@@ -28,7 +28,7 @@ setMethod("anova", "HdxStatModel",
 ##' @rdname hdxstat-methods
 setMethod("logLik", "HdxStatModel",
           function(object){
-              .out <- sapply(c(list(object@nullmodel), object@alternative@nlsmodels), logLik)
+              .out <- sapply(c(list(object@nullmodel), object@alternative@nlsmodels), stats::logLik)
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })

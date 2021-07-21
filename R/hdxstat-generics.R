@@ -10,3 +10,6 @@ setGeneric("wilk", function(object, ...)
 ##' @rdname  hidden_aliases
 setGeneric("fitUptakeKinetics", function(object, ...)
     standardGeneric("fitUptakeKinetics"))
+##'@rdname hidden_aliases
+setGeneric("logLik", function(object, ...)
+    standardGeneric("logLik"))
