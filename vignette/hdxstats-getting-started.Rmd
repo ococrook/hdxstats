@@ -271,10 +271,39 @@ res@statmodels[[42]]@vis + res@statmodels[[45]]@vis
 
 ```
 As we can see our model has picked up some subtle differences, we can further
-visualise these using a forest plot
+visualise these using a forest plot. We can see the the functions are very similar
+as the parameters are almost identical `(a,b,p,d)`. However, we can see that
+the deuterium differences are lower in 10% structural variant condition.
 
 ```{r,}
-forestPlot(params = res@statmodels[[42]])
+fp <- forestPlot(params = res@statmodels[[42]])
 
 ```
+We can produce a table to actual numbers. We see that at all 4 timepoints
+the deuterium difference is negative, though the confidence intervals overlap
+with 0. Our functional approach is picking up this small but reproducible difference.
+```{r,}
+knitr::kable(fp$data)
+```
+
+Let's us now have a look a situation where the changes are more dramatic.
+
+```{r,}
+res_wt <- fitUptakeKinetics(object = MBPqDF[, c(61:100)],
+                            feature = rownames(MBPqDF[, c(61:100)])[[1]],
+                            start = list(a = NULL, b = 0.001,  d = NULL, p = 1))
+
+```
+```{r,}
+out_wt <- processFunctional(object = MBPqDF[, c(61:100)], params = res_wt)
+```
+
+We can visualise some of the result and generate plots.
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+res_wt@statmodels[[27]]@vis/res_wt@statmodels[[28]]@vis + plot_layout(guides = "collect")|(forestPlot(params = res_wt@statmodels[[27]], condition = c("WT", "W169G"))/forestPlot(params = res_wt@statmodels[[28]], condition = c("WT", "W169G")) + plot_layout(guides = "collect")) + 
+    plot_annotation(tag_levels = 'a') +  plot_layout(widths = c(1, 1))
+```
+
+
+
 
