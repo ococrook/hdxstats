@@ -513,8 +513,8 @@ forestPlot <- function(params, condition = c(1,2)) {
     
     stopifnot("params must be an HdxStatModel"=class(params)=="HdxStatModel")
     
-    model1 <- params@alternative@nlsmodels[[condition[1]]]
-    model2 <- params@alternative@nlsmodels[[condition[2]]]
+    model1 <- params@alternative@nlsmodels[[1]]
+    model2 <- params@alternative@nlsmodels[[2]]
     
     tmp <- summary(model1)$parameters
     tmp2 <- summary(model1)$parameters
