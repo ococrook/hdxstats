@@ -27,6 +27,7 @@ library("RColorBrewer")
 library("tidyr")
 library("pheatmap")
 library("viridis")
+library("patchwork")
 ```
 
 # A well-defined HDX-MS experiment
@@ -207,5 +208,73 @@ deviance(res)
 summary(res)
 
 ```
+# Analysis of a typical HDX-MS experiment
 
+We have seen the basic aspects of our functional modelling approach. We now
+wish to roll out our method across all peptides in the experiment. The
+`fitUptakeKinetics` function allows us to apply our modelling approach across
+all the peptide in the experiment. We need to provide a `QFeatures` object 
+and the features for which we are fitting the model. The design will be extracted
+from the column names or you can provide a design yourself. The parameter 
+initilisation should also be provided. Sometimes the model can't be fit on the
+kinetics. This is either because there is not enough data or through lack of 
+convergence. An error will be reported in these cases but this should not 
+perturb the user. You may wish to try a few starting values if there 
+excessive models that fail fitting. 
+
+```{r,}
+res <- fitUptakeKinetics(object = MBPqDF[,c(1:24)],
+                         feature = rownames(MBPqDF[,c(1:24)])[[1]],
+                         start = list(a = NULL, b = 0.001,  d = NULL, p = 1))
+
+```
+The code chunk above returns a class `HdxStatModels` indicating that a number
+of models for peptide have been fit. This is simply a holder for a list
+of `HdxStatModel` instances.
+```{r,}
+res
+```
+
+We can easily examine indivual fits by going to the underyling `HdxStatModel`
+class:
+```{r,}
+res@statmodels[[1]]@vis + scale_color_manual(values = brewer.pal(n = 2, name = "Set2"))
+```
+We now wish to apply statistical analysis to these fitted curves. Our approach
+is an empirical Bayes testing procedure, which borrows information across peptides
+to stablise variance estimates. Here, we need to provide the original data
+that was analysed and the `HdxStatModels` class. The following code chunk
+returns an object of class `HdxStatRes`. This object tell us that statistical
+analysis was performed using our Functional model.
+
+```{r,}
+out <- processFunctional(object = MBPqDF[,1:24], params = res)
+out
+```
+
+The main slot of interest is the `results` slot which returns quantities of 
+interest such as `p-values` and `fdr` corrected p-values because of multiple testing.
+The following is the `DataFrame` of interest.
+```{r,}
+out@results
+```
+
+We can now examine the peptides for which the false discovery rate is less
+than 0.05
+
+```{r,}
+which(out@results$ebayes.fdr < 0.05)
+```
+Let us visualise some of these examples:
+```{r,}
+res@statmodels[[42]]@vis + res@statmodels[[45]]@vis
+
+```
+As we can see our model has picked up some subtle differences, we can further
+visualise these using a forest plot
+
+```{r,}
+forestPlot(params = res@statmodels[[42]])
+
+```
 
