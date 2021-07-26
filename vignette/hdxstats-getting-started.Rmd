@@ -17,6 +17,7 @@ vignette: |
 
 ```{r style, echo = FALSE, results = 'asis'}
 BiocStyle::markdown()
+knitr::opts_chunk$set(dpi=300)
 ```
 
 ```{r env, message = FALSE, warning = FALSE, echo = FALSE}
@@ -28,6 +29,7 @@ library("tidyr")
 library("pheatmap")
 library("viridis")
 library("patchwork")
+libraru("biostrings")
 ```
 
 # A well-defined HDX-MS experiment
@@ -447,7 +449,7 @@ res_all@statmodels[[53]]@vis ) + plot_layout(guides = 'collect')
 ```
 We can make a Manhatten plot to better specially visualise what's happening.
 
-```{r,}
+```{r, fig.width= 20, fig.height = 15}
 #We need to provide an indication of "difference" so we can examine deprotected
 # or prected regions
 diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
@@ -459,4 +461,25 @@ sigplots <- manhattentplot(params = funresdAb25_1,
                            difference = diffdata,
                            nrow = 1)
 sigplots[[1]] + plot_layout(guides = 'collect')
+```
+
+We can visualise this in a peptide plot which helps us understand the nature
+of the overlap
+
+```{r,}
+fpath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+HOIP <- readAAStringSet(filepath = fpath, "fasta")
+
+scores <- funresdAb25_1@results$ebayes.fdr
+
+out <- plotEpitopeMap(AAString = HOIPfasta[[1]],
+                      peptideSeqs = unique(HOIP$Sequence),
+                      numlines = 2,
+                      maxmismatch = 1,
+                      by = 1,
+                      scores = 1 * (-log10(scores[unique(HOIP$Sequence)])  > -log10(0.05)) + 0.0001,
+                      name = "significant")
+
+out[[1]]/(out[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
+
 ```
