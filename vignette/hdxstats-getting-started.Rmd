@@ -29,7 +29,7 @@ library("tidyr")
 library("pheatmap")
 library("viridis")
 library("patchwork")
-libraru("biostrings")
+library("Biostrings")
 ```
 
 # A well-defined HDX-MS experiment
@@ -305,6 +305,7 @@ We can visualise some of the result and generate plots.
 res_wt@statmodels[[27]]@vis/res_wt@statmodels[[28]]@vis + plot_layout(guides = "collect")|(forestPlot(params = res_wt@statmodels[[27]], condition = c("WT", "W169G"))/forestPlot(params = res_wt@statmodels[[28]], condition = c("WT", "W169G")) + plot_layout(guides = "collect")) + 
     plot_annotation(tag_levels = 'a') +  plot_layout(widths = c(1, 1))
 ```
+
 # An epitope mapping experiment
 
 We now describe the analysis of an epitope mapping experiment. Here, the data
@@ -437,7 +438,7 @@ which(funresdAb25_1@results$ebayes.fdr < 0.05)
 ```
 We can plot these kinetics to see what is happening. This allows us to visualise
 region of protection and deprotection, potentially identifiying the epitope.
-```{r,}
+```{r, fig.width= 22, fig.height = 15}
 (res_all@statmodels[[36]]@vis + 
 res_all@statmodels[[42]]@vis  + 
 res_all@statmodels[[43]]@vis  + 
@@ -449,7 +450,7 @@ res_all@statmodels[[53]]@vis ) + plot_layout(guides = 'collect')
 ```
 We can make a Manhatten plot to better specially visualise what's happening.
 
-```{r, fig.width= 20, fig.height = 15}
+```{r, fig.width= 22, fig.height = 15}
 #We need to provide an indication of "difference" so we can examine deprotected
 # or prected regions
 diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
@@ -466,9 +467,9 @@ sigplots[[1]] + plot_layout(guides = 'collect')
 We can visualise this in a peptide plot which helps us understand the nature
 of the overlap
 
-```{r,}
+```{r, fig.width= 22, fig.height = 15}
 fpath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
-HOIP <- readAAStringSet(filepath = fpath, "fasta")
+HOIPfasta <- readAAStringSet(filepath = fpath, "fasta")
 
 scores <- funresdAb25_1@results$ebayes.fdr
 
@@ -483,3 +484,74 @@ out <- plotEpitopeMap(AAString = HOIPfasta[[1]],
 out[[1]]/(out[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
 
 ```
+
+We can further visualise this a barcode of particular residues, here we use
+residue level averaging to obtain results at the residue level.
+
+```{r, fig.width= 22, fig.height = 15}
+
+scores <- funresdAb25_1@results$ebayes.fdr
+out2 <- plotEpitopeMapResidue(AAString = HOIPfasta[[1]],
+                              peptideSeqs = unique(HOIP$Sequence),
+                              numlines = 2,
+                              maxmismatch = 1,
+                              by = 5,
+                              scores = scores[unique(HOIP$Sequence)],
+                              name = "-log10 p value")
+
+out2[[1]]/out2[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+We can also plot multiple residue maps on the same plot so that we can compare
+different antibodies. 
+
+```{r, fig.width= 22, fig.height = 15}
+scores <- funresdAb25_1@results$ebayes.fdr
+avMap25_1 <- ComputeAverageMap(AAString = HOIPfasta[[1]],
+                               peptideSeqs = unique(HOIP$Sequence),
+                               numlines = 2, maxmismatch = 1,
+                               by = 10, scores = scores[unique(HOIP$Sequence)],
+                               name = "-log10 p value")
+
+## generate results from other dAB
+cn <- new.colnames[c(1:3,19:21)]
+HOIP_wide_nrm <- data.frame(HOIP_wide)
+HOIP_wide_nrm[,c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)]
+HOIP_wide_nrm[,c(20:22)] <- HOIP_wide_nrm[,c(20:22)] - HOIP_wide_nrm[,c(20)] 
+
+newqDF2 <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
+                        design = cn,
+                        quantcol = c(2:4,20:22),
+                        rownames = HOIP_wide$Sequence)
+
+res_all2 <- fitUptakeKinetics(object = newqDF2[,1:6],
+                             feature = rownames(newqDF2[,1:6])[[1]],
+                             start = list(a = NULL),
+                             formula = value ~ a * (1 - exp(-0.07*(timepoint))))
+  
+funresdAb27_2 <- processFunctional(object = newqDF[,1:6],
+                                   params = res_all2)
+
+scores <- funresdAb27_2@results$ebayes.fdr
+# compute average map
+avMap27_2  <- ComputeAverageMap(AAString = HOIPfasta[[1]],
+                                peptideSeqs = unique(HOIP$Sequence),
+                                numlines = 2,
+                                maxmismatch = 1,
+                                by = 10,
+                                scores = scores[unique(HOIP$Sequence)],
+                                name = "-log10 p value")
+
+# set rownames
+rownames(avMap25_1) <- "dAb25_1"
+rownames(avMap27_2) <- "dAb27_2"
+
+# store in a list
+avMap <- list(avMap27_2 = avMap27_2,
+              avMap25_1 = avMap25_1)
+
+#plotting
+out3 <- plotAverageMaps(avMap, by = 20)
+out3[[1]]/out3[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+
