@@ -1,5 +1,15 @@
-## plotting for epitope mapping
-
+##' A manhatten plot for epitope mapping
+##' 
+##' @param params An object of class `HdxStatRes`
+##' @param sequences A character vector containing the measured peptide sequences
+##' @param difference A numeric vector with deuterium differences for each peptide
+##' @param region The start and end of the sequences provided.
+##' @param nrow The number of rows to plot the manhatten plot over. Useful for larger
+##' proteins
+##' @return use for side effect which returns manhatten plot 
+##' @md 
+##'
+##' @rdname functional-plots
 manhattentplot <- function(params,
                            sequences,
                            difference = 0,
@@ -8,7 +18,7 @@ manhattentplot <- function(params,
     
     butterfly <- matrix(0, ncol = length(unique(sequences)), nrow = 1)
     colnames(butterfly) <- unique(sequences)
-    butterfly <- params$ebayesres$fdr[unique(sequences)]
+    butterfly <- params@results$ebayes.fdr[unique(sequences)]
     butterflydf <- as.data.frame(butterfly)
     butterflydf$Sequence <- rownames(butterflydf)
     butterflydf$protection <- 1*(difference > 0)
@@ -508,7 +518,15 @@ plotAverageMaps <- function(averageMaps,
     return(plot.list)
 }
 
-
+##' Generate a forest plot
+##' 
+##' @param params An object of class `HdxStatRes`
+##' @param condition If there are multiple conditions which ones to plot. Default
+##' is `c(1,2)`
+##' @return Side effect produces a forest plot
+##' @md
+##' 
+##' @rdname functional-plots
 forestPlot <- function(params, condition = c(1,2)) {
     
     stopifnot("params must be an HdxStatModel"=class(params)=="HdxStatModel")

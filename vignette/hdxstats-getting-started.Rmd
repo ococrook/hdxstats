@@ -303,7 +303,160 @@ We can visualise some of the result and generate plots.
 res_wt@statmodels[[27]]@vis/res_wt@statmodels[[28]]@vis + plot_layout(guides = "collect")|(forestPlot(params = res_wt@statmodels[[27]], condition = c("WT", "W169G"))/forestPlot(params = res_wt@statmodels[[28]], condition = c("WT", "W169G")) + plot_layout(guides = "collect")) + 
     plot_annotation(tag_levels = 'a') +  plot_layout(widths = c(1, 1))
 ```
+# An epitope mapping experiment
+
+We now describe the analysis of an epitope mapping experiment. Here, the data
+analysis is more challenging, since only 1 replicate in each condition, apo and
+antibody, was performed. If we make some simplifying assumptions rigorous
+statistical analysis can still be performed.
+
+The experiment was performed on HOIP-RBR, we loaded the data below from inside
+the package
+```{r,}
+HOIPpath <- system.file("extdata", "N64184_1a2_state.csv", package = "hdxstats")
+HOIP <- read.csv(HOIPpath)
+```
+
+```{r,}
+unique(HOIP$State)
+```
+
+```{r,}
+HOIP$Exposure <- HOIP$Exposure * 60 #convert to seconds
+filter(HOIP, Sequence == unique(HOIP$Sequence[1])) %>%
+    ggplot(aes(x = Exposure,
+               y = Center,
+               color = factor(State, unique(HOIP$State)))) +
+    theme_classic() + geom_point(size = 3) + 
+    scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11)) + 
+    labs(color = "experiment", x = "Deuterium Exposure", y = "Deuterium incoperation")
+```
+
+As before we need to convert data to an object of classes `QFeatures`
+for ease of analysis.
+
+First, we put the data into a `DataFrame` object. Currently, its in long format
+so we switch to a wide format
+```{r,}
+HOIP_wide <- pivot_wider(data.frame(HOIP),
+                         values_from = Center,
+                         names_from = c("Exposure", "State"),
+                         id_cols = c("Sequence"))
+
+```
+
+Now remove all columns with only NAs
+```{r,}
+HOIP_wide <- HOIP_wide[, colSums(is.na(HOIP_wide)) != nrow(HOIP_wide)]
+```
+
+The colanmes are not very informative, provide in the format X(time)rep(repliate)cond(condition)
+```{r,}
+colnames(HOIP_wide)[-c(1)]
+
+new.colnames <- gsub("0_", "0rep1", paste0("X", colnames(HOIP_wide)[-c(1)]))
+new.colnames <- gsub("rep1", "rep1cond", new.colnames)
+
+# remove annoying % signs
+new.colnames <- gsub("%", "", new.colnames)
+
+# remove space (NULL could get confusing later and WT is clear)
+new.colnames <- gsub(" .*", "", new.colnames)
+
+```
 
 
+Now, we can provide rownames and convert the data to a `QFeatures` object:
+
+```{r,}
+
+qDF <- parseDeutData(object = DataFrame(HOIP_wide),
+                     design = new.colnames,
+                     quantcol = 2:34,
+                     rownames = HOIP_wide$Sequence)
+
+```
+
+As before, we can produce a heatmap, we perform a simple normalisation for
+ease of visualisation:
+
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+mat <- assay(qDF)
+mat <- apply(mat, 2, function(x) x - assay(qDF)[,1])
+
+pheatmap(t(mat),
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "HOIP RBR heatmap",
+         fontsize = 14,
+         legend_breaks = c(0, 2, 4, 6,8,10,12, max(assay(qDF))),
+         legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"))
+```
+
+Let us first perform a quick test:
+```{r,}
+res <- differentialUptakeKinetics(object = qDF[,1:33],
+                                  feature = rownames(qDF)[[1]][3],
+                                  start = list(a = NULL, b = 0.01,  d = NULL),
+                                  formula = value ~ a * (1 - exp(-b*(timepoint))) + d) 
+res@vis+ scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11)) 
+```
+
+Whilst this analysis performs good fits for the functions, there are too many
+degrees of freedom to perform sound statistical analysis. Hence, we normalize
+to remove the degree of freedom for the intercept. For simplicity and to preserve
+the original matrix, we reprocess the data. We then fit a simplified kinetic
+model, where only the plateau is inferred.
+
+```{r,}
+cn <- new.colnames[c(1:3,10:12)]
+HOIP_wide_nrm <- data.frame(HOIP_wide)
+HOIP_wide_nrm[, c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)] # normalise by intercept
+HOIP_wide_nrm[, c(11:13)] <- HOIP_wide_nrm[,c(11:13)] - HOIP_wide_nrm[,c(11)] # normalised by intercept
+
+newqDF <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
+                        design = cn,
+                        quantcol = c(2:4, 11:13), rownames = HOIP_wide$Sequence)
+
+res_all <- fitUptakeKinetics(object = newqDF[,1:6],
+                             feature = rownames(newqDF[,1:6])[[1]],
+                             start = list(a = NULL),
+                             formula = value ~ a * (1 - exp(-0.05*(timepoint))))
+  
+funresdAb25_1 <- processFunctional(object = newqDF[,1:6],
+                                   params = res_all)
+```
+
+We can have a look at the results:
+```{r,}
+funresdAb25_1@results
+which(funresdAb25_1@results$ebayes.fdr < 0.05)
+```
+We can plot these kinetics to see what is happening. This allows us to visualise
+region of protection and deprotection, potentially identifiying the epitope.
+```{r,}
+(res_all@statmodels[[36]]@vis + 
+res_all@statmodels[[42]]@vis  + 
+res_all@statmodels[[43]]@vis  + 
+res_all@statmodels[[65]]@vis  + 
+res_all@statmodels[[68]]@vis  + 
+res_all@statmodels[[70]]@vis  + 
+res_all@statmodels[[52]]@vis  + 
+res_all@statmodels[[53]]@vis ) + plot_layout(guides = 'collect')
+```
+We can make a Manhatten plot to better specially visualise what's happening.
+
+```{r,}
+#We need to provide an indication of "difference" so we can examine deprotected
+# or prected regions
+diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
 
 
+sigplots <- manhattentplot(params = funresdAb25_1,
+                           sequences = HOIP$Sequence, 
+                           region = HOIP[, c("Start", "End")],
+                           difference = diffdata,
+                           nrow = 1)
+sigplots[[1]] + plot_layout(guides = 'collect')
+```
