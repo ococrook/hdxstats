@@ -4,6 +4,7 @@
 \alias{likRatio}
 \alias{wilk}
 \alias{fitUptakeKinetics}
+\alias{logLik}
 \title{Generics for hdxstats package}
 \usage{
 likRatio(object, ...)
@@ -11,6 +12,8 @@ likRatio(object, ...)
 wilk(object, ...)
 
 fitUptakeKinetics(object, ...)
+
+logLik(object, ...)
 }
 \arguments{
 \item{object}{An object of class \code{HdxStatModel}}

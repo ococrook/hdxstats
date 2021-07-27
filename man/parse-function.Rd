@@ -24,7 +24,11 @@ parseDeutData(
 \item{rownames}{The rownames of the features. Default is NULL, in which case
 the rownames are extract from the \code{sequence} and \code{charge} in the object}
 
+\item{quantcol}{The columns wiht the quantitative data.}
+
 \item{filter}{Currently unused filter}
+
+\item{filterScore}{Currently usused filter score}
 
 \item{sequence}{The name of the column where the peptide sequence is stored.
 Default is "pep_sequence"}
@@ -33,8 +37,6 @@ Default is "pep_sequence"}
 Default is "pep_chrage"}
 
 \item{design}{The design which will become the column names}
-
-\item{filterSCore}{Currently usused filter score}
 }
 \value{
 An instance of class \code{QFeatures} storing the quantitative mass-spectrometry

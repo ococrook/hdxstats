@@ -1,5 +1,5 @@
 ##' A manhatten plot for epitope mapping
-##' 
+##' @title manhatten plot
 ##' @param params An object of class `HdxStatRes`
 ##' @param sequences A character vector containing the measured peptide sequences
 ##' @param difference A numeric vector with deuterium differences for each peptide
@@ -10,11 +10,11 @@
 ##' @md 
 ##'
 ##' @rdname functional-plots
-manhattentplot <- function(params,
-                           sequences,
-                           difference = 0,
-                           region = NULL, 
-                           nrow = 1){
+manhattenplot <- function(params,
+                          sequences,
+                          difference = 0,
+                          region = NULL, 
+                          nrow = 1){
     
     butterfly <- matrix(0, ncol = length(unique(sequences)), nrow = 1)
     colnames(butterfly) <- unique(sequences)
@@ -53,13 +53,32 @@ manhattentplot <- function(params,
     
 }
 
+##' Generate an epitope map by plotting the signifcantly changed peptides
+##' with respect to a differential HDX-MS experiment
+##' @title Epitope Map
+##' @param AAString An object of class `AAString` for the protein of interest
+##' @param peptideSeqs A character vector of peptide sequences
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 5.
+##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
+##'  indicated the number of mismatched amino acids. Default is 0.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @param scores A numeric vector indicating score to be used for plotting
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param threshold The threshold used to determine significance. Default is
+##' `-log10(0.05)`. Note the log scale.
+##' @md
+##' 
+##' @rdname functional-plots
 plotEpitopeMap <- function(AAString, 
-                         peptideSeqs,
-                         numlines = 5,
-                         maxmismatch = 0,
-                         by = 5,
-                         scores = NULL,
-                         name = "-log10 p values", threshold = -log10(0.05)){
+                          peptideSeqs,
+                          numlines = 5,
+                          maxmismatch = 0,
+                          by = 5,
+                          scores = NULL,
+                          name = "-log10 p values",
+                          threshold = -log10(0.05)){
     
     # Test
     stopifnot("AAString must be an object of class AAString"= class(AAString) == "AAString")
@@ -174,7 +193,24 @@ plotEpitopeMap <- function(AAString,
     return(plot.list)
     
 }
-
+##' Generate an epitope map by plotting the signifcantly changed peptides
+##' with respect to a differential HDX-MS experiment. Plots FDR rather than
+##' thresholding.
+##' @param AAString An object of class `AAString` for the protein of interest
+##' @param pepetideSeqs A character vector of peptide sequences
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 5.
+##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
+##'  indicated the number of mismatched amino acids. Default is 0.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @param scores A numeric vector indicating score to be used for plotting
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param threshold The threshold used to determine significance. Default is
+##' `-log10(0.05)`. Note the log scale.
+##' @md
+##' 
+##' @rdname functional-plots
 plotEpitopeMapFdr <- function(AAString, 
                               peptideSeqs,
                               numlines = 5,
@@ -297,7 +333,24 @@ plotEpitopeMapFdr <- function(AAString,
     return(plot.list)
     
 }
-
+##' Generate an epitope barcode on the residue scale using a harmonic mean
+##' averageing approach.
+##' @param AAString An object of class `AAString` for the protein of interest
+##' @param pepetideSeqs A character vector of peptide sequences
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 5.
+##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
+##'  indicated the number of mismatched amino acids. Default is 0.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @param scores A numeric vector indicating score to be used for plotting. Most 
+##'  likely adusted p-values.
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param threshold The threshold used to determine significance. Default is
+##' `-log10(0.05)`. Note the log scale.
+##' @md
+##' 
+##' @rdname functional-plots
 plotEpitopeMapResidue <- function(AAString, 
                               peptideSeqs,
                               numlines = 5,
@@ -398,8 +451,24 @@ plotEpitopeMapResidue <- function(AAString,
     
     return(plot.list)
 }
-
-
+##' Underlying computation for compute residue level mappings. Will performed 
+##' harmonic mean averaging to obtain residue level results.
+##' @param AAString An object of class `AAString` for the protein of interest
+##' @param pepetideSeqs A character vector of peptide sequences
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 5.
+##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
+##'  indicated the number of mismatched amino acids. Default is 0.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @param scores A numeric vector indicating score to be used for plotting. Most 
+##'  likely adusted p-values.
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param threshold The threshold used to determine significance. Default is
+##' `-log10(0.05)`. Note the log scale.
+##' @md
+##' 
+##' @rdname functional-plots
 ComputeAverageMap <- function(AAString, 
                               peptideSeqs,
                               numlines = 5,
@@ -474,7 +543,18 @@ ComputeAverageMap <- function(AAString,
    
     return(averageMap = averageMap)
 }    
-
+##' Plotting for comparing average maps. This function will simultaneous plot
+##'  several barcodes ontop of each other so the comparison is easier
+##' @param averageMaps A list of average maps generated by the `computeAverageMaps`
+##'  function
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 2.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @md
+##' 
+##' @rdname functional-plots
 plotAverageMaps <- function(averageMaps,
                             name = "-log10 p value",
                             numlines = 2,

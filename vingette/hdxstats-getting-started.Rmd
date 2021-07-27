@@ -456,11 +456,11 @@ We can make a Manhatten plot to better specially visualise what's happening.
 diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
 
 
-sigplots <- manhattentplot(params = funresdAb25_1,
-                           sequences = HOIP$Sequence, 
-                           region = HOIP[, c("Start", "End")],
-                           difference = diffdata,
-                           nrow = 1)
+sigplots <- manhattenplot(params = funresdAb25_1,
+                          sequences = HOIP$Sequence, 
+                          region = HOIP[, c("Start", "End")],
+                          difference = diffdata,
+                          nrow = 1)
 sigplots[[1]] + plot_layout(guides = 'collect')
 ```
 

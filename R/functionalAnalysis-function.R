@@ -10,6 +10,7 @@
 ##'  chargestates, timepoints ete. Default is NULL and design is extract from column names
 ##' @param formula The nonlinear formula used. Default is NULL, in which a weibull model is used.
 ##' @param start The initial guess for the parameters
+##' @param mycolours A colour palette default uses `brewer.pal`.
 ##' @return Returns an instance of class `HdxStatmodel`
 ##' @md 
 ##' 

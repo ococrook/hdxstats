@@ -1,8 +1,8 @@
-##' The nls class
+##' @name nls The nls class
 ##' @md
 ##' @rdname hdxstat-class
 setOldClass("nls")
-##' The ggplot class
+##' @name gg The ggplot class
 ##' @md
 ##' @rdname hdxstat-class
 setOldClass("gg")

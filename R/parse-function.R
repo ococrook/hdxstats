@@ -3,8 +3,9 @@
 ##' @param assayname The name of assay. The Default is incoperation.
 ##' @param rownames The rownames of the features. Default is NULL, in which case
 ##' the rownames are extract from the `sequence` and `charge` in the object
+##' @param quantcol The columns wiht the quantitative data.
 ##' @param filter Currently unused filter
-##' @param filterSCore Currently usused filter score
+##' @param filterScore Currently usused filter score
 ##' @param sequence The name of the column where the peptide sequence is stored.
 ##' Default is "pep_sequence"
 ##' @param charge The name of the column where the peptide charge is stored.
