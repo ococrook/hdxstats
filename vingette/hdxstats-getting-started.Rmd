@@ -49,7 +49,7 @@ The package relies of Bioconductor infrastructure so that it integrates with
 other data types and can benefit from advantages in other fields of mass-spectrometry.
 There are package specific object, classes and methods but importantly there is
 reuse of classes found in quantitative proteomics data, mainly the `QFeatures`
-object which extends the `summarisedExperiment` class for mass spectrometry data.
+object which extends the `SummarisedExperiment` class for mass spectrometry data.
 The focus of this package is on testing and visualisation of the testing results.
 
 # Data
