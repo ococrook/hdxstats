@@ -20,7 +20,11 @@ devtools::install_github("ococrook/hdxstats")
 
 # Examples
 
+See vignettes for example analysis, including epitope mapping.
+
 # Documentation
+
+See vignettes and package manual for documentation
 
 
 
