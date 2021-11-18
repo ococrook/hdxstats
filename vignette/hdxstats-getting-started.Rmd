@@ -156,7 +156,22 @@ pheatmap(t(assay(MBPqDF)),
          legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(MBPqDF))),
          legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"))
 ```
+If you prefer to have the start-to-end residue numbers in the heatmap instead
+you can change the plot as follows:
+```{r,}
+regions <- unique(MBP[,c("pep_start", "pep_end")])
+xannot <- paste0("[", regions[,1], ",", regions[,2], "]")
+pheatmap(t(assay(MBPqDF)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "Stuctural variant deuterium incoperation heatmap", 
+         fontsize = 14,
+         legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(MBPqDF))),
+         legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"),
+         labels_col = xannot)
 
+```
 
 # Functional data analysis of HDX-MS data
 
