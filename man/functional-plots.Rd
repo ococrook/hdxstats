@@ -98,8 +98,6 @@ function}
 
 \item{condition}{If there are multiple conditions which ones to plot. Default
 is \code{c(1,2)}}
-
-\item{pepetideSeqs}{A character vector of peptide sequences}
 }
 \value{
 use for side effect which returns manhatten plot

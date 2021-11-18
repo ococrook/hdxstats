@@ -197,7 +197,7 @@ plotEpitopeMap <- function(AAString,
 ##' with respect to a differential HDX-MS experiment. Plots FDR rather than
 ##' thresholding.
 ##' @param AAString An object of class `AAString` for the protein of interest
-##' @param pepetideSeqs A character vector of peptide sequences
+##' @param peptideSeqs A character vector of peptide sequences
 ##' @param numlines The number of lines to plot the protein over. Useful for larger
 ##'  proteins. Default is 5.
 ##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
@@ -336,7 +336,7 @@ plotEpitopeMapFdr <- function(AAString,
 ##' Generate an epitope barcode on the residue scale using a harmonic mean
 ##' averageing approach.
 ##' @param AAString An object of class `AAString` for the protein of interest
-##' @param pepetideSeqs A character vector of peptide sequences
+##' @param peptideSeqs A character vector of peptide sequences
 ##' @param numlines The number of lines to plot the protein over. Useful for larger
 ##'  proteins. Default is 5.
 ##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
@@ -454,7 +454,7 @@ plotEpitopeMapResidue <- function(AAString,
 ##' Underlying computation for compute residue level mappings. Will performed 
 ##' harmonic mean averaging to obtain residue level results.
 ##' @param AAString An object of class `AAString` for the protein of interest
-##' @param pepetideSeqs A character vector of peptide sequences
+##' @param peptideSeqs A character vector of peptide sequences
 ##' @param numlines The number of lines to plot the protein over. Useful for larger
 ##'  proteins. Default is 5.
 ##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
