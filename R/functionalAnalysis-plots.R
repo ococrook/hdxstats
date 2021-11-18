@@ -306,8 +306,8 @@ plotEpitopeMapFdr <- function(AAString,
         
         sc <- scale_fill_manual(name, 
                                 values = c("white", viridis(n = nlevels(factor(peptideMap))), alpha = 0.7),
-                                labels = substring(levels(factor(peptideMap))[seq(1, nlevels(factor(peptideMap)), by = by)], 1, 4),
-                                breaks = levels(factor(peptideMap))[seq(1, nlevels(factor(peptideMap)), by = by)], drop = FALSE)
+                                labels = substring(levels(factor(peptideMap)), 1, 4),
+                                breaks = levels(factor(peptideMap)), drop = FALSE)
         
         for (i in 1:ceiling(length(coverage)/n)) {
             
@@ -424,8 +424,8 @@ plotEpitopeMapResidue <- function(AAString,
     
     sc <- scale_fill_manual(name, 
                             values = c("white", viridis(n = nlevels(factor(averageMap))), alpha = 0.7),
-                            labels = substring(levels(factor(averageMap))[seq(1, nlevels(factor(averageMap)), by = by)], 1, 4),
-                            breaks = levels(factor(averageMap))[seq(1, nlevels(factor(averageMap)), by = by)], drop = FALSE)
+                            labels = substring(levels(factor(averageMap)), 1, 4),
+                            breaks = levels(factor(averageMap)), drop = FALSE)
     
     for (i in 1:ceiling(length(coverage)/n)) {
         
@@ -568,9 +568,9 @@ plotAverageMaps <- function(averageMaps,
     n <- ceiling(coverage/numlines)
     
     sc <- scale_fill_manual(name, 
-                            values = c("white", viridis(n = nlevels(factor(map))), alpha = 0.7),
-                            labels = substring(levels(factor(map))[seq(1, nlevels(factor(map)), by = by)], 1, 4),
-                            breaks = levels(factor(map))[seq(1, nlevels(factor(map)), by = by)], drop = FALSE)
+                            values = c("white", viridis(n = nlevels(factor(map)), alpha = 0.7)), drop = FALSE,
+                            labels = substring(levels(factor(map)), 1, 4),
+                            breaks = levels(factor(map)))
 
     for (i in 1:ceiling(coverage/n)) {
         

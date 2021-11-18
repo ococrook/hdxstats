@@ -27,9 +27,11 @@ library("ggplot2")
 library("RColorBrewer")
 library("tidyr")
 library("pheatmap")
+library("scales")
 library("viridis")
 library("patchwork")
 library("Biostrings")
+
 ```
 
 # A well-defined HDX-MS experiment
@@ -287,6 +289,30 @@ with 0. Our functional approach is picking up this small but reproducible differ
 ```{r,}
 knitr::kable(fp$data)
 ```
+
+It is also possible to visualize, these plots on a different scale. Of course,
+changing the natural scaling will emphasis different parts of the plot and
+could distort interpretation. In particular, if a log transform is used then
+care should be taken when interpreting values around 0. We suggest examining
+the numerical values in a forest plot or table alongside any transformation of 
+the variables. We suggest using the `pseudo log transform` as this allows
+control the linearity of the plot, clearly demonstrating this a choice
+of visualisation (and not of statistical modelling). The parameter `sigma`
+below controls the scaling factor of the linear part of the transformation.
+
+```{r,}
+res@statmodels[[42]]@vis + scale_x_continuous(
+    trans = pseudo_log_trans(base = 10, sigma = 0.01), breaks = c(0, 10^(1:7)))
+
+res@statmodels[[42]]@vis + scale_x_continuous(
+    trans = pseudo_log_trans(base = 10, sigma = 0.0001), breaks = c(0, 10^(1:7)))
+
+res@statmodels[[42]]@vis + scale_x_continuous(
+    trans = pseudo_log_trans(base = 10, sigma = 10), breaks = c(0, 10^(1:7)))
+
+```
+
+
 
 Let's us now have a look a situation where the changes are more dramatic.
 
