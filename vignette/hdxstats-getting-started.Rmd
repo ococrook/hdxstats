@@ -158,7 +158,7 @@ pheatmap(t(assay(MBPqDF)),
 ```
 If you prefer to have the start-to-end residue numbers in the heatmap instead
 you can change the plot as follows:
-```{r,}
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
 regions <- unique(MBP[,c("pep_start", "pep_end")])
 xannot <- paste0("[", regions[,1], ",", regions[,2], "]")
 pheatmap(t(assay(MBPqDF)),
