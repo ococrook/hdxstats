@@ -423,7 +423,7 @@ plotEpitopeMapResidue <- function(AAString,
     rownames(averageMap) <- paste0(seq.int(1:nrow(averageMap)))
     
     sc <- scale_fill_manual(name, 
-                            values = c("white", viridis(n = nlevels(factor(averageMap))), alpha = 0.7),
+                            values = c("white", viridis(n = nlevels(factor(averageMap)), alpha = 0.7)),
                             labels = substring(levels(factor(averageMap)), 1, 4),
                             breaks = levels(factor(averageMap)), drop = FALSE)
     

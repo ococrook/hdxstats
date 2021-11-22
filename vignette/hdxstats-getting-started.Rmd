@@ -643,4 +643,15 @@ out3 <- plotAverageMaps(avMap, by = 20)
 out3[[1]]/out3[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
 
+# Exporting results
+
+We suggest saving files in `.rds` format. However, if you wish to export data
+to `.csv` format this can be done as in the following exampe.
+
+```{r, eval=FALSE }
+# not run
+write.csv(funresdAb25_1@results, file = "myhdxresuts.csv")
+
+```
+
 
