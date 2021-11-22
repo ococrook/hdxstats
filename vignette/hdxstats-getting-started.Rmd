@@ -172,6 +172,54 @@ pheatmap(t(assay(MBPqDF)),
          labels_col = xannot)
 
 ```
+It maybe useful to normalize HDX-MS data for either interpretation or 
+visualization purposes. We can normalize by the number of exchangeable amides
+or by using back-exchange correction values. We first use percentage
+incorporation as normalisation and visualise as a heatmap.
+
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+MBPqDF_norm1 <- normalisehdx(MBPqDF,
+                             sequence = unique(MBP$pep_sequence),
+                             method = "pc")
+
+
+pheatmap(t(assay(MBPqDF_norm1)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "Stuctural variant deuterium incoperation heatmap normalised", 
+         fontsize = 14,
+         legend_breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
+         legend_labels = c("0", "0.2", "0.4", "0.6", "0.8","1", "Incorporation"),
+         labels_col = xannot)
+
+```
+Now, we demonstrate a back-exchange correction calculation. The 
+back-exchange value are fictious by the code chunk below demonstrates how
+to set this up.
+
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+# made-up correction factor
+correction <- (exchangeableAmides(unique(MBP$pep_sequence)) + 1) * 0.9
+
+MBPqDF_norm2 <- normalisehdx(MBPqDF,
+                             sequence = unique(MBP$pep_sequence),
+                             method = "bc", 
+                             correction = correction)
+
+
+pheatmap(t(assay(MBPqDF_norm2)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "Stuctural variant deuterium incoperation heatmap normalised", 
+         fontsize = 14,
+         legend_breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
+         legend_labels = c("0", "0.2", "0.4", "0.6", "0.8","1", "Incorporation"),
+         labels_col = xannot)
+
+```
+
 
 # Functional data analysis of HDX-MS data
 
