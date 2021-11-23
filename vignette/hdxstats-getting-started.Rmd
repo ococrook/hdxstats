@@ -642,6 +642,47 @@ avMap <- list(avMap27_2 = avMap27_2,
 out3 <- plotAverageMaps(avMap, by = 20)
 out3[[1]]/out3[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
+# Protection/deprotection maps
+
+Users may also wish to colour according to protection or deprotections of hdx.
+The following functions determine whether there is protection or not by
+computing deuterium difference. The users pass the argument for which
+to compute the differences. The user pass can any scores though it is useful
+to look at the FDR provided by previous analysis. As is typical blue
+indicates protection whilst red deprotection. The binding epitope is very
+clear from these diagrams.
+
+```{r, fig.width= 22, fig.height = 15}
+scores <- funresdAb27_2@results$ebayes.fdr
+hdxdiff1 <- hdxdifference(object = newqDF2,
+              AAString = HOIPfasta[[1]],
+              peptideSeqs = unique(HOIP$Sequence),
+              numlines = 2,
+              maxmismatch = 1,
+              by = 10,
+              scores = scores[unique(HOIP$Sequence)],
+              cols = c(2,5), # columns of object to use for differences
+              name = "-log10 p value (signed)")
+
+scores <- funresdAb25_1@results$ebayes.fdr
+hdxdiff2 <- hdxdifference(object = newqDF,
+              AAString = HOIPfasta[[1]],
+              peptideSeqs = unique(HOIP$Sequence),
+              numlines = 2,
+              maxmismatch = 1,
+              by = 10,
+              scores = scores[unique(HOIP$Sequence)],
+              cols = c(2,5),
+              name = "-log10 p value (signed)")
+
+
+dMap <- list(hdxdiff1$diffMap, hdxdiff2$diffMap)
+out4 <- hdxheatmap(averageMaps = avMap, diffMaps = dMap)
+out4[[1]]/out4[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+
+```
+
+
 
 # Exporting results
 

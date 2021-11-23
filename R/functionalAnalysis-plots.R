@@ -653,3 +653,190 @@ forestPlot <- function(params, condition = c(1,2)) {
     
     print(gg)
 }
+##' Underlying computation for compute residue level differences plots. Uses
+##' average differences at each residue. 
+##' @param object An object of class `QFeatures` contains the hdx data.
+##' @param AAString An object of class `AAString` for the protein of interest
+##' @param peptideSeqs A character vector of peptide sequences
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 5.
+##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
+##'  indicated the number of mismatched amino acids. Default is 0.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @param scores A numeric vector indicating score to be used for plotting. Most 
+##'  likely adjusted p-values.
+##' @param cols Columns for which to compute the difference. The difference is
+##' relative to the first entry.
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param threshold The threshold used to determine significance. Default is
+##' `-log10(0.05)`. Note the log scale.
+##' @md
+##' 
+##' @rdname functional-plots
+hdxdifference <- function(object, 
+                          AAString, 
+                          peptideSeqs,
+                          numlines = 5,
+                          maxmismatch = 0,
+                          by = 5,
+                          cols = c(1,4),
+                          scores = NULL,
+                          name = "-log10 p value"){
+    
+    # Test
+    stopifnot("AAString must be an object of class AAString"= class(AAString) == "AAString")
+    #stopifnot("peptideSeqs must be a character vector"= is.character(peptideSeqs) == "TRUE")
+    stopifnot("cols must be length 2"=length(cols) == 2)
+    
+    # Storage and global variables
+    plot.list <- list()
+    coverage <- matrix(0, ncol = length(AAString), nrow = 1)
+    n <- ceiling(length(coverage)/numlines)
+    colnames(coverage) <- strsplit(as.character(AAString), "")[[1]]
+    
+    # Compute AA stringset and match to dictionary
+    peptideset <- AAStringSet(x = peptideSeqs)
+    allPatterns <- matchPDict(pdict = peptideset,
+                              subject = AAString,
+                              max.mismatch = maxmismatch)  
+    
+    # Compute coverage numbers
+    for (i in seq_along(allPatterns)) {
+        
+        begin <- allPatterns[[i]]@start[1]
+        end <- allPatterns[[i]]@start[1] - 1 + allPatterns[[i]]@width[1]
+        coverage[, seq.int(begin, end)] <- coverage[, seq.int(begin, end)] + 1
+    }
+    
+    ncov <- max(coverage)
+    
+    start <- sapply(allPatterns, function(x) x@start) - 1
+    end <- start + sapply(allPatterns, function(x) x@width)
+    
+    
+    peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
+    colnames(peptideMap) <- strsplit(as.character(AAString), "")[[1]]
+    rownames(peptideMap) <- seq.int(1:nrow(peptideMap))
+    
+    ## compute differences
+    diff <- assay(qDF)[, cols[2]] - assay(qDF)[, cols[1]]
+    
+    for (i in seq_along(start)){
+            
+            if (i == 1) {
+                peptideMap[1, start[i]:end[i]] <- diff[i]
+            } else {
+                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
+                peptideMap[j, start[i]:end[i]] <- diff[i]
+            }
+    }
+    
+    if (is.null(scores) == TRUE){
+        for (i in seq_along(start)){
+            
+            if (i == 1) {
+                peptideMap[1, start[i]:end[i]] <- 1
+            } else {
+                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
+                peptideMap[j, start[i]:end[i]] <- 1
+            }
+        }
+    } else {
+        for (i in seq_along(start)){
+            
+            if (i == 1) {
+                peptideMap[1, start[i]:end[i]] <- scores[i]
+            } else {
+                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
+                peptideMap[j, start[i]:end[i]] <- scores[i]
+            }
+        }
+    }
+    peptideMap[peptideMap == 0] <- NA
+    averageMap <- apply(peptideMap, 2, function(x) 1/mean(1/x, na.rm = TRUE))
+    averageMap[is.nan(averageMap)] <- 1
+    averageMap <- -log10(averageMap)
+    averageMap <- t(as.matrix(averageMap))
+    rownames(averageMap) <- paste0(seq.int(1:nrow(averageMap)))
+    
+    
+    
+    peptideMap[peptideMap == 0] <- NA
+    diffMap <- apply(peptideMap, 2, function(x) mean(x, na.rm = TRUE))
+    diffMap[is.nan(diffMap)] <- 0
+    diffMap <- t(as.matrix(diffMap))
+    rownames(diffMap) <- paste0(seq.int(1:nrow(diffMap)))
+    
+    
+    return(list(averageMap = averageMap, diffMap = diffMap))
+}    
+##' Plotting for comparing difference maps. This function will simultaneous plot
+##'  several difference barcodes on top of each other so the comparison is easier
+##' @param averageMaps A list of average maps generated by the `computeAverageMaps`
+##'  function
+##' @param diffMaps A list of difference maps generated by the `hdxdifference`
+##' function 
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values (singed)". Indicated the significance and direction
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 2.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @md
+##' 
+##' @rdname functional-plots
+hdxheatmap <- function(averageMaps,
+                       diffMaps,
+                       name = "-log10 p value (signed)",
+                       numlines = 2,
+                       by = 5){
+
+    stopifnot(class(averageMaps) == "list")
+    stopifnot(class(diffMaps) == "list")
+    plot.list <- list()
+    
+    map <- do.call(rbind, averageMaps)
+    diff <- do.call(rbind, diffMaps)
+    coverage <- ncol(map)
+    n <- ceiling(coverage/numlines)
+    
+    map <- map * sign(diff)
+    
+    values <-  c(colorRampPalette(RColorBrewer::brewer.pal(n = 11, name = "RdBu")[c(11, 7)], alpha = 0.9)(sum(unique(c(map)) < 0)),
+                 "white",
+                 colorRampPalette(RColorBrewer::brewer.pal(n = 11, name = "RdBu")[c(6, 1)], alpha = 0.9)(sum(unique(c(map)) > 0)))
+                 
+    names(values) <- factor(sort(unique(c(map))))
+    
+    sc <- scale_fill_manual(name, 
+                            values = values,
+                            drop = FALSE,
+                            labels = round(sort(unique(c(map))),3),
+                            breaks = levels(factor(map)))
+    
+    for (i in 1:ceiling(coverage/n)) {
+        
+        
+        if (i < ceiling(coverage/n)){    
+            mygrid <- expand.grid(X = factor(1:n), Y = rownames(map[, n * (i - 1) + 1:n, drop = FALSE]))
+            mygrid$Z <- factor(c(t(map[, n * (i - 1) + 1:n])), levels = levels(factor(map)))
+            
+            plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc +
+                theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(map[, n * (i - 1) + 1:n, drop = FALSE])) +
+                theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
+                ylab("dAb") + xlab("AA sequence")
+        } else {
+            mygrid$Z <- factor(c(t(map[, (n * (i-1)):ncol(map)])), levels = levels(factor(map)))
+            
+            plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc + 
+                theme_classic() + theme(legend.position = "none") + 
+                scale_x_discrete(breaks = 1:(ncol(map)%%n + 1), labels = colnames(map[, (n * (i-1)):ncol(map), drop = FALSE])) +
+                scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
+                ylab("dAb") + xlab("AA sequence")
+            
+        }
+    }
+    
+    return(plot.list)
+}
+
