@@ -642,6 +642,7 @@ avMap <- list(avMap27_2 = avMap27_2,
 out3 <- plotAverageMaps(avMap, by = 20)
 out3[[1]]/out3[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
+
 # Protection/deprotection maps
 
 Users may also wish to colour according to protection or deprotections of hdx.
