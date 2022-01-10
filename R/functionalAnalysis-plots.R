@@ -1,3 +1,62 @@
+##' A manhatten plot for a multi-level testing prodcedure based on the 
+##' haromic mean p-value
+##' @title hmpWindow
+##' @param sequences A character vector containing the measured peptide sequences
+##' @param region The start and end of the sequences provided.
+##' @param nrow The number of rows to plot the manhatten plot over. Useful for larger
+##' proteins
+##' @return use for side effect which returns manhatten plot 
+##' @md 
+##'
+##' @rdname functional-plots
+hmpWindow <- function(params,
+                      sequences,
+                      region,
+                      interval = 20){
+    
+    stopifnot("params must be a class of HdxStatRes"=is(params, "HdxStatRes"))
+    
+    butterfly <- matrix(0, ncol = length(unique(sequences)), nrow = 1)
+    colnames(butterfly) <- unique(sequences)
+    butterfly <- params@results$ebayes.pvals[unique(sequences)]
+    butterflydf <- as.data.frame(butterfly)
+    butterflydf$Sequence <- rownames(butterflydf)
+    colnames(butterflydf)[1] <- "p_value"
+    butterfly_long <- butterflydf
+    butterfly_long$position <- rep(seq.int(nrow(butterfly_long)/1), each = 1)
+    butterfly_long$region <- unique(region[, c("Start", "End")])
+    
+    # compute harmonic mean p-value
+    phmp <- vector(mode = "numeric", nrow(butterfly_long) - interval)
+    region <- matrix(NA, nrow = nrow(butterfly_long) - interval, ncol = 2)
+    for (i in seq.int(nrow(butterfly_long) - interval)){
+        phmp[i] <- p.hmp(butterfly_long[seq.int(i, i + interval), "p_value"], L = nrow(butterfly_long))
+        region[i, ] <- c(min(butterfly_long[seq.int(i, i + interval), "region"]), 
+                         max(butterfly_long[seq.int(i, i + interval), "region"]))
+    }
+    
+    
+    plot.list <- list()
+    r <- nrow
+    xannot <- paste0("[", region[,1], ",", region[,2], "]")
+    df <- data.frame(p_value = phmp, region = xannot)
+    df$position <- seq.int(nrow(df))
+    for (i in seq.int(r)) {
+        
+        plot.list[[i]] <- ggplot(df, aes(x = position,
+                                         y = -log10(p_value/((interval + 1)/nrow(butterfly_long))),
+                                         group = -log10(p_value))) + 
+            geom_point(size = 3, color = brewer.pal(n = 3, name = "Set2")[2]) + 
+            theme_classic() + ylim(c(0, max(-log10(df$p_value)))) + 
+            ylab("-log10 harmonic adjusted p-value") + xlab("region") + xlim(c(1, nrow(df))) + 
+            scale_x_continuous(breaks = 1:nrow(df), labels = xannot) + 
+            ggtitle("Manhatten hmp plot") + geom_hline(yintercept = 1.301, linetype = "dashed", colour = "red") + 
+            theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), text = element_text(size = 15))
+    }
+    
+    return(plot.list = plot.list)
+    
+}
 ##' A manhatten plot for epitope mapping
 ##' @title manhatten plot
 ##' @param params An object of class `HdxStatRes`
