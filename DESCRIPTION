@@ -28,7 +28,8 @@ Imports: Rcpp (>= 1.0.4.6),
     minpack.lm,
     broom,
     limma,
-    lmerTest
+    lmerTest,
+    harmonicmeanp
 Suggests: pheatmap,
     viridis,
     scales
