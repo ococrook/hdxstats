@@ -682,6 +682,7 @@ out4 <- hdxheatmap(averageMaps = avMap, diffMaps = dMap)
 out4[[1]]/out4[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
 
 ```
+
 # Multi-level testing
 
 Advanced users and those struggling to find any significant results may wish to 
@@ -693,12 +694,12 @@ the strong-sense family wise error rate (ssFWER). The FWER is the probability
 of of making at least one type 1 error (false discovery) and is hence a more
 stringent notion than FDR. We control this quantity in the strong sense,
 which means we do not require the global null hypothesis to be true. Typically,
-we wish control this quantity at some level $\alpha = 0.05$, which means
+we wish to control this quantity at some level $\alpha = 0.05$, which means
 the probability of there being at least one false discovery is less than $0.05$.
 Our strategy combines $p$-values in the spatial axis using the harmonic mean
 p-value approach. The cost for this is that the regions which we cover become 
 wider, potentially impacting interpretation. Furthermore, becuase of combining
-p-values it no-longer makes sense to examine protection/deprotection factors. 
+p-values it no longer makes sense to examine protection/deprotection factors. 
 However, it is valid to then examine only the region with significant results
 without affecting multiplicity. In the following code chunk, we combined
 p-values spatially and control for multiplicity using an interval of size 20.
@@ -706,7 +707,7 @@ This means a sliding window of $20$ peptide is used to combine p-values. The
 region that this covers is plotted in the x-axis. For example, from the plot
 below we can deduce that there is at least 1 peptide in region [49,120] where
 there is a significant difference, where the probability that this is a false
-discovery is $0.05$
+discovery is $0.05$.
 
 ```{r, fig.width= 22, fig.height = 6}
 hmpplot <- hmpWindow(params = funresdAb25_1,
