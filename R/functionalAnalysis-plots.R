@@ -57,10 +57,11 @@ hmpWindow <- function(params,
     return(plot.list = plot.list)
     
 }
-##' A manhatten plot for epitope mapping
-##' @title manhatten plot
+##' A manhattan plot for epitope mapping
+##' @title manhattan plot
 ##' @param params An object of class `HdxStatRes`
-##' @param sequences A character vector containing the measured peptide sequences
+##' @param sequences A character vector containing the measured peptides sequences,
+##' if there are different charge states the vector must identify the charge state.
 ##' @param difference A numeric vector with deuterium differences for each peptide
 ##' @param region The start and end of the sequences provided.
 ##' @param nrow The number of rows to plot the manhatten plot over. Useful for larger
@@ -69,8 +70,9 @@ hmpWindow <- function(params,
 ##' @md 
 ##'
 ##' @rdname functional-plots
-manhattenplot <- function(params,
+manhattanplot <- function(params,
                           sequences,
+                          charge = NULL,
                           difference = 0,
                           region = NULL, 
                           nrow = 1){
@@ -85,7 +87,8 @@ manhattenplot <- function(params,
     colnames(butterflydf)[1] <- "p_value"
     butterfly_long <- butterflydf
     butterfly_long$position <- rep(seq.int(nrow(butterfly_long)/1), each = 1)
-    butterfly_long$region <- unique(region[, c("Start", "End")])
+    
+    butterfly_long$region <-  region[which(unique(sequences) %in% sequences), c("Start", "End")]
     
     plot.list <- list()
     r <- nrow
