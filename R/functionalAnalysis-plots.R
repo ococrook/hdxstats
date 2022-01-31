@@ -1,11 +1,11 @@
 ##' A manhatten plot for a multi-level testing prodcedure based on the 
-##' haromic mean p-value
-##' @title hmpWindow
+##' haromonic mean p-value
+##' @title hmpWindow (Currently in development and not used)
+##' @param params An object of class HdxStatRes
 ##' @param sequences A character vector containing the measured peptide sequences
 ##' @param region The start and end of the sequences provided.
-##' @param nrow The number of rows to plot the manhatten plot over. Useful for larger
-##' proteins
-##' @return use for side effect which returns manhatten plot 
+##' @param interval interval size to average over.
+##' @return use for side effect which returns manhattan plot 
 ##' @md 
 ##'
 ##' @rdname functional-plots
@@ -63,7 +63,8 @@ hmpWindow <- function(params,
 ##' @param sequences A character vector containing the measured peptides sequences,
 ##' if there are different charge states the vector must identify the charge state.
 ##' @param difference A numeric vector with deuterium differences for each peptide
-##' @param region The start and end of the sequences provided.
+##' @param region The start and end of the sequences provided. Columns must be 
+##' called "Start" and "End".
 ##' @param nrow The number of rows to plot the manhatten plot over. Useful for larger
 ##' proteins
 ##' @return use for side effect which returns manhatten plot 
@@ -72,23 +73,38 @@ hmpWindow <- function(params,
 ##' @rdname functional-plots
 manhattanplot <- function(params,
                           sequences,
-                          charge = NULL,
                           difference = 0,
                           region = NULL, 
                           nrow = 1){
+    
+    stopifnot("Column names of region incorrect"=all(c("Start", "End") %in% colnames(region)))
+    
+    if(nrow(params@results) != length(unique(sequences))){
+       warning("Sequences provided don't match the results from the statistical
+             analysis. Double check sequences and subset if necessary.
+             Results may not be coherent. Automatic subsetting has been applied.")
+        # order important do not switch
+        region <- region[which(sequences %in% rownames(params@results)), c("Start", "End")]
+        sequences <- sequences[sequences %in% rownames(params@results)]
+
+    }
+    
+    
     
     butterfly <- matrix(0, ncol = length(unique(sequences)), nrow = 1)
     colnames(butterfly) <- unique(sequences)
     butterfly <- params@results$ebayes.fdr[unique(sequences)]
     butterflydf <- as.data.frame(butterfly)
     butterflydf$Sequence <- rownames(butterflydf)
-    butterflydf$protection <- 1*(difference > 0)
+    butterflydf$protection <- 1*(difference[butterflydf$Sequence] > 0)
     butterflydf$protection[is.na(butterflydf$protection)] <- 0
     colnames(butterflydf)[1] <- "p_value"
     butterfly_long <- butterflydf
     butterfly_long$position <- rep(seq.int(nrow(butterfly_long)/1), each = 1)
     
-    butterfly_long$region <-  region[which(unique(sequences) %in% sequences), c("Start", "End")]
+    butterfly_long$region <-  unique(region[sequences %in% unique(sequences), c("Start", "End")])
+    
+    
     
     plot.list <- list()
     r <- nrow

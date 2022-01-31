@@ -59,7 +59,7 @@ normalisehdx <- function(object,
     # parse as qFeatures object
     x <- DataFrame(x)
     x$rownames <- rownames(object)[[1]]
-    qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fname = "rownames")
+    qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
     
     return(qFeat)
 }

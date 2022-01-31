@@ -537,7 +537,7 @@ res_all@statmodels[[70]]@vis  +
 res_all@statmodels[[52]]@vis  + 
 res_all@statmodels[[53]]@vis ) + plot_layout(guides = 'collect')
 ```
-We can make a Manhatten plot to better specially visualise what's happening.
+We can make a Manhattan plot to better specially visualise what's happening.
 
 ```{r, fig.width= 22, fig.height = 15}
 #We need to provide an indication of "difference" so we can examine deprotected
@@ -545,7 +545,7 @@ We can make a Manhatten plot to better specially visualise what's happening.
 diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
 
 
-sigplots <- manhattenplot(params = funresdAb25_1,
+sigplots <- manhattanplot(params = funresdAb25_1,
                           sequences = HOIP$Sequence, 
                           region = HOIP[, c("Start", "End")],
                           difference = diffdata,

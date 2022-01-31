@@ -32,7 +32,10 @@ Imports: Rcpp (>= 1.0.4.6),
     harmonicmeanp
 Suggests: pheatmap,
     viridis,
-    scales
+    scales,
+    patchwork,
+    tidyr,
+    Biostrings
 VignetteBuilder: knitr
 LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown=TRUE)
