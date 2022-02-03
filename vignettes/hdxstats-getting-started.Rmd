@@ -36,7 +36,7 @@ library("Biostrings")
 
 # A well-defined HDX-MS experiment
 
-This vignette describeds how to analyse time-resolved differential HDX-MS
+This vignette describes how to analyse time-resolved differential HDX-MS
 experiments. The key elements are at least two conditions i.e. apo + antibody,
 apo + small molecule or protein closed + protien open, etc. The experiment can
 be replicated, though if there are sufficient time points analysed (>=3) then
