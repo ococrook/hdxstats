@@ -398,6 +398,7 @@ processFunctional <- function(object,
     # get rownames
     #rw <- rownames(object)[[1]][which(!sapply(res, function(x) class(x)) == "try-error")]
     rw <- sapply(params@statmodels, function(xx) xx@vis$data$rowname[1])
+    rw <- rw[which(!sapply(res, function(x) class(x)) == "try-error")]
     
     # remove data with error
     res_filtered <- res[which(!sapply(res, function(x) class(x)) == "try-error")]
