@@ -9,7 +9,7 @@
 ##' @param sequence The name of the column where the peptide sequence is stored.
 ##' Default is "pep_sequence"
 ##' @param charge The name of the column where the peptide charge is stored.
-##' Default is "pep_chrage"
+##' Default is "pep_charge"
 ##' @param  design The design which will become the column names
 ##' @return An instance of class `QFeatures` storing the quantitative mass-spectrometry
 ##' data

@@ -396,8 +396,9 @@ processFunctional <- function(object,
                   function(z) try(computeRSS(object = params@statmodels[[z]])))
     
     # get rownames
-    rw <- rownames(object)[[1]][which(!sapply(res, function(x) class(x)) == "try-error")]
-
+    #rw <- rownames(object)[[1]][which(!sapply(res, function(x) class(x)) == "try-error")]
+    rw <- sapply(params@statmodels, function(xx) xx@vis$data$rowname[1])
+    
     # remove data with error
     res_filtered <- res[which(!sapply(res, function(x) class(x)) == "try-error")]
     
