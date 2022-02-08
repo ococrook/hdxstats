@@ -66,24 +66,23 @@ differentialUptakeKinetics <- function(object,
                 start$d <- min(data$value)
             }
             
-            attempts <- 0
-            repeatLoop <- TRUE
-            while(repeatLoop & attempts < maxAttempts){
-                
-            start$b <- 10^(attempts - maxAttempts)
-            print(start$b)
-            nonlin_mod <- try(nlsLM(data = data, 
-                                  formula = formula, 
-                                  start = start,
-                                  control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
-                                  trace = FALSE, 
-                                  lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))
+            nonlin_mod <- vector(mode = "list", length = maxAttempts)
+            for(j in seq_len(maxAttempts)){
             
-            attempts <- attempts + 1
-                if(!(inherits(nonlin_mod, "try-error"))){
-                    repeatLoop <- FALSE
+                if (is.null(start$b)){
+                    start$b <- 10^(j - maxAttempts)
                 }
+
+                nonlin_mod[[j]] <- try(nlsLM(data = data, 
+                                      formula = formula, 
+                                      start = start,
+                                      control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
+                                      trace = FALSE, 
+                                      lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))
+            
             }
+            
+            nonlin_mod <- nonlin_mod[[which.min(sapply(nonlin_mod, deviance))]]
             
             if(inherits(nonlin_mod, "try-error")){
                 print("model fit failed, likely exessive missing values")
