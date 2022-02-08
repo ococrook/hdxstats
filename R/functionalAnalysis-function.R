@@ -79,10 +79,16 @@ differentialUptakeKinetics <- function(object,
                                       control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
                                       trace = FALSE, 
                                       lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))
-            
+                # reset b
+                start$b <- NULL
             }
-            
-            nonlin_mod <- nonlin_mod[[which.min(sapply(nonlin_mod, deviance))]]
+            # find best starting paramters for analysis
+            jj <- which.min(sapply(nonlin_mod, deviance))
+            if (is.null(start$b)){
+                start$b <- 10^{jj - maxAttempts} # best start
+            }
+            # take best null model
+            nonlin_mod <- nonlin_mod[[jj]]
             
             if(inherits(nonlin_mod, "try-error")){
                 print("model fit failed, likely exessive missing values")
