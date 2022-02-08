@@ -20,7 +20,8 @@ differentialUptakeKinetics <- function(object,
                                        design = NULL,
                                        formula = NULL,
                                        start = list(a = NULL, b = 0.001,  d = NULL, p = 1),
-                                       mycolours = brewer.pal(n = 8, name = "Set2")){
+                                       mycolours = brewer.pal(n = 8, name = "Set2"),
+                                       maxAttempts = 5){
     
     .out <- NULL
     
@@ -64,13 +65,30 @@ differentialUptakeKinetics <- function(object,
             if (is.null(start$d) & length(start) > 2){
                 start$d <- min(data$value)
             }
+            
+            nonlin_mod <- vector(mode = "list", length = maxAttempts)
+            for(j in seq_len(maxAttempts)){
+            
+                if (is.null(start$b)){
+                    start$b <- 10^(j - maxAttempts)
+                }
 
-            nonlin_mod <- try(nlsLM(data = data, 
-                                  formula = formula, 
-                                  start = start,
-                                  control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
-                                  trace = FALSE, 
-                                  lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))
+                nonlin_mod[[j]] <- try(nlsLM(data = data, 
+                                      formula = formula, 
+                                      start = start,
+                                      control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
+                                      trace = FALSE, 
+                                      lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))
+                # reset b
+                start$b <- NULL
+            }
+            # find best starting paramters for analysis
+            jj <- which.min(sapply(nonlin_mod, deviance))
+            if (is.null(start$b)){
+                start$b <- 10^{jj - maxAttempts} # best start
+            }
+            # take best null model
+            nonlin_mod <- nonlin_mod[[jj]]
             
             if(inherits(nonlin_mod, "try-error")){
                 print("model fit failed, likely exessive missing values")

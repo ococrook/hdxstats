@@ -116,13 +116,15 @@ setMethod("fitUptakeKinetics", "QFeatures",
                    feature = NULL,
                    design = NULL,
                    formula = NULL,
-                   start = list(a = NULL, b = 0.001,  d = NULL, p = 1)){
+                   start = list(a = NULL, b = 0.001,  d = NULL, p = 1),
+                   maxAttempts = 5){
               .res <- lapply(feature,
                              function(x) differentialUptakeKinetics(object = object,
                                                                     feature = x,
                                                                     start = start,
                                                                     formula = formula,
-                                                                    design = design))
+                                                                    design = design, 
+                                                                    maxAttempts = maxAttempts))
               .res <- .res[which(!sapply(.res, function(x) class(x)) == "try-error")]
               .res <- .res[which(sapply(.res, function(x) class(x) == "HdxStatModel"))]
               .res2 <- .hdxstatmodels(statmodels = .res)
