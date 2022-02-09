@@ -82,8 +82,14 @@ differentialUptakeKinetics <- function(object,
                 # reset b
                 start$b <- NULL
             }
-            # find best starting paramters for analysis
-            jj <- which.min(as.numeric(sapply(nonlin_mod, function(x) try(deviance(x)))))
+            
+            # find best starting parameters for analysis
+            jj <- which.min(as.numeric(sapply(nonlin_mod, function(x) try(deviance(x), silent = TRUE))))
+            # if all models fail.
+            if (jj == 0L){
+                jj <- maxAttempts
+            }
+            
             if (is.null(start$b)){
                 start$b <- 10^{jj - maxAttempts} # best start
             }
