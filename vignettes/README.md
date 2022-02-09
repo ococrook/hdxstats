@@ -1,6 +1,6 @@
 # Tutorials
 
-This folder contains a collection of useful Notebooks with tutorials on how to use the **LDDS** Lagrangian descriptors Python module for analyzing the phase space structure of dynamical systems.
+This folder contains a collection of useful tutorials on how to use the `hdxstats` R-package  for analysing and visualising HDX-MS experimental data.
 
 __[Tutorial 1](tutorial-1.Rmd)__ Basics
 
@@ -23,4 +23,4 @@ __[Tutorial 5](tutorial-5.Rmd)__ Multi-level testing
 * TOC
 __More to come...__
 
-We encourage contributions from users to develop Jupyter notebooks that extend the capabilities and features of the software package.
+We encourage users to contribute with applications of the software package and the development of capabilities that extend it. 
