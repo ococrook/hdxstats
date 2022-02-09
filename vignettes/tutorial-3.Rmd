@@ -1,0 +1,283 @@
+---
+title: "Analysing differential hydrogen deuterium exchange mass spectrometry data"
+author:
+- name: Oliver M. Crook
+package: hdxstats
+output:
+  BiocStyle::html_document:
+    toc_float: yes
+abstract: "This vignette describes how to analyse a mass-spectrometry based  hydrogen
+  deuterium exchange experiment, in particular we focus on empirical Bayes functional
+  models and visualisations. \n"
+vignette: |
+  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r env, message = FALSE, warning = FALSE, echo = FALSE}
+library("hdxstats")
+library("dplyr")
+library("ggplot2")
+library("RColorBrewer")
+library("tidyr")
+library("pheatmap")
+library("scales")
+library("viridis")
+library("patchwork")
+library("Biostrings")
+
+```
+
+
+# An epitope mapping experiment
+
+We now describe the analysis of an epitope mapping experiment. Here, the data
+analysis is more challenging, since only 1 replicate in each condition, apo and
+antibody, was performed. If we make some simplifying assumptions rigorous
+statistical analysis can still be performed.
+
+The experiment was performed on HOIP-RBR, we loaded the data below from inside
+the package
+```{r,}
+HOIPpath <- system.file("extdata", "N64184_1a2_state.csv", package = "hdxstats")
+HOIP <- read.csv(HOIPpath)
+```
+
+```{r,}
+unique(HOIP$State)
+```
+
+```{r,}
+HOIP$Exposure <- HOIP$Exposure * 60 #convert to seconds
+filter(HOIP, Sequence == unique(HOIP$Sequence[1])) %>%
+    ggplot(aes(x = Exposure,
+               y = Center,
+               color = factor(State, unique(HOIP$State)))) +
+    theme_classic() + geom_point(size = 3) + 
+    scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11)) + 
+    labs(color = "experiment", x = "Deuterium Exposure", y = "Deuterium incoperation")
+```
+
+As before we need to convert data to an object of classes `QFeatures`
+for ease of analysis.
+
+First, we put the data into a `DataFrame` object. Currently, its in long format
+so we switch to a wide format
+```{r,}
+HOIP_wide <- pivot_wider(data.frame(HOIP),
+                         values_from = Center,
+                         names_from = c("Exposure", "State"),
+                         id_cols = c("Sequence"))
+
+```
+
+Now remove all columns with only NAs
+```{r,}
+HOIP_wide <- HOIP_wide[, colSums(is.na(HOIP_wide)) != nrow(HOIP_wide)]
+```
+
+The colanmes are not very informative, provide in the format X(time)rep(repliate)cond(condition)
+```{r,}
+colnames(HOIP_wide)[-c(1)]
+
+new.colnames <- gsub("0_", "0rep1", paste0("X", colnames(HOIP_wide)[-c(1)]))
+new.colnames <- gsub("rep1", "rep1cond", new.colnames)
+
+# remove annoying % signs
+new.colnames <- gsub("%", "", new.colnames)
+
+# remove space (NULL could get confusing later and WT is clear)
+new.colnames <- gsub(" .*", "", new.colnames)
+
+```
+
+
+Now, we can provide rownames and convert the data to a `QFeatures` object:
+
+```{r,}
+
+qDF <- parseDeutData(object = DataFrame(HOIP_wide),
+                     design = new.colnames,
+                     quantcol = 2:34,
+                     rownames = HOIP_wide$Sequence)
+
+```
+
+As before, we can produce a heatmap, we perform a simple normalisation for
+ease of visualisation:
+
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+mat <- assay(qDF)
+mat <- apply(mat, 2, function(x) x - assay(qDF)[,1])
+
+pheatmap(t(mat),
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "HOIP RBR heatmap",
+         fontsize = 14,
+         legend_breaks = c(0, 2, 4, 6,8,10,12, max(assay(qDF))),
+         legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"))
+```
+
+Let us first perform a quick test:
+```{r,}
+res <- differentialUptakeKinetics(object = qDF[,1:33],
+                                  feature = rownames(qDF)[[1]][3],
+                                  start = list(a = NULL, b = 0.01,  d = NULL),
+                                  formula = value ~ a * (1 - exp(-b*(timepoint))) + d) 
+res@vis+ scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11)) 
+```
+
+Whilst this analysis performs good fits for the functions, there are too many
+degrees of freedom to perform sound statistical analysis. Hence, we normalize
+to remove the degree of freedom for the intercept. For simplicity and to preserve
+the original matrix, we reprocess the data. We then fit a simplified kinetic
+model, where only the plateau is inferred.
+
+```{r,}
+cn <- new.colnames[c(1:3,10:12)]
+HOIP_wide_nrm <- data.frame(HOIP_wide)
+HOIP_wide_nrm[, c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)] # normalise by intercept
+HOIP_wide_nrm[, c(11:13)] <- HOIP_wide_nrm[,c(11:13)] - HOIP_wide_nrm[,c(11)] # normalised by intercept
+
+newqDF <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
+                        design = cn,
+                        quantcol = c(2:4, 11:13), rownames = HOIP_wide$Sequence)
+
+res_all <- fitUptakeKinetics(object = newqDF[,1:6],
+                             feature = rownames(newqDF[,1:6])[[1]],
+                             start = list(a = NULL),
+                             formula = value ~ a * (1 - exp(-0.05*(timepoint))))
+  
+funresdAb25_1 <- processFunctional(object = newqDF[,1:6],
+                                   params = res_all)
+```
+
+We can have a look at the results:
+```{r,}
+funresdAb25_1@results
+which(funresdAb25_1@results$ebayes.fdr < 0.05)
+```
+We can plot these kinetics to see what is happening. This allows us to visualise
+region of protection and deprotection, potentially identifiying the epitope.
+```{r, fig.width= 22, fig.height = 15}
+(res_all@statmodels[[36]]@vis + 
+res_all@statmodels[[42]]@vis  + 
+res_all@statmodels[[43]]@vis  + 
+res_all@statmodels[[65]]@vis  + 
+res_all@statmodels[[68]]@vis  + 
+res_all@statmodels[[70]]@vis  + 
+res_all@statmodels[[52]]@vis  + 
+res_all@statmodels[[53]]@vis ) + plot_layout(guides = 'collect')
+```
+We can make a Manhattan plot to better specially visualise what's happening.
+
+```{r, fig.width= 22, fig.height = 15}
+#We need to provide an indication of "difference" so we can examine deprotected
+# or prected regions
+diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
+
+
+sigplots <- manhattanplot(params = funresdAb25_1,
+                          sequences = HOIP$Sequence, 
+                          region = HOIP[, c("Start", "End")],
+                          difference = diffdata,
+                          nrow = 1)
+sigplots[[1]] + plot_layout(guides = 'collect')
+```
+
+We can visualise this in a peptide plot which helps us understand the nature
+of the overlap
+
+```{r, fig.width= 22, fig.height = 15}
+fpath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+HOIPfasta <- readAAStringSet(filepath = fpath, "fasta")
+
+scores <- funresdAb25_1@results$ebayes.fdr
+
+out <- plotEpitopeMap(AAString = HOIPfasta[[1]],
+                      peptideSeqs = unique(HOIP$Sequence),
+                      numlines = 2,
+                      maxmismatch = 1,
+                      by = 1,
+                      scores = 1 * (-log10(scores[unique(HOIP$Sequence)])  > -log10(0.05)) + 0.0001,
+                      name = "significant")
+
+out[[1]]/(out[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
+
+```
+
+We can further visualise this a barcode of particular residues, here we use
+residue level averaging to obtain results at the residue level.
+
+```{r, fig.width= 22, fig.height = 15}
+
+scores <- funresdAb25_1@results$ebayes.fdr
+out2 <- plotEpitopeMapResidue(AAString = HOIPfasta[[1]],
+                              peptideSeqs = unique(HOIP$Sequence),
+                              numlines = 2,
+                              maxmismatch = 1,
+                              by = 5,
+                              scores = scores[unique(HOIP$Sequence)],
+                              name = "-log10 p value")
+
+out2[[1]]/out2[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+We can also plot multiple residue maps on the same plot so that we can compare
+different antibodies. 
+
+```{r, fig.width= 22, fig.height = 15}
+scores <- funresdAb25_1@results$ebayes.fdr
+avMap25_1 <- ComputeAverageMap(AAString = HOIPfasta[[1]],
+                               peptideSeqs = unique(HOIP$Sequence),
+                               numlines = 2, maxmismatch = 1,
+                               by = 10, scores = scores[unique(HOIP$Sequence)],
+                               name = "-log10 p value")
+
+## generate results from other dAB
+cn <- new.colnames[c(1:3,19:21)]
+HOIP_wide_nrm <- data.frame(HOIP_wide)
+HOIP_wide_nrm[,c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)]
+HOIP_wide_nrm[,c(20:22)] <- HOIP_wide_nrm[,c(20:22)] - HOIP_wide_nrm[,c(20)] 
+
+newqDF2 <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
+                        design = cn,
+                        quantcol = c(2:4,20:22),
+                        rownames = HOIP_wide$Sequence)
+
+res_all2 <- fitUptakeKinetics(object = newqDF2[,1:6],
+                             feature = rownames(newqDF2[,1:6])[[1]],
+                             start = list(a = NULL),
+                             formula = value ~ a * (1 - exp(-0.07*(timepoint))))
+  
+funresdAb27_2 <- processFunctional(object = newqDF[,1:6],
+                                   params = res_all2)
+
+scores <- funresdAb27_2@results$ebayes.fdr
+# compute average map
+avMap27_2  <- ComputeAverageMap(AAString = HOIPfasta[[1]],
+                                peptideSeqs = unique(HOIP$Sequence),
+                                numlines = 2,
+                                maxmismatch = 1,
+                                by = 10,
+                                scores = scores[unique(HOIP$Sequence)],
+                                name = "-log10 p value")
+
+# set rownames
+rownames(avMap25_1) <- "dAb25_1"
+rownames(avMap27_2) <- "dAb27_2"
+
+# store in a list
+avMap <- list(avMap27_2 = avMap27_2,
+              avMap25_1 = avMap25_1)
+
+#plotting
+out3 <- plotAverageMaps(avMap, by = 20)
+out3[[1]]/out3[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```

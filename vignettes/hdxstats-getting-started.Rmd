@@ -85,7 +85,7 @@ filter(MBP, pep_sequence == unique(MBP$pep_sequence[1]), pep_charge == 2) %>%
     labs(color = "experiment", x = "Deuterium Exposure", y = "Deuterium incoperation")
 ```
 We can see that the units of the time dimension are in seconds and that
-Deuterium incoperation has been normalized into Daltons.
+Deuterium incorporation has been normalized into Daltons.
 
 # Parsing to an object of class QFeatures
 
