@@ -96,6 +96,7 @@ setMethod("residuals", "HdxStatModel",
 ##' @return Returns a summary of the fitted models.
 ##' 
 ##' @rdname hdxstat-methods
+##' @export
 setMethod("summary", "HdxStatModel",
           function(object) {
               .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), summary)

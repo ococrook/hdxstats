@@ -36,7 +36,8 @@
   feature = NULL,
   design = NULL,
   formula = NULL,
-  start = list(a = NULL, b = 0.001, d = NULL, p = 1)
+  start = list(a = NULL, b = 0.001, d = NULL, p = 1),
+  maxAttempts = 5
 )
 }
 \arguments{

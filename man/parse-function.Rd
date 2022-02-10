@@ -34,7 +34,7 @@ the rownames are extract from the \code{sequence} and \code{charge} in the objec
 Default is "pep_sequence"}
 
 \item{charge}{The name of the column where the peptide charge is stored.
-Default is "pep_chrage"}
+Default is "pep_charge"}
 
 \item{design}{The design which will become the column names}
 }

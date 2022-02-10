@@ -231,7 +231,7 @@ the `HdxStatModel` class.
 ```{r,}
 res <- differentialUptakeKinetics(object = MBPqDF[,1:100], #provide a QFeature object
                                   feature = rownames(MBPqDF)[[1]][37], # which peptide to do we fit
-                                  start = list(a = NULL, b = 0.0001,  d = NULL, p = 1)) # what are the starting parameter guesses
+                                  start = list(a = NULL, b = NULL,  d = NULL, p = 1)) # what are the starting parameter guesses
 ```
 Here, we see the `HdxStatModel` class, and that a Functional Model was applied
 to the data and a total of 7 models were fitted.
