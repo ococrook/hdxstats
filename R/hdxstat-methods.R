@@ -52,8 +52,8 @@ setMethod("likRatio", "HdxStatModel",
 setMethod("wilk", "HdxStatModel",
           function(object){
             .lr <- likRatio(object)
-            palt <- sum(sapply(object@alternative@nlsmodels, function(x) summary(x)$df[1]))
-            pnull <- summary(object@alternative@nlsmodels[[1]])$df[1]
+            palt <- sum(sapply(object@alternative@nlsmodels, function(x) base::summary(x)$df[1]))
+            pnull <- base::summary(object@alternative@nlsmodels[[1]])$df[1]
             .pval <- pchisq(.lr, df = palt - pnull, lower.tail = FALSE)
             names(.pval) <- "p-value"
             .pval
