@@ -69,7 +69,7 @@ differentialUptakeKinetics <- function(object,
             nonlin_mod <- vector(mode = "list", length = maxAttempts)
             for(j in seq_len(maxAttempts)){
             
-                if (is.null(start$b)){
+                if (is.null(start$b) & maxAttempts > 1){
                     start$b <- 10^(j - maxAttempts)
                 }
 
@@ -78,13 +78,19 @@ differentialUptakeKinetics <- function(object,
                                       start = start,
                                       control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
                                       trace = FALSE, 
-                                      lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))
+                                      lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude), silent = TRUE)
                 # reset b
                 start$b <- NULL
             }
-            # find best starting paramters for analysis
-            jj <- which.min(sapply(nonlin_mod, deviance))
-            if (is.null(start$b)){
+            
+            # find best starting parameters for analysis
+            jj <- which.min(as.numeric(sapply(nonlin_mod, function(x) try(deviance(x), silent = TRUE))))
+            # if all models fail.
+            if (length(jj) == 0){
+                jj <- maxAttempts
+            }
+            
+            if (is.null(start$b) & maxAttempts > 1){
                 start$b <- 10^{jj - maxAttempts} # best start
             }
             # take best null model

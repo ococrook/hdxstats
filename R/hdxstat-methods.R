@@ -7,8 +7,8 @@
 ##' @rdname hdxstat-methods
 setMethod("vcov", "HdxStatModel", 
           function(object){
-            .nullvcov <- vcov(object@nullmodel)
-            .altvcov <- lapply(object@alternative@nlsmodels, vcov)
+            .nullvcov <- stats::vcov(object@nullmodel)
+            .altvcov <- lapply(object@alternative@nlsmodels, stats::vcov)
             .out <- list(nullvcov = .nullvcov, altvcov = .altvcov)
             .out
             })
@@ -52,8 +52,8 @@ setMethod("likRatio", "HdxStatModel",
 setMethod("wilk", "HdxStatModel",
           function(object){
             .lr <- likRatio(object)
-            palt <- sum(sapply(object@alternative@nlsmodels, function(x) summary(x)$df[1]))
-            pnull <- summary(object@alternative@nlsmodels[[1]])$df[1]
+            palt <- sum(sapply(object@alternative@nlsmodels, function(x) base::summary(x)$df[1]))
+            pnull <- base::summary(object@alternative@nlsmodels[[1]])$df[1]
             .pval <- pchisq(.lr, df = palt - pnull, lower.tail = FALSE)
             names(.pval) <- "p-value"
             .pval
@@ -87,7 +87,7 @@ setMethod("deviance", "HdxStatModel",
 ##' @rdname hdxstat-methods
 setMethod("residuals", "HdxStatModel",
           function(object) {
-              .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), residuals)
+              .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), stats::residuals)
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })
@@ -96,9 +96,10 @@ setMethod("residuals", "HdxStatModel",
 ##' @return Returns a summary of the fitted models.
 ##' 
 ##' @rdname hdxstat-methods
+##' @export
 setMethod("summary", "HdxStatModel",
           function(object) {
-              .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), summary)
+              .out <- lapply(c(list(object@nullmodel), object@alternative@nlsmodels), base::summary)
               names(.out) <- c("null", paste0("alt", seq.int(length(object))))
               .out
           })
