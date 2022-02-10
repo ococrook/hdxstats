@@ -514,7 +514,7 @@ newqDF <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
 res_all <- fitUptakeKinetics(object = newqDF[,1:6],
                              feature = rownames(newqDF[,1:6])[[1]],
                              start = list(a = NULL),
-                             formula = value ~ a * (1 - exp(-0.05*(timepoint))))
+                             formula = value ~ a * (1 - exp(-0.05*(timepoint))), maxAttempts = 1)
   
 funresdAb25_1 <- processFunctional(object = newqDF[,1:6],
                                    params = res_all)
@@ -615,7 +615,7 @@ newqDF2 <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
 res_all2 <- fitUptakeKinetics(object = newqDF2[,1:6],
                              feature = rownames(newqDF2[,1:6])[[1]],
                              start = list(a = NULL),
-                             formula = value ~ a * (1 - exp(-0.07*(timepoint))))
+                             formula = value ~ a * (1 - exp(-0.07*(timepoint))), maxAttempts = 1)
   
 funresdAb27_2 <- processFunctional(object = newqDF[,1:6],
                                    params = res_all2)
