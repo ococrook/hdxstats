@@ -7,8 +7,8 @@
 ##' @rdname hdxstat-methods
 setMethod("vcov", "HdxStatModel", 
           function(object){
-            .nullvcov <- vcov(object@nullmodel)
-            .altvcov <- lapply(object@alternative@nlsmodels, vcov)
+            .nullvcov <- stats::vcov(object@nullmodel)
+            .altvcov <- lapply(object@alternative@nlsmodels, stats::vcov)
             .out <- list(nullvcov = .nullvcov, altvcov = .altvcov)
             .out
             })
