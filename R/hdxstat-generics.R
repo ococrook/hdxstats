@@ -17,4 +17,5 @@ setGeneric("residuals", function(object, ...)
     standardGeneric("residuals"))
 setGeneric("summary", function(object, ...)
     standardGeneric("residuals"))    
-    
+setGeneric("vcov", function(object, ...)
+    standardGeneric("residuals"))        
