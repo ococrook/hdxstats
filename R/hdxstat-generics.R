@@ -13,3 +13,8 @@ setGeneric("fitUptakeKinetics", function(object, ...)
 ##'@rdname hidden_aliases
 setGeneric("logLik", function(object, ...)
     standardGeneric("logLik"))
+setGeneric("residuals", function(object, ...)
+    standardGeneric("residuals"))
+setGeneric("summary", function(object, ...)
+    standardGeneric("residuals"))    
+    
