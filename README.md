@@ -9,7 +9,7 @@ hdxstats: An R-package for statistical analysis of hydrogen deuterium exchange m
 
 - Start with HDX-MS data in a `QFeatures` object and perform statistical workflows and visualisation. 
 
-`hdxstats` require data to be stored in a particular format, we provide guidance based on the output of standard software but any .csv should be coercible. The `QFeatures` object ensure reproducibility and standardisation
+`hdxstats` require data to be stored in a particular format, we provide guidance based on the output of standard software but any .csv should be coercible. The `QFeatures` object ensures reproducibility and standardisation
 
 `hdxstats` uses rigourous statistical testing for determining the differences between hdx-ms on a peptide-per-peptide basis.
 
