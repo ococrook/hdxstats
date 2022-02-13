@@ -50,5 +50,5 @@ Contributions are welcome, if you wish to contribute to the package please open 
 
 # Funding
 
-This develop of this package was support by funding from GlaxoSmithKline, a Todd-Bird Junior Research Fellowship and the EPSRC (EP/R511742/1).
+This development of this package was support by funding from GlaxoSmithKline, a Todd-Bird Junior Research Fellowship and the EPSRC (EP/R511742/1).
 
