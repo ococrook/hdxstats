@@ -693,7 +693,7 @@ forestPlot <- function(params, condition = c(1,2)) {
     model2 <- params@alternative@nlsmodels[[2]]
     
     tmp <- summary(model1)$parameters
-    tmp2 <- summary(model1)$parameters
+    tmp2 <- summary(model2)$parameters
     
     df <- data.frame(tmp)
     df$rownames <- rownames(df)
