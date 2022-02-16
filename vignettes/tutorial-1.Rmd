@@ -1,8 +1,8 @@
 ---
 title: "basics"
 author:
- - Oliver M. Crook
- - Broncio Aguiar-Sanjuan
+- name: Oliver M. Crook
+- name: Broncio Aguiar-Sanjuan
 date: "09/02/2022"
 package: hdxstats
 output:
