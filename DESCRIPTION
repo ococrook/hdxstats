@@ -1,18 +1,18 @@
 Package: hdxstats
 Title: Statistical analysis of hydrogen deuterium exchange mass spectrometry
-Version: 1.0
-Author: c(person("Crook", "Oliver M.",
-		    email = "oliver.crook@stats.ox.ac.uk",
-		    comment = c(ORCID = "0000-0001-5669-8506"),
-		    role = c("aut", "cre")))
-Maintainer: Oliver Crook <oliver.crook@stats.ox.ac.uk>
+Version: 0.99.0
+Authors@R: c(person(family = "Crook", given = "Oliver M.",
+		                email = "oliver.crook@stats.ox.ac.uk",
+		                comment = c(ORCID = "0000-0001-5669-8506"),
+		                role = c("aut", "cre")))
 Description: The hdxstats package enables the analysis and visualisation
     of hydrogen deuterium exchange mass spectromery experiments. It supports
     all types of HDX-MS experiments but provides additional support for epitope
-    mapping experiments. 
+    mapping experiments. The package focuses and implements empirical Bayes
+    functional models for hydrogen deuterium exchange data.
 License: Artistic-2.0
 Encoding: UTF-8
-Depends: R (>= 4.0), S4Vectors, Biobase, QFeatures
+Depends: R (>= 4.1), S4Vectors, Biobase, QFeatures
 Imports: Rcpp (>= 1.0.4.6),
     ggplot2,
     dplyr,
@@ -29,7 +29,8 @@ Imports: Rcpp (>= 1.0.4.6),
     broom,
     limma,
     lmerTest,
-    harmonicmeanp
+    harmonicmeanp,
+    stats
 Suggests: pheatmap,
     viridis,
     scales,
