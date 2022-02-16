@@ -297,9 +297,15 @@ We can make a Manhattan plot to better spatially visualize what's happening.
 diffdata <- assay(secAqDF_norm1_sub)[,34] - assay(secAqDF_norm1_sub)[,17]
 secA <- read.csv(secApath)
 
+#carefully subset regions and sequences
+region = secA[, c("Start", "End")]
+region <- unique(region[paste0(secA$Sequence, "_", secA$z) %in% rownames(out@results),])
+sequences = rownames(out@results)
+
+
 sigplots <- manhattanplot(params = out,
-                          sequences = unique(paste0(secA$Sequence, "_", secA$z)), 
-                          region = secA[, c("Start", "End")],
+                          sequences = sequences, 
+                          region = region,
                           difference = diffdata,
                           nrow = 1)
 sigplots[[1]] + plot_layout(guides = 'collect')
