@@ -2,6 +2,7 @@
 title: "basics"
 author:
  - Oliver M. Crook
+ - Broncio Aguiar-Sanjuan
 date: "09/02/2022"
 package: hdxstats
 output:
@@ -69,6 +70,7 @@ MBP <- read.csv(MBPpath)
 head(MBP) # have a look
 length(unique(MBP$pep_sequence)) # peptide sequences
 ```
+
 
 Let us have a quick visualisation of some the data so that we can see some of
 the features
@@ -138,6 +140,12 @@ MBPqDF <- parseDeutData(object = DataFrame(MBP_wide),
                         quantcol = 3:102)
 
 ```
+
+We save this object for future use in the vignettes ahead
+```{r,}
+saveRDS(MBPqDF,file='data/MBPqDF.rsd')
+```
+
 
 # Heatmap visualisations of HDX data
 

@@ -78,6 +78,6 @@ to `.csv` format this can be done as in the following exampe.
 
 ```{r, eval=FALSE }
 # not run
-write.csv(funresdAb25_1@results, file = "myhdxresuts.csv")
+write.csv(funresdAb25_1@results, file = "data/myhdxresuts.csv")
 
 ```

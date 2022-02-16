@@ -2,6 +2,7 @@
 title: "Analysing differential hydrogen deuterium exchange mass spectrometry data"
 author:
 - name: Oliver M. Crook
+- name: Broncio Aguiar-Sanjuan
 package: hdxstats
 output:
   BiocStyle::html_document:
@@ -45,7 +46,15 @@ initilisation should also be provided. Sometimes the model can't be fit on the
 kinetics. This is either because there is not enough data or through lack of 
 convergence. An error will be reported in these cases but this should not 
 perturb the user. You may wish to try a few starting values if there 
-excessive models that fail fitting. 
+excessive models that fail fitting.
+
+We start by first loading the `QFeatures` object that we saved previously
+
+```{r,}
+MBPqDF <- readRDS(file='data/MBPqDF.rsd')
+```
+
+Then, we execute
 
 ```{r,}
 res <- fitUptakeKinetics(object = MBPqDF[,c(1:24)],
