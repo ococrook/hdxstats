@@ -61,29 +61,48 @@ and we expect to see reproducible but subtle differences. We first load the data
 from the package and it is .csv format.
 
 ```{r,}
-MBPpath <- system.file("extdata", "MBP.csv", package = "hdxstats")
+csv_filename <- "MBP.csv"
+csv_filepath <- system.file("extdata", csv_filename, package = "hdxstats")
 ```
 
 We can now read in the .csv file and have a quick look at the .csv.
 ```{r,}
-MBP <- read.csv(MBPpath)
-head(MBP) # have a look
-length(unique(MBP$pep_sequence)) # peptide sequences
+data <- read.csv(csv_filepath)
+head(data) # have a look
 ```
 
+```{r,}
+length(unique(data$pep_sequence)) # peptide sequences
+```
 
 Let us have a quick visualisation of some the data so that we can see some of
 the features
 
 ```{r,}
-filter(MBP, pep_sequence == unique(MBP$pep_sequence[1]), pep_charge == 2) %>%
-    ggplot(aes(x = hx_time, y = d, group = factor(replicate_cnt),
-               color = factor(hx_sample,
-                              unique(MBP$hx_sample)[c(7,5,1,2,3,4,6)]))) + 
-    theme_classic() + geom_point(size = 2) + 
-    scale_color_manual(values = brewer.pal(n = 7, name = "Set2")) + 
-    labs(color = "experiment", x = "Deuterium Exposure", y = "Deuterium incoperation")
+condition1 <- data$pep_sequence == unique(data$pep_sequence[1])
+condition2 <- data$pep_charge == 2
+data_filtered <- filter(data, condition1, condition2)
+
+selection <- c(7,5,1,2,3,4,6)
+colors <- factor(data_filtered$hx_sample, unique(data$hx_sample)[selection])
+colormap <- "Set2"
+point_size <- 2
+
+# make a pretty plot
+data_filtered %>%
+    ggplot(aes(x = hx_time, y = d, group = factor(replicate_cnt), color = colors)) + 
+    # further customise plot
+    theme_classic() +
+    geom_point(size = point_size) + 
+    scale_color_manual(values = brewer.pal(n = 7, name = colormap)) + 
+    labs(color = "experiment", 
+         x = "Deuterium Exposure", 
+         y = "Deuterium incoperation"
+         )
+
 ```
+
+
 We can see that the units of the time dimension are in seconds and that
 Deuterium incorporation has been normalized into Daltons.
 
@@ -100,7 +119,7 @@ as it is a powerful and scalable way to store quantitative mass-spectrometry dat
 Firstly, the data is storted in long format rather than wide format. We first 
 switch the data to wide format. 
 ```{r,}
-MBP_wide <- pivot_wider(data.frame(MBP),
+MBP_wide <- pivot_wider(data.frame(data),
                         values_from = d,
                         names_from = c("hx_time", "replicate_cnt", "hx_sample"),
                         id_cols = c("pep_sequence", "pep_charge"))
