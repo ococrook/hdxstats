@@ -130,37 +130,49 @@ data_wide <- pivot_wider(data.frame(data),
                         id_cols = columns_fixed
                         )
 
-# check appearance of transformed data
+# check how the data looks like now
 head(data_wide)
 ```
 
 
-We notice that there are many columns with `NA`s. The follow code chunk removes
+Next, we notice that there are many columns with `NA` values. The follow code chunk removes
 these columns.
+
 ```{r,}
-MBP_wide <- MBP_wide[, colSums(is.na(MBP_wide)) != nrow(MBP_wide)]
+data_wide <- data_wide[, colSums(is.na(data_wide)) != nrow(data_wide)]
+
+# check how the data looks like now
+head(data_wide)
 ```
 
-We also note that the colnames are not very informative. We are going to format
+We can see that the number of columns has changed from 198 to 102 only. 
+
+Now, we note that the column names are not very informative. We are going to format these
 in a very specific way so that later functions can automatically infer the design
-from the column names. We provide in the format X(time)rep(replicate)cond(condition)
+from the column names. We impose the following format `X(time) rep(replicate) cond(condition)`
+
 ```{r,}
-colnames(MBP_wide)[-c(1,2)]
+columns_to_remove <- c(1,2) # subtract names from first two columns
+old_columns_names <- colnames(data_wide)[-columns_to_remove]  
 
-new.colnames <- gsub("0_", "0rep", paste0("X", colnames(MBP_wide)[-c(1,2)]))
-new.colnames <- gsub("_", "cond", new.colnames)
-
+# add X and rep markers to new column names
+new_object.colnames <- paste0("X", old_columns_names)
+new_object.colnames <- gsub("0_", "0rep", new_object.colnames)
+new_object.colnames <- gsub("_", "cond", new_object.colnames)
 # remove annoying % signs
-new.colnames <- gsub("%", "", new.colnames)
-
+new_object.colnames <- gsub("%", "", new_object.colnames)
 # remove space (NULL could get confusing later and WT is clear)
-new.colnames <- gsub(" .*", "", new.colnames)
+new_object.colnames <- gsub(" .*", "", new_object.colnames)
 
-new.colnames
+# Compare old and new column names
+old_columns_names
+new_object.colnames
 ```
+
 We will now parse the data into an object of class `QFeatures`, we have provided
 a function to assist with this in the package. If you want to do this yourself
 use the `readQFeatures` function from the `QFeatures` package.
+
 ```{r,}
 MBPqDF <- parseDeutData(object = DataFrame(MBP_wide),
                         design = new.colnames,
