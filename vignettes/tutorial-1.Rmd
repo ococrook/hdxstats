@@ -174,17 +174,21 @@ a function to assist with this in the package. If you want to do this yourself
 use the `readQFeatures` function from the `QFeatures` package.
 
 ```{r,}
-MBPqDF <- parseDeutData(object = DataFrame(MBP_wide),
-                        design = new.colnames,
-                        quantcol = 3:102)
+# column range corresponding to numeric data
+initial_column <- 3
+last_column <- 102
+
+data_qDF <- parseDeutData(object = DataFrame(data_wide),
+                          design = new_object.colnames,
+                          quantcol = initial_column:last_column
+                          )
 
 ```
 
 We save this object for future use in the vignettes ahead
 ```{r,}
-saveRDS(MBPqDF,file='data/MBPqDF.rsd')
+saveRDS(data_qDF, file='data/MBPqDF.rsd')
 ```
-
 
 # Heatmap visualisations of HDX data
 
