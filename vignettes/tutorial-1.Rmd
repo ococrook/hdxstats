@@ -196,14 +196,20 @@ To help us get used to the `QFeatures` we show how to generate a heatmap
 of these data from this object:
 
 ```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
-pheatmap(t(assay(MBPqDF)),
+data_qDF_transposed <- t(assay(data_qDF))
+colors_discrete <- brewer.pal(n = 9, name = "BuPu") # colours from discrete colormap
+legend_labels <- c("0", "2", "4", "6", "8","10", "12", "Incorporation")
+title <- "Stuctural variant deuterium incoperation heatmap"
+
+pheatmap(data_qDF_transposed,
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
-         color = brewer.pal(n = 9, name = "BuPu"),
-         main = "Stuctural variant deuterium incoperation heatmap", 
+         color = colors_discrete,
+         main = title, 
          fontsize = 14,
-         legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(MBPqDF))),
-         legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"))
+         legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(data_qDF))),
+         legend_labels = legend_labels
+         )
 ```
 If you prefer to have the start-to-end residue numbers in the heatmap instead
 you can change the plot as follows:
