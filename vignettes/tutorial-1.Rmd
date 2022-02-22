@@ -104,21 +104,33 @@ data_filtered %>%
 
 
 We can see that the units of the time dimension are in seconds and that
-Deuterium incorporation has been normalized into Daltons.
+Deuterium incorporation has been normalized into Daltons (`Da`).
 
 # Parsing to an object of class QFeatures
 
 Working from a .csv is likely to cause issues downstream. Indeed, we run
-the risk of accidently changing the data or corrupting the file in some way.
-Secondly, all .csvs will be formatted slightly different and so making extensible
+the risk of accidentally changing the data or corrupting the file in some way.
+Secondly, all `.csv` file will be formatted slightly different and so making extensible
 tools for these files will be inefficient. Furthermore, working with a generic
 class used in other mass-spectrometry fields can speed up analysis and adoption
-of new methods. We will work the class `QFeatures` from the `QFeatures` class
+of new methods. We will work with the class `QFeatures` from the `QFeatures` class
 as it is a powerful and scalable way to store quantitative mass-spectrometry data.
 
-Firstly, the data is storted in long format rather than wide format. We first 
-switch the data to wide format. 
+Firstly, the data is stored in long format rather than wide format. We first 
+switch the data to wide format.
+
 ```{r,}
+MBP_wide <- pivot_wider(data.frame(data),
+                        values_from = d,
+                        names_from = c("hx_time", "replicate_cnt", "hx_sample"),
+                        id_cols = c("pep_sequence", "pep_charge"))
+head(MBP_wide)
+
+```
+
+
+```{r,}
+# Original 
 MBP_wide <- pivot_wider(data.frame(data),
                         values_from = d,
                         names_from = c("hx_time", "replicate_cnt", "hx_sample"),
