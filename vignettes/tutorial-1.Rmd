@@ -178,6 +178,7 @@ use the `readQFeatures` function from the `QFeatures` package.
 initial_column <- 3
 last_column <- 102
 
+# hdxstats method
 data_qDF <- parseDeutData(object = DataFrame(data_wide),
                           design = new_object.colnames,
                           quantcol = initial_column:last_column
@@ -192,14 +193,17 @@ saveRDS(data_qDF, file='data/MBPqDF.rsd')
 
 # Heatmap visualisations of HDX data
 
-To help us get used to the `QFeatures` we show how to generate a heatmap
+To help us get used to the `QFeatures` we show how to generate a `heatmap`
 of these data from this object:
 
 ```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
 data_qDF_transposed <- t(assay(data_qDF))
-colors_discrete <- brewer.pal(n = 9, name = "BuPu") # colours from discrete colormap
+
+# parameters to customise heatmap plot
+colors_discrete <- brewer.pal(n = 9, name = "BuPu") # colours from discrete colormap (BuPu)
 legend_labels <- c("0", "2", "4", "6", "8","10", "12", "Incorporation")
-title <- "Stuctural variant deuterium incoperation heatmap"
+legend_breaks <- c(0, 2, 4, 6, 8, 10, 12, max(assay(data_qDF)))
+title <- "Structural Variant Deuterium Incorporation"
 
 pheatmap(data_qDF_transposed,
          cluster_rows = FALSE, 
@@ -207,72 +211,110 @@ pheatmap(data_qDF_transposed,
          color = colors_discrete,
          main = title, 
          fontsize = 14,
-         legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(data_qDF))),
+         legend_breaks = legend_breaks,
          legend_labels = legend_labels
          )
 ```
-If you prefer to have the start-to-end residue numbers in the heatmap instead
-you can change the plot as follows:
+
+If you prefer to have the start-to-end residue numbers in the `heatmap` instead
+you can change the plot as follows
+
 ```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
-regions <- unique(MBP[,c("pep_start", "pep_end")])
-xannot <- paste0("[", regions[,1], ",", regions[,2], "]")
-pheatmap(t(assay(MBPqDF)),
+data_qDF_transposed <- t(assay(data_qDF))
+
+# parameters to customise heatmap plot
+colors_discrete <- brewer.pal(n = 9, name = "BuPu") # colours from discrete colormap (BuPu)
+legend_labels <- c("0", "2", "4", "6", "8","10", "12", "Incorporation")
+legend_breaks <- c(0, 2, 4, 6, 8, 10, 12, max(assay(data_qDF)))
+title <- "Structural Variant Deuterium Incorporation"
+
+# take start-to-end residue numbers
+regions <- unique(data[,c("pep_start", "pep_end")])
+column_labels_new <- paste0("[", regions[,1], ",", regions[,2], "]")
+
+pheatmap(data_qDF_transposed,
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
-         color = brewer.pal(n = 9, name = "BuPu"),
-         main = "Stuctural variant deuterium incoperation heatmap", 
+         color = colors_discrete,
+         main = title, 
          fontsize = 14,
-         legend_breaks = c(0, 2, 4, 6, 8, 10, 12, max(assay(MBPqDF))),
-         legend_labels = c("0", "2", "4", "6", "8","10", "12", "Incorporation"),
-         labels_col = xannot)
-
+         legend_breaks = legend_breaks,
+         legend_labels = legend_labels,
+         labels_col = column_labels_new
+         )
 ```
-It maybe useful to normalize HDX-MS data for either interpretation or 
-visualization purposes. We can normalize by the number of exchangeable amides
-or by using back-exchange correction values. We first use percentage
+
+It maybe useful to normalise HDX-MS data for either interpretation or 
+visualization purposes. We can normalize by the percentage (`pc`) of exchangeable amides 
+or by using back-exchange correction values (`bc`). We first use percentage
 incorporation as normalisation and visualise as a heatmap.
 
 ```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
-MBPqDF_norm1 <- normalisehdx(MBPqDF,
-                             sequence = unique(MBP$pep_sequence),
-                             method = "pc")
+# normalised data with hdxstats method
+data_qDF_normalised <- normalisehdx(data_qDF,
+                                    sequence = unique(data$pep_sequence),
+                                    method = "pc")
 
+data_qDF_transposed <- t(assay(data_qDF_normalised))
 
-pheatmap(t(assay(MBPqDF_norm1)),
+# parameters to customise heatmap plot
+colors_discrete <- brewer.pal(n = 9, name = "BuPu") # colours from discrete colormap (BuPu)
+legend_labels_new <- c("0", "0.2", "0.4", "0.6", "0.8","1", "Incorporation")
+legend_breaks_new <- c(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2)
+title_new <- "Structural Variant Deuterium Incorporation: Normalised by Percentage Incorporation"
+
+# take start-to-end residue numbers
+regions <- unique(data[,c("pep_start", "pep_end")])
+column_labels_new <- paste0("[", regions[,1], ",", regions[,2], "]")
+
+pheatmap(data_qDF_transposed,
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
-         color = brewer.pal(n = 9, name = "BuPu"),
-         main = "Stuctural variant deuterium incoperation heatmap normalised", 
+         color = colors_discrete,
+         main = title_new, 
          fontsize = 14,
-         legend_breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
-         legend_labels = c("0", "0.2", "0.4", "0.6", "0.8","1", "Incorporation"),
-         labels_col = xannot)
-
+         legend_breaks = legend_breaks_new,
+         legend_labels = legend_labels_new,
+         labels_col = column_labels_new
+         )
 ```
-Now, we demonstrate a back-exchange correction calculation. The 
-back-exchange value are fictious by the code chunk below demonstrates how
+
+Now, we demonstrate a back-exchange correction (`bc`) calculation. The 
+back-exchange value are fictitious by the code chunk below demonstrates how
 to set this up.
 
 ```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
-# made-up correction factor
-correction <- (exchangeableAmides(unique(MBP$pep_sequence)) + 1) * 0.9
+# made-up correction factor using hdxstats method: exchangeableAmides
+correction <- (exchangeableAmides(unique(data$pep_sequence)) + 1) * 0.9
 
-MBPqDF_norm2 <- normalisehdx(MBPqDF,
-                             sequence = unique(MBP$pep_sequence),
-                             method = "bc", 
-                             correction = correction)
+data_qDF_normalised <- normalisehdx(data_qDF,
+                                    sequence = unique(data$pep_sequence),
+                                    method = "bc", 
+                                    correction = correction
+                                    )
 
+data_qDF_normalised <- t(assay(data_qDF_normalised))
 
-pheatmap(t(assay(MBPqDF_norm2)),
+# parameters to customise heatmap plot
+colors_discrete <- brewer.pal(n = 9, name = "BuPu") # colours from discrete colormap (BuPu)
+legend_labels_new <- c("0", "0.2", "0.4", "0.6", "0.8","1", "Incorporation")
+legend_breaks_new <- c(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2)
+title_new <- "Structural Variant Deuterium Incorporation: Normalised by Back-exchange Correction"
+
+# take start-to-end residue numbers
+regions <- unique(data[,c("pep_start", "pep_end")])
+column_labels_new <- paste0("[", regions[,1], ",", regions[,2], "]")
+
+pheatmap(data_qDF_transposed,
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
-         color = brewer.pal(n = 9, name = "BuPu"),
-         main = "Stuctural variant deuterium incoperation heatmap normalised", 
+         color = colors_discrete,
+         main = title_new, 
          fontsize = 14,
-         legend_breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2),
-         legend_labels = c("0", "0.2", "0.4", "0.6", "0.8","1", "Incorporation"),
-         labels_col = xannot)
-
+         legend_breaks = legend_breaks_new,
+         legend_labels = legend_labels_new,
+         labels_col = column_labels_new
+         )
 ```
 
 
