@@ -120,24 +120,20 @@ Firstly, the data is stored in long format rather than wide format. We first
 switch the data to wide format.
 
 ```{r,}
-MBP_wide <- pivot_wider(data.frame(data),
-                        values_from = d,
-                        names_from = c("hx_time", "replicate_cnt", "hx_sample"),
-                        id_cols = c("pep_sequence", "pep_charge"))
-head(MBP_wide)
+columns_names <- c("hx_time", "replicate_cnt", "hx_sample") # to merge into new column names
+columns_fixed <- c("pep_sequence", "pep_charge")
 
+# transform data
+data_wide <- pivot_wider(data.frame(data),
+                        values_from = d,
+                        names_from = columns_names,
+                        id_cols = columns_fixed
+                        )
+
+# check appearance of transformed data
+head(data_wide)
 ```
 
-
-```{r,}
-# Original 
-MBP_wide <- pivot_wider(data.frame(data),
-                        values_from = d,
-                        names_from = c("hx_time", "replicate_cnt", "hx_sample"),
-                        id_cols = c("pep_sequence", "pep_charge"))
-head(MBP_wide)
-
-```
 
 We notice that there are many columns with `NA`s. The follow code chunk removes
 these columns.
