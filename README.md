@@ -28,6 +28,16 @@ devtools::install_github("ococrook/hdxstats")
 
 See vignettes for example analysis, including epitope mapping.
 
+# Conpatible experimental designs
+
+We suggest discussing with a statistican prior to performing experiments. However, the following rules of thumb will be useful:
+
+1) Aim for at least 3 time points e.g. 0, 30, 300 seconds with 1 replicate.
+2) Adding more timepoints and replicates will substantially improve statistical power (ability to detect differences). 
+3) Two replicates at each time point, will stablise analysis considerably.
+4) For more subtle differences, more replicates will be better than more time points.
+5) For better mechanistic insights, more timepoints are preferred.
+
 # Documentation
 
 See vignettes and package manual for documentation
