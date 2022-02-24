@@ -26,7 +26,86 @@ Fetch structure directly from the PDB provided a `pdb_id`
 pdb_id <- "2pne"
 NGLVieweR(pdb_id) %>% addRepresentation("cartoon")
 ```
-Test further
+
+Visualise a PDB from path and map 1D array to each residue in the PDB structure
+
+# Lysozyme visualisation
+```{r,}
+pdb_path <- "data/lysozyme_cleaned.pdb"
+
+sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
+n_residues <- nchar(sequence)
+values_per_resisude <- runif(n_residues, min=0, max=100)
+
+
+NGLVieweR(pdb_path) %>%   
+addRepresentation("cartoon", param = list(name="cartoon", colorScheme="residueindex", backgroundColor="white"))
+```
+Colour selection with same colour
+
+```{r,}
+pdb_path <- "data/lysozyme_cleaned.pdb"
+
+sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
+n_residues <- nchar(sequence)
+values_per_resisude <- runif(n_residues, min=0, max=100)
+
+
+NGLVieweR(pdb_path) %>%
+addRepresentation("ball+stick") %>%
+addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("yellow"), colorScheme = "element", sele="20-50"))
+```
+
+Colour selection with same colour
+
+```{r,}
+pdb_path <- "data/lysozyme_cleaned.pdb"
+
+sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
+n_residues <- nchar(sequence)
+values_per_resisude <- runif(n_residues, min=0, max=100)
+
+
+NGLVieweR(pdb_path) %>%
+addRepresentation("cartoon") %>%
+addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("yellow"), colorScheme = "element", sele="20-23")) %>%
+addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("green"), colorScheme = "element", sele="23-27")) %>%
+addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("red"), colorScheme = "element", sele="27-30"))  
+```
+
+Test colouring per residue using an user-defined color scale 
+
+```{r,}
+library("RColorBrewer")
+
+pdb_path <- "data/lysozyme_cleaned.pdb"
+
+sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
+n_residues <- nchar(sequence)
+values_per_resisude <- runif(n_residues, min=0, max=100)
+
+# Define a coloring function
+# install.packages("colorRamps")
+# colors <- brewer.pal(8, name = "Set2")
+# colfunc(3)
+# colfunc <- colorRampPalette(c("red", "blue"))
+
+#Can also use vuiridis
+# library("viridis")
+# viridis(10)
+
+# pass a list of tuples specifying colour and residue selection
+colors <- list(list("#FF0000", "20-23"), list("#7F007F", "24-27"), list("#0000FF", "28-31"))
+#colors <- list(list("#440154FF", "20-23"), list("#21908CFF", "24-27"), list("#FDE725FF", "28-31"))
+
+NGLVieweR(pdb_path) %>%
+addRepresentation("cartoon") %>%
+addRepresentation("cartoon", param = list(color=colors, backgroundColor='white'))
+```
+
+
+More functions
+
 
 ```{r,}
 NGLVieweR("7CID") %>%
