@@ -2,7 +2,7 @@
 title: "Analysing differential hydrogen deuterium exchange mass spectrometry data"
 author:
 - name: Oliver M. Crook
-- name: Broncio Aguiar-Sanjuan
+- name: Broncio Aguilar-Sanjuan
 package: hdxstats
 output:
   BiocStyle::html_document:
