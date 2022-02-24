@@ -2,7 +2,7 @@
 title: "basics"
 author:
 - name: Oliver M. Crook
-- name: Broncio Aguiar-Sanjuan
+- name: Broncio Aguilar-Sanjuan
 date: "09/02/2022"
 package: hdxstats
 output:
@@ -317,37 +317,55 @@ pheatmap(data_qDF_transposed,
          )
 ```
 
-
 # Functional data analysis of HDX-MS data
 
-The `hdxstats` package uses an empirical Bayes functional approach to analyse
-the data. We explain this idea in steps so that we can get an idea of the approach.
-First we fit the parametric model to the data. This will allow us to explore
-the `HdxStatModel` class. 
+The `hdxstats` package uses an _empirical Bayes functional approach_ to analyse
+the data. We illustrate this idea in steps so that we can get an idea of the approach.
+
+First, we fit a parametric model to the data restricted to a single randomly chosen peptide.
+We explore the `HdxStatModel` class objects and their attributes.
 
 ```{r,}
-res <- differentialUptakeKinetics(object = MBPqDF[,1:100], #provide a QFeature object
-                                  feature = rownames(MBPqDF)[[1]][37], # which peptide to do we fit
-                                  start = list(a = NULL, b = 0.0001,  d = NULL, p = 1)) # what are the starting parameter guesses
+all_peptides <- rownames(data_qDF)[[1]] # get all peptides
+selected_peptide <- all_peptides[37] # randomly picked
+
+fitting_method <- differentialUptakeKinetics # model for fitting
+starting_parameters <- list(a = NULL, b = 0.0001,  d = NULL, p = 1) # initial model parameter guesses
+
+# HdxStatModel class object
+result <- fitting_method(object = data_qDF[,1:100], #provide a QFeature object
+                         feature = selected_peptide, # which peptide to do we fit
+                         start = starting_parameters
+                         ) 
 ```
+
 Here, we see the `HdxStatModel` class, and that a Functional Model was applied
-to the data and a total of 7 models were fitted.
+to the data and a total of 7 models were fitted, for each available experimental condition.
+
 ```{r,}
-res
-```
-The `nullmodel` and `alternative` slots of an instance of `HdxStatModel` provide
-the underlying fitted models. The `method` and `formula` slots provide vital 
-information about what analysis was performed. The `vis` slot provides a `ggplot`
-object so that we can visualise the functional fits.
-```{r,}
-res@vis
+result
 ```
 
-Since this is a ggplot object, we can customise in the usual grammatical ways.
+The `result` object provides several slots providing several pieces of informat at once.
+For instance, the `nullmodel` and `alternative` slots provide the underlying fitted models. 
+The `method` and `formula` slots provide vital information about what analysis was performed. 
+The `vis` slot provides a `ggplot` object so that we can visualise the functional fits.
+
+Let's play now with the visualisation slot!
+
 ```{r,}
-res@vis + scale_color_manual(values = brewer.pal(n = 8, name = "Set2"))
+result@vis
 ```
-A number of standard methods are available and can be applied to a `HdxStatModels`,
+
+Since this is a `ggplot` object, we can customise it in the usual grammatical ways.
+
+```{r,}
+colors <- brewer.pal(n = 8, name = "Set2")
+
+result@vis + scale_color_manual(values = colors)
+```
+
+A number of standard methods are available and can be applied to a `HdxStatModels` object,
 these extend the usual `base` stats methods. These include
 
 1. `anova`: An analysis of variance
@@ -355,20 +373,21 @@ these extend the usual `base` stats methods. These include
 3. `residuals`: The residuals for the fitted models
 4. `vcov`: The variance-covariance matrix between parameters of the models
 5. `likRatio`: The likelihood ratio between null and alternative models
-6. `wilk`: Applies wilk's theorem to obtain a p-value from the liklihood ratio
+6. `wilk`: Applies wilk's theorem to obtain a p-value from the likelihood ratio
 7. `coef`: The fitted model coefficients
 8. `deviance`: The deviance of the fitted models
 9. `summary`: The statistical summary of the models.
 
-```{r,}
-anova(res)
-logLik(res)
-residuals(res)
-vcov(res)
-likRatio(res)
-wilk(res)
-coef(res)
-deviance(res)
-summary(res)
+Let's tests these now.
 
+```{r,}
+anova(result)
+logLik(result)
+residuals(result)
+vcov(result)
+likRatio(result)
+wilk(result)
+coef(result)
+deviance(result)
+summary(result)
 ```
