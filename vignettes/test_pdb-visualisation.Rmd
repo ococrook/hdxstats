@@ -47,6 +47,14 @@ addRepresentation("cartoon") %>%
 addRepresentation("cartoon", param = list(color = color_parameters, backgroundColor="white"))
 ```
 
+To see stuff in thr browser
+
+
+```{r}
+myViewer <- getOption("viewer")
+myViewer("vignettes/test_pdb-visualisation.html")
+```
+
 
 
 Examples of use [here](https://nvelden.github.io/NGLVieweR/articles/NGLVieweR.html)
