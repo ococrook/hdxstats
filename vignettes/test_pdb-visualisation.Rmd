@@ -3,6 +3,7 @@ title: "Untitled"
 author: "Broncio Aguilar-Sanjuan"
 date: "09/02/2022"
 output: html_document
+runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -16,91 +17,44 @@ Installation instructions for `NGLVieweR` available on the GitHub repo [here](ht
 ```{r,}
 library("NGLVieweR")
 library("tidyverse")
+library("RColorBrewer")
+library("scales")
+library("comprehenr")
+```
+# Lysozyme visualisation
+
+```{r,}
+pdb_path <- "data/lysozyme_cleaned.pdb"
+# extracted from fasta file
+sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
+n_residues <- nchar(sequence)
+
+values_per_residue <- runif(n_residues, min=0, max=100)
+residue_numbers <- 1:n_residues
+residue_selections <- sprintf("%s",seq(1:n_residues))
+
+#colormap <- "Greens"
+colormap <- colorRamp(brewer.pal(8, "Spectral"))
+domain <- c(min(values_per_residue), max(values_per_residue))
+
+color_function <- col_bin(colormap, domain = domain) # scales.col_bin
+
+df <- data.frame(x=color_function(values_per_residue), y=residue_selections)
+color_parameters <- to_list(for(i in residue_numbers) c(df$x[i], df$y[i]))
+
+NGLVieweR(pdb_path) %>%
+addRepresentation("cartoon") %>%
+addRepresentation("cartoon", param = list(color = color_parameters, backgroundColor="white"))
 ```
 
-Examples of use [here](https://nvelden.github.io/NGLVieweR/articles/NGLVieweR.html)
 
+
+Examples of use [here](https://nvelden.github.io/NGLVieweR/articles/NGLVieweR.html)
 
 Fetch structure directly from the PDB provided a `pdb_id`
 ```{r,}
 pdb_id <- "2pne"
 NGLVieweR(pdb_id) %>% addRepresentation("cartoon")
-```
-
-Visualise a PDB from path and map 1D array to each residue in the PDB structure
-
-# Lysozyme visualisation
-```{r,}
-pdb_path <- "data/lysozyme_cleaned.pdb"
-
-sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
-n_residues <- nchar(sequence)
-values_per_resisude <- runif(n_residues, min=0, max=100)
-
-
-NGLVieweR(pdb_path) %>%   
-addRepresentation("cartoon", param = list(name="cartoon", colorScheme="residueindex", backgroundColor="white"))
-```
-Colour selection with same colour
-
-```{r,}
-pdb_path <- "data/lysozyme_cleaned.pdb"
-
-sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
-n_residues <- nchar(sequence)
-values_per_resisude <- runif(n_residues, min=0, max=100)
-
-
-NGLVieweR(pdb_path) %>%
-addRepresentation("ball+stick") %>%
-addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("yellow"), colorScheme = "element", sele="20-50"))
-```
-
-Colour selection with same colour
-
-```{r,}
-pdb_path <- "data/lysozyme_cleaned.pdb"
-
-sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
-n_residues <- nchar(sequence)
-values_per_resisude <- runif(n_residues, min=0, max=100)
-
-
-NGLVieweR(pdb_path) %>%
-addRepresentation("cartoon") %>%
-addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("yellow"), colorScheme = "element", sele="20-23")) %>%
-addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("green"), colorScheme = "element", sele="23-27")) %>%
-addRepresentation("cartoon",param = list(name="cartoon", colorValue=c("red"), colorScheme = "element", sele="27-30"))  
-```
-
-Test colouring per residue using an user-defined color scale 
-
-```{r,}
-library("RColorBrewer")
-
-pdb_path <- "data/lysozyme_cleaned.pdb"
-
-sequence <- "KILKKQELCKNLVAQGMNGYQHITLPNWVCTAFHESSYNTRATNHNTDGSTDYGILQINSRYWCHDGKTPGSKNACNISCSKLLDDDITDDLKCAKKIAGEAKGLTPWVAWKSKCRGHDLSKFKC"
-n_residues <- nchar(sequence)
-values_per_resisude <- runif(n_residues, min=0, max=100)
-
-# Define a coloring function
-# install.packages("colorRamps")
-# colors <- brewer.pal(8, name = "Set2")
-# colfunc(3)
-# colfunc <- colorRampPalette(c("red", "blue"))
-
-#Can also use vuiridis
-# library("viridis")
-# viridis(10)
-
-# pass a list of tuples specifying colour and residue selection
-colors <- list(list("#FF0000", "20-23"), list("#7F007F", "24-27"), list("#0000FF", "28-31"))
-#colors <- list(list("#440154FF", "20-23"), list("#21908CFF", "24-27"), list("#FDE725FF", "28-31"))
-
-NGLVieweR(pdb_path) %>%
-addRepresentation("cartoon") %>%
-addRepresentation("cartoon", param = list(color=colors, backgroundColor='white'))
 ```
 
 
