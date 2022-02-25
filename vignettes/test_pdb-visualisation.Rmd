@@ -43,18 +43,11 @@ df <- data.frame(x=color_function(values_per_residue), y=residue_selections)
 color_parameters <- to_list(for(i in residue_numbers) c(df$x[i], df$y[i]))
 
 NGLVieweR(pdb_path) %>%
-addRepresentation("cartoon") %>%
-addRepresentation("cartoon", param = list(color = color_parameters, backgroundColor="white"))
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color = color_parameters, backgroundColor="white")) %>%
+  setSpin()
 ```
-
-To see stuff in thr browser
-
-
-```{r}
-myViewer <- getOption("viewer")
-myViewer("vignettes/test_pdb-visualisation.html")
-```
-
 
 
 Examples of use [here](https://nvelden.github.io/NGLVieweR/articles/NGLVieweR.html)
