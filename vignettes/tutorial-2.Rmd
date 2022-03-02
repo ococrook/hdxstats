@@ -51,29 +51,42 @@ excessive models that fail fitting.
 We start by first loading the `QFeatures` object that we saved previously
 
 ```{r,}
-MBPqDF <- readRDS(file='data/MBPqDF.rsd')
+data_qDF <- readRDS(file='data/MBPqDF.rsd')
 ```
 
 Then, we execute
 
 ```{r,}
-res <- fitUptakeKinetics(object = MBPqDF[,c(1:24)],
-                         feature = rownames(MBPqDF[,c(1:24)])[[1]],
-                         start = list(a = NULL, b = 0.001,  d = NULL, p = 1))
+data_selection <- data_qDF[,1:24]
+all_peptides <- rownames(data_selection)[[1]]
 
+fitting_method <- fitUptakeKinetics # this will fit models for all peptides
+starting_parameters <- list(a = NULL, b = 0.001,  d = NULL, p = 1)
+
+all_models <- fitting_method(object = data_selection,
+                             feature = all_peptides,
+                             start = starting_parameters
+                             )
 ```
+
 The code chunk above returns a class `HdxStatModels` indicating that a number
-of models for peptide have been fit. This is simply a holder for a list
+of models that have been fit for the peptides. This is simply a holder for a list
 of `HdxStatModel` instances.
+
 ```{r,}
-res
+all_models
 ```
 
-We can easily examine indivual fits by going to the underyling `HdxStatModel`
-class:
+We can easily examine individual fits by going to the underlying `HdxStatModel`
+class, for example, let's visualise the fit for the first peptide:
+
+
 ```{r,}
-res@statmodels[[1]]@vis + scale_color_manual(values = brewer.pal(n = 2, name = "Set2"))
+colors <- brewer.pal(n = 2, name = "Set2")
+all_models@statmodels[[1]]@vis + scale_color_manual(values = colors)
 ```
+
+
 We now wish to apply statistical analysis to these fitted curves. Our approach
 is an empirical Bayes testing procedure, which borrows information across peptides
 to stablise variance estimates. Here, we need to provide the original data
@@ -82,26 +95,52 @@ returns an object of class `HdxStatRes`. This object tell us that statistical
 analysis was performed using our Functional model.
 
 ```{r,}
-out <- processFunctional(object = MBPqDF[,1:24], params = res)
-out
+# 
+# out <- processFunctional(object = MBPqDF[,1:24], params = results)
+# out
 ```
+
+```{r,}
+
+all_models_analysis <- processFunctional(object = data_selection, params = all_models)
+all_models_analysis
+```
+
 
 The main slot of interest is the `results` slot which returns quantities of 
 interest such as `p-values` and `fdr` corrected p-values because of multiple testing.
 The following is the `DataFrame` of interest.
+
 ```{r,}
-out@results
+all_models_analysis@results
+```
+
+```{r,}
+# out@results
 ```
 
 We can now examine the peptides for which the false discovery rate is less
 than 0.05
 
 ```{r,}
-which(out@results$ebayes.fdr < 0.05)
+which(all_models_analysis@results$ebayes.fdr < 0.05)
 ```
-Let us visualise some of these examples:
+
 ```{r,}
-res@statmodels[[42]]@vis + res@statmodels[[45]]@vis
+# which(out@results$ebayes.fdr < 0.05)
+```
+
+Let us visualise some of these examples:
+
+```{r,}
+all_models@statmodels[[42]]@vis + all_models@statmodels[[45]]@vis
+```
+
+
+
+
+```{r,}
+# res@statmodels[[42]]@vis + res@statmodels[[45]]@vis
 
 ```
 As we can see our model has picked up some subtle differences, we can further
@@ -110,14 +149,25 @@ as the parameters are almost identical `(a,b,p,d)`. However, we can see that
 the deuterium differences are lower in 10% structural variant condition.
 
 ```{r,}
-fp <- forestPlot(params = res@statmodels[[42]])
+forest_plot <- forestPlot(params = all_models@statmodels[[42]])
 
+```
+
+
+```{r,}
+# fp <- forestPlot(params = res@statmodels[[42]])
+# 
 ```
 We can produce a table to actual numbers. We see that at all 4 timepoints
 the deuterium difference is negative, though the confidence intervals overlap
 with 0. Our functional approach is picking up this small but reproducible difference.
+
 ```{r,}
-knitr::kable(fp$data)
+knitr::kable(forest_plot$data)
+```
+
+```{r,}
+# knitr::kable(fp$data)
 ```
 
 It is also possible to visualize, these plots on a different scale. Of course,
@@ -131,14 +181,28 @@ of visualisation (and not of statistical modelling). The parameter `sigma`
 below controls the scaling factor of the linear part of the transformation.
 
 ```{r,}
-res@statmodels[[42]]@vis + scale_x_continuous(
+all_models@statmodels[[42]]@vis + scale_x_continuous(
     trans = pseudo_log_trans(base = 10, sigma = 0.01), breaks = c(0, 10^(1:7)))
 
-res@statmodels[[42]]@vis + scale_x_continuous(
+all_models@statmodels[[42]]@vis + scale_x_continuous(
     trans = pseudo_log_trans(base = 10, sigma = 0.0001), breaks = c(0, 10^(1:7)))
 
-res@statmodels[[42]]@vis + scale_x_continuous(
+all_models@statmodels[[42]]@vis + scale_x_continuous(
     trans = pseudo_log_trans(base = 10, sigma = 10), breaks = c(0, 10^(1:7)))
+
+```
+
+
+
+```{r,}
+# res@statmodels[[42]]@vis + scale_x_continuous(
+#     trans = pseudo_log_trans(base = 10, sigma = 0.01), breaks = c(0, 10^(1:7)))
+# 
+# res@statmodels[[42]]@vis + scale_x_continuous(
+#     trans = pseudo_log_trans(base = 10, sigma = 0.0001), breaks = c(0, 10^(1:7)))
+# 
+# res@statmodels[[42]]@vis + scale_x_continuous(
+#     trans = pseudo_log_trans(base = 10, sigma = 10), breaks = c(0, 10^(1:7)))
 
 ```
 
@@ -147,17 +211,64 @@ res@statmodels[[42]]@vis + scale_x_continuous(
 Let's us now have a look a situation where the changes are more dramatic.
 
 ```{r,}
-res_wt <- fitUptakeKinetics(object = MBPqDF[, c(61:100)],
-                            feature = rownames(MBPqDF[, c(61:100)])[[1]],
-                            start = list(a = NULL, b = 0.001,  d = NULL, p = 1))
+data_selection <- data_qDF[,61:100]
+all_peptides <- rownames(data_selection)[[1]]
+
+fitting_method <- fitUptakeKinetics # this will fit models for all peptides
+starting_parameters <- list(a = NULL, b = 0.001,  d = NULL, p = 1)
+
+all_models <- fitting_method(object = data_selection,
+                             feature = all_peptides,
+                             start = starting_parameters
+                             )
+```
+
+
+```{r,}
+# res_wt <- fitUptakeKinetics(object = MBPqDF[, c(61:100)],
+#                             feature = rownames(MBPqDF[, c(61:100)])[[1]],
+#                             start = list(a = NULL, b = 0.001,  d = NULL, p = 1))
 
 ```
 ```{r,}
-out_wt <- processFunctional(object = MBPqDF[, c(61:100)], params = res_wt)
+# out_wt <- processFunctional(object = MBPqDF[, c(61:100)], params = res_wt)
 ```
 
+```{r,}
+all_models_analysis <- processFunctional(object = data_selection, params = all_models)
+```
+
+
 We can visualise some of the result and generate plots.
+
+
+```{r, fig.height = 16, fig.width = 20, fig.align = "center", echo=FALSE, message=FALSE, results='hide'}
+# plot model fits
+n_model1 <- 27
+n_model2 <- 28
+
+plot1 <- all_models@statmodels[[n_model1]]@vis
+plot2 <- all_models@statmodels[[n_model2]]@vis
+plot12_merged <- plot1/plot2 # stack plots vertically
+# customise plot panels
+plot12_merged <- plot12_merged + plot_layout(guides = "collect")
+
+# plot forest plots
+forest_plot1 <- forestPlot(params = all_models@statmodels[[n_model1]], condition = c("WT", "W169G"))
+forest_plot2 <- forestPlot(params = all_models@statmodels[[n_model2]], condition = c("WT", "W169G"))
+forest_plot12_merged <- forest_plot1/forest_plot2 + plot_layout(guides = "collect") # stack plots vertically
+# customise plot panels
+forest_plot12_merged <- forest_plot12_merged + plot_layout(guides = "collect")
+
+# plot side by side
+all_plots <- plot12_merged | forest_plot12_merged
+# customise plot panels
+all_plots <- all_plots + plot_annotation(tag_levels = 'a') +  plot_layout(widths = c(1, 1))
+all_plots
+```
+
+
 ```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
-res_wt@statmodels[[27]]@vis/res_wt@statmodels[[28]]@vis + plot_layout(guides = "collect")|(forestPlot(params = res_wt@statmodels[[27]], condition = c("WT", "W169G"))/forestPlot(params = res_wt@statmodels[[28]], condition = c("WT", "W169G")) + plot_layout(guides = "collect")) + 
-    plot_annotation(tag_levels = 'a') +  plot_layout(widths = c(1, 1))
+# res_wt@statmodels[[27]]@vis/res_wt@statmodels[[28]]@vis + plot_layout(guides = "collect")|(forestPlot(params = res_wt@statmodels[[27]], condition = c("WT", "W169G"))/forestPlot(params = res_wt@statmodels[[28]], condition = c("WT", "W169G")) + plot_layout(guides = "collect")) + 
+#     plot_annotation(tag_levels = 'a') +  plot_layout(widths = c(1, 1))
 ```
