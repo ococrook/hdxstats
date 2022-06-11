@@ -97,6 +97,62 @@ if (interactive()) {
   shinyApp(ui, server)
 }
 ```
+
+## Protection-Deprotection mapping 
+
+```{r,}
+averaged_protection <- read.csv("vignettes/data/averaged_protection_both.csv")
+averaged_deprotection <- read.csv("vignettes/data/averaged_deprotection_both.csv")
+```
+
+
+```{r}
+library("seqinr")
+fasta_filepath <- "vignettes/data/5edv.fasta"
+fasta_content <- read.fasta(fasta_filepath, seqtype = "AA", as.string = TRUE, set.attributes = FALSE)
+sequence_chainA_full <- fasta_content$`5edv_A`
+n_residues_full <- nchar(sequence_chainA_full)
+```
+
+
+```{r}
+library("bio3d")
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+pdb_content <- read.pdb(pdb_filepath)
+row.names(data.frame(pdbseq(pdb_content)))
+sequence_chainA_pdb <- pdbseq(pdb_content)
+sequence_chainA_pdb_indices <- row.names(data.frame(sequence_chainA_pdb))
+```
+
+
+```{r,}
+library("bio3d")
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+pdb_content <- read.pdb(pdb_filepath)
+
+sequence_from_pdb <- pdbseq(pdb_content)
+sequence_residue_numbers <- strtoi(row.names(data.frame(sequence_from_pdb)))
+n_residues <- nchar(paste(sequence_from_pdb, collapse=""))
+
+values_per_residue <- runif(n_residues, min=0, max=100) # random numbers
+residue_selections <- sprintf("%s", sequence_residue_numbers)
+
+#colormap <- "Greens"
+colormap <- colorRamp(brewer.pal(8, "Blues"))
+domain <- c(min(values_per_residue), max(values_per_residue))
+
+color_function <- col_bin(colormap, domain = domain) # scales.col_bin
+
+df <- data.frame(x=color_function(values_per_residue), y=residue_selections)
+color_parameters <- to_list(for(i in 1:n_residues) c(df$x[i], df$y[i]))
+
+NGLVieweR(pdb_filepath) %>%
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color=color_parameters, backgroundColor="white")) %>%
+  setSpin()
+```
+
 ## API
 
 This launches a window for visualisation with basic GUI with user-defined action buttons.
