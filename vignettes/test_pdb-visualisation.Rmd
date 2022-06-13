@@ -277,11 +277,19 @@ sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
 n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
 ```
 
+Select column name 
+```{r}
+#column_name <- "dAb41_3"
+#column_name <- "dAb25_1"
+#column_name <- "dAb6_1"
+column_name <- "dAb27_1"
+```
+
 Workout mean likelihood for protection values and available residue numbers in HDX data
 ```{r}
 dataset <- averaged_protection
 X <- dataset$X # residue ranges
-Y <- dataset$dAb41_3 # protection likelihood
+Y <- dataset[[column_name]] # protection likelihood
 
 output_list = list()
 for (i in 1:length(X)){
@@ -316,7 +324,7 @@ Workout mean likelihood for deprotection values and available residue numbers in
 ```{r}
 dataset <- averaged_deprotection
 X <- dataset$X # residue ranges
-Y <- dataset$dAb41_3 # deprotection likelihood
+Y <- dataset[[column_name]] # deprotection likelihood
 
 output_list = list()
 for (i in 1:length(X)){
