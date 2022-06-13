@@ -205,7 +205,7 @@ n_residues_hdx <- length(geometric_mean_values)
 sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
 ```
 
-
+Extract resdue numbers from available residues in PDB
 ```{r}
 library("bio3d")
 
@@ -248,7 +248,191 @@ NGLVieweR(pdb_filepath) %>%
 ```
 
 
+# Putting everything together
+
+```{r,}
+library("NGLVieweR")
+library("tidyverse")
+library("RColorBrewer")
+library("scales")
+library("comprehenr")
+library("dplyr")
+```
+
+```{r,}
+averaged_protection <- read.csv("vignettes/data/averaged_protection_both.csv")
+averaged_deprotection <- read.csv("vignettes/data/averaged_deprotection_both.csv")
+pdb_viewer_data <- list()
+```
+
+Extract residue numbers from available residues in PDB coordinates
+```{r}
+library("bio3d")
+
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+pdb_content <- read.pdb(pdb_filepath)
+
+sequence_from_pdb <- pdbseq(pdb_content)
+sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
+n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
+```
+
+Workout mean likelihood for protection values and available residue numbers in HDX data
+```{r}
+dataset <- averaged_protection
+X <- dataset$X # residue ranges
+Y <- dataset$dAb41_3 # protection likelihood
+
+output_list = list()
+for (i in 1:length(X)){
+    # generate residue numbers sequence from range
+    residue_number_range <- eval(parse(text=paste("seq", X[i], sep = "")))
+    for (resn in residue_number_range){
+        key <- paste("residue-", as.character(resn),sep = "")
+        # gather all protection likelihood values per residue number
+        output_list[[key]] <- append(output_list[[key]], Y[i])
+    }
+}
+
+geometric_mean_values <- lapply(output_list, function(x) exp(mean(log(x))))
+geometric_mean_values <- unname(unlist(geometric_mean_values)) # extract numerical values only
+
+n_residues_hdx <- length(geometric_mean_values)
+sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
+```
+
+Work out residues and protection values to map onto PDB
+```{r}
+residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+geometric_mean_values_pdb <- geometric_mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
+```
+
+Save data into list
+```{r}
+pdb_viewer_data[["protection"]] <- list("values"= geometric_mean_values_pdb,"residues"= residue_numbers_hdx_pdb)
+```
+
+Workout mean likelihood for deprotection values and available residue numbers in HDX data
+```{r}
+dataset <- averaged_deprotection
+X <- dataset$X # residue ranges
+Y <- dataset$dAb41_3 # deprotection likelihood
+
+output_list = list()
+for (i in 1:length(X)){
+    # generate residue numbers sequence from range
+    residue_number_range <- eval(parse(text=paste("seq", X[i], sep = "")))
+    for (resn in residue_number_range){
+        key <- paste("residue-", as.character(resn),sep = "")
+        # gather all protection likelihood values per residue number
+        output_list[[key]] <- append(output_list[[key]], Y[i])
+    }
+}
+
+geometric_mean_values <- lapply(output_list, function(x) exp(mean(log(x))))
+geometric_mean_values <- unname(unlist(geometric_mean_values)) # extract numerical values only
+
+n_residues_hdx <- length(geometric_mean_values)
+sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
+```
+
+Work out residues and deprotection values to map onto PDB
+```{r}
+residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+geometric_mean_values_pdb <- geometric_mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
+```
+
+Save data into list
+```{r}
+pdb_viewer_data[["deprotection"]] <- list("values"= geometric_mean_values_pdb,"residues"= residue_numbers_hdx_pdb)
+```
+
+```{r}
+# extract values 
+extracted_values <- c()
+assigned_labels <- c()
+for (i in 1:length(pdb_viewer_data$protection$residues)) {
+    protection_value <- pdb_viewer_data$protection$values[i]
+    deprotection_value <- pdb_viewer_data$deprotection$values[i]
+    if (protection_value > deprotection_value) {
+        assigned_labels <- append(assigned_labels, "protected")
+        extracted_values <- append(extracted_values, protection_value)
+    } else {
+        assigned_labels <- append(assigned_labels, "deprotected")
+        extracted_values <- append(extracted_values, deprotection_value)
+    }
+}
+```
+
+Save data in dataframe
+```{r}
+output_data <- data.frame("resnum"=pdb_viewer_data$protection$residues,"labels"=assigned_labels,"hdx_values"=extracted_values)
+write_csv(output_data, "vignettes/data/hdx_labelled_residues_pdb.csv")
+```
+
+
+Work out colour parameters 
+```{r,}
+# Protection color function
+residue_selections <- sprintf("%s", pdb_viewer_data$protection$residues)
+values_per_residue <- pdb_viewer_data$protection$values
+colormap <- colorRamp(brewer.pal(8, "Reds"))
+domain <- c(min(values_per_residue), max(values_per_residue))
+color_function_protected <- col_bin(colormap, domain = domain)
+
+# Deprotection color function
+residue_selections <- sprintf("%s", pdb_viewer_data$deprotection$residues)
+values_per_residue <- pdb_viewer_data$deprotection$values
+colormap <- colorRamp(brewer.pal(8, "Blues"))
+domain <- c(min(values_per_residue), max(values_per_residue))
+color_function_deprotected <- col_bin(colormap, domain = domain)
+
+# Define general colour function
+color_function <- function(extracted_values, assigned_labels) {
+    colours <- c()
+    for (i in 1:length(extracted_values)) {
+        if (assigned_labels[i] == "protected") {
+            colours <- append(colours, color_function_protected(extracted_values[i]))
+        }
+        else if (assigned_labels[i] == "deprotected") {
+            colours <- append(colours, color_function_deprotected(extracted_values[i]))
+        }
+    }
+    return(colours)
+}
+
+# Define selection according to label
+residue_selections <- pdb_viewer_data$protection$residues
+df <- data.frame(x=color_function(extracted_values, assigned_labels), y=residue_selections)
+color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
+```
+
+View mapped colour parameters onto PDB
+```{r}
+NGLVieweR(pdb_filepath) %>%
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color=color_parameters, backgroundColor="white"))
+```
+
+
 Miscellaneous
+
+Plot protection and deprotection likelihood values
+```{r}
+pdb_viewer_df <- as.data.frame(pdb_viewer_data)
+
+# data sanity checks
+# 1. test if list of resdiue numbers are equal
+setequal(pdb_viewer_df$protection.residues, pdb_viewer_df$deprotection.residues)
+# 2. check if protection and deprotection values are equal, and if so, find out values
+pdb_viewer_df$protection.values[pdb_viewer_df$protection.values == pdb_viewer_df$deprotection.values]
+
+ggplot(as.data.frame(pdb_viewer_data[["deprotection"]]), aes(x=residues,y=values))+geom_line(color="blue")
+ggplot(as.data.frame(pdb_viewer_data[["protection"]]), aes(x=residues,y=values))+geom_line(color="red")
+```
+
+
 
 ```{r,}
 library("bio3d")
