@@ -279,7 +279,7 @@ n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
 
 Select column name 
 ```{r}
-#column_name <- "dAb41_3"
+column_name <- "dAb41_3"
 #column_name <- "dAb25_1"
 #column_name <- "dAb6_1"
 column_name <- "dAb27_1"
