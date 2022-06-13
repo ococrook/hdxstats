@@ -150,19 +150,28 @@ sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
 n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
 ```
 
+Work out residues and values to map onto PDB
+
+```{r}
+residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+is_residue_numbers_hdx_in_pdb <- sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb
+geometric_mean_values_pdb <- geometric_mean_values[is_residue_numbers_hdx_in_pdb]
+```
+
+Map values onto PDB 
 
 ```{r,}
-values_per_residue <- runif(n_residues_from_pdb , min=0, max=1) # random numbers
-residue_selections <- sprintf("%s", sequence_residue_numbers_pdb)
+residue_selections <- sprintf("%s", residue_numbers_hdx_pdb)
+values_per_residue <- geometric_mean_values_pdb
 
 #colormap <- "Greens"
-colormap <- colorRamp(brewer.pal(8, "Blues"))
+colormap <- colorRamp(brewer.pal(8, "Reds"))
 domain <- c(min(values_per_residue), max(values_per_residue))
 
 color_function <- col_bin(colormap, domain = domain) # scales.col_bin
 
 df <- data.frame(x=color_function(values_per_residue), y=residue_selections)
-color_parameters <- to_list(for(i in 1:n_residues) c(df$x[i], df$y[i]))
+color_parameters <- to_list(for(i in 1:length(residue_numbers_hdx_pdb)) c(df$x[i], df$y[i]))
 
 NGLVieweR(pdb_filepath) %>%
   stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
@@ -172,6 +181,74 @@ NGLVieweR(pdb_filepath) %>%
 ```
 
 
+_EXAMPLE_: colourmap deprotected residues
+```{r}
+dataset <- averaged_deprotection
+X <- dataset$X # residue ranges
+Y <- dataset$dAb41_3 # protection likelihood
+
+output_list = list()
+for (i in 1:length(X)){
+    # generate residue numbers sequence from range
+    residue_number_range <- eval(parse(text=paste("seq", X[i], sep = "")))
+    for (resn in residue_number_range){
+        key <- paste("residue-", as.character(resn),sep = "")
+        # gather all protection likelihood values per residue number
+        output_list[[key]] <- append(output_list[[key]], Y[i])
+    }
+}
+
+geometric_mean_values <- lapply(output_list, function(x) exp(mean(log(x))))
+geometric_mean_values <- unname(unlist(geometric_mean_values)) # extract numerical values only
+
+n_residues_hdx <- length(geometric_mean_values)
+sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
+```
+
+
+```{r}
+library("bio3d")
+
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+pdb_content <- read.pdb(pdb_filepath)
+
+sequence_from_pdb <- pdbseq(pdb_content)
+sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
+n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
+```
+
+Work out residues and values to map onto PDB
+
+```{r}
+residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+is_residue_numbers_hdx_in_pdb <- sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb
+geometric_mean_values_pdb <- geometric_mean_values[is_residue_numbers_hdx_in_pdb]
+```
+
+Map values onto PDB 
+
+```{r,}
+residue_selections <- sprintf("%s", residue_numbers_hdx_pdb)
+values_per_residue <- geometric_mean_values_pdb
+
+#colormap <- "Greens"
+colormap <- colorRamp(brewer.pal(8, "Blues"))
+domain <- c(min(values_per_residue), max(values_per_residue))
+
+color_function <- col_bin(colormap, domain = domain) # scales.col_bin
+
+df <- data.frame(x=color_function(values_per_residue), y=residue_selections)
+color_parameters <- to_list(for(i in 1:length(residue_numbers_hdx_pdb)) c(df$x[i], df$y[i]))
+
+NGLVieweR(pdb_filepath) %>%
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color=color_parameters, backgroundColor="white")) %>%
+  setSpin()
+```
+
+
+Miscellaneous
 
 ```{r,}
 library("bio3d")
