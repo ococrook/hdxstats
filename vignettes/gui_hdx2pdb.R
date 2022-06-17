@@ -92,63 +92,68 @@ color_function <- function(output_labelled_data) {
   return(colours)
 }
 
+map_hdx2pdb <- function(dataset, antibody, pdb_filepath) {
+  pdb_content <- read.pdb(pdb_filepath)
+  
+  # Extract residue numbers from available residues in PDB coordinates
+  sequence_from_pdb <- pdbseq(pdb_content)
+  sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
+  n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
+  
+  # Iterate over raw protection/deprotection data to generated labelled data
+  #dataset <- list("protection"=averaged_protection, "deprotection"=averaged_deprotection)
+  
+  pdb_viewer_data <- list() # List to store data for visualisation
+  for (x in names(dataset)){
+    X <- dataset[[x]]$X # residue ranges
+    Y <- dataset[[x]][[antibody]] # deprotection likelihood
+    
+    data <- get_mean_values_per_residue(X, Y)
+    sequence_residue_numbers_hdx <- data$sequence_residue_numbers_hdx
+    mean_values <- data$mean_values
+    
+    # Work out residues and deprotection values to map onto PDB
+    residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+    mean_values_pdb <- mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
+    
+    pdb_viewer_data[[x]] <- list("values"= mean_values_pdb,"residues"= residue_numbers_hdx_pdb)
+  }
+  
+  # Save labelled data per residue in CSV file
+  output_labelled_data <- label_residues(pdb_viewer_data)
+  #output_file <- paste("data/hdx_", antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
+  #write_csv(output_labelled_data, output_file)
+  
+  # Define selection according to label
+  residue_selections <- pdb_viewer_data$protection$residues
+  df <- data.frame(x=color_function(output_labelled_data), y=residue_selections)
+  color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
+  
+  return(color_parameters)
+}
+#################################################
 # Load input CSV files
 averaged_protection <- read.csv("data/averaged_protection_both.csv")
 averaged_deprotection <- read.csv("data/averaged_deprotection_both.csv")
-
-# Select column name from input CSV datafiles
-antibody <- "dAb41_3"
-#antibody <- "dAb25_1"
-#antibody <- "dAb6_1"
-#antibody <- "dAb27_1"
-
-#pdb_viewer_data <- list() # List to store data for visualisation
-pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
-pdb_content <- read.pdb(pdb_filepath)
-
-# Extract residue numbers from available residues in PDB coordinates
-sequence_from_pdb <- pdbseq(pdb_content)
-sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
-n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
-
-# Iterate over raw protection/deprotection data to generated labelled data
 dataset <- list("protection"=averaged_protection, "deprotection"=averaged_deprotection)
 
-pdb_viewer_data <- list() # List to store data for visualisation
-for (x in names(dataset)){
-  X <- dataset[[x]]$X # residue ranges
-  Y <- dataset[[x]][[antibody]] # deprotection likelihood
-  
-  data <- get_mean_values_per_residue(X, Y)
-  sequence_residue_numbers_hdx <- data$sequence_residue_numbers_hdx
-  mean_values <- data$mean_values
-  
-  # Work out residues and deprotection values to map onto PDB
-  residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
-  mean_values_pdb <- mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
-  
-  pdb_viewer_data[[x]] <- list("values"= mean_values_pdb,"residues"= residue_numbers_hdx_pdb)
-}
-
-# Save labelled data per residue in CSV file
-output_labelled_data <- label_residues(pdb_viewer_data)
-output_file <- paste("data/hdx_", antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
-write_csv(output_labelled_data, output_file)
-
-# Define selection according to label
-residue_selections <- pdb_viewer_data$protection$residues
-df <- data.frame(x=color_function(output_labelled_data), y=residue_selections)
-color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
-
-# View mapped colour parameters onto PDB
+# List of Antibodies present in HDX data
 antibody_selection <- colnames(averaged_protection)[c(2:length(averaged_protection))]
 
+# Antigen PDB coordinate file
+pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
+#################################################
+
+# Define shinny app
 ui <- fluidPage(
-  titlePanel("Viewer with API inputs"),
+  titlePanel("HDX protection/deprotection viewer"),
   sidebarLayout(
     sidebarPanel(
       selectInput("antibody", "Antibody", antibody_selection),
-      actionButton("colour", "Colour"),
+      selectInput("representation", "Representation", c("cartoon", "backbone", "licorice", "ball+stick", "spacefill", "surface")),
+      sliderInput("opacity", "Opacity", 0, 1, 1),
+      actionButton("update", "Update"),
+      # actionButton("colour", "Colour"),
     ),
     mainPanel(
       NGLVieweROutput("structure")
@@ -159,13 +164,22 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$structure <- renderNGLVieweR({
     
+    mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath)
     NGLVieweR(pdb_filepath) %>%
       stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
       addRepresentation("cartoon") %>%
-      addRepresentation("cartoon", param = list(color=color_parameters, backgroundColor="white")) %>%
-      setQuality("high") %>%
-      setFocus(0) #%>%
+      addRepresentation("cartoon", param = list(name="sele1", color=mycolor_parameters, backgroundColor="white")) #%>%
+      #setQuality("high") %>%
+      #setFocus(0) #%>%
     #setSpin(TRUE)
   })
+
+  observeEvent(input$update, {
+    mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath)
+    NGLVieweR_proxy("structure") %>%
+      #updateRepresentation(isolate(input$representation), param = list(name="sel1", color=mycolor_parameters, opacity=isolate(input$opacity)))
+      #updateRepresentation(input$representation, param = list(name="sel1", color=mycolor_parameters))
+      addSelection(input$representation, param=list(name="sel1", color=mycolor_parameters))
+  })  
 }
 shinyApp(ui, server)
