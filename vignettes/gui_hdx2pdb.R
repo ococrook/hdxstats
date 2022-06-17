@@ -151,9 +151,6 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("antibody", "Antibody", antibody_selection),
       selectInput("representation", "Representation", c("cartoon", "backbone", "licorice", "ball+stick", "spacefill", "surface")),
-      sliderInput("opacity", "Opacity", 0, 1, 1),
-      actionButton("update", "Update"),
-      # actionButton("colour", "Colour"),
     ),
     mainPanel(
       NGLVieweROutput("structure")
@@ -165,21 +162,13 @@ server <- function(input, output) {
   output$structure <- renderNGLVieweR({
     
     mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath)
+    
     NGLVieweR(pdb_filepath) %>%
       stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
-      addRepresentation("cartoon") %>%
-      addRepresentation("cartoon", param = list(name="sele1", color=mycolor_parameters, backgroundColor="white")) #%>%
-      #setQuality("high") %>%
-      #setFocus(0) #%>%
-    #setSpin(TRUE)
+      addRepresentation(input$representation) %>%
+      addRepresentation(input$representation, param = list(name="sele1", color=mycolor_parameters, backgroundColor="white")) #%>%
+      #setQuality("high")
   })
-
-  observeEvent(input$update, {
-    mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath)
-    NGLVieweR_proxy("structure") %>%
-      #updateRepresentation(isolate(input$representation), param = list(name="sel1", color=mycolor_parameters, opacity=isolate(input$opacity)))
-      #updateRepresentation(input$representation, param = list(name="sel1", color=mycolor_parameters))
-      addSelection(input$representation, param=list(name="sel1", color=mycolor_parameters))
-  })  
 }
+
 shinyApp(ui, server)
