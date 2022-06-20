@@ -1,0 +1,11 @@
+name: demo
+title:
+username:
+account: broncio
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6507050
+bundleId: 6017659
+url: https://broncio.shinyapps.io/demo/
+when: 1655479960.98251
+lastSyncTime: 1655479960.98258
