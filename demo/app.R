@@ -10,6 +10,9 @@ library("comprehenr")
 library("dplyr")
 library("bio3d")
 library("psych") # to compute harmonic.mean
+library("data.table") # to transpose table
+library("shinydashboard")
+library("DT")
 
 #' Return harmonic mean protection/deprotection probability per residue
 #' 
@@ -26,6 +29,10 @@ get_mean_values_per_residue <- function(X, Y) {
   }
   
   sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
+  
+  #resn_min <- min(sequence_residue_numbers_hdx)
+  #resn_max <- max(sequence_residue_numbers_hdx)
+  #sequence_residue_numbers_hdx_full <- seq(resn_min, resn_max)
   
   #mean_values <- lapply(output_list, function(x) exp(mean(log(x))))
   mean_values <- lapply(output_list, function(x) harmonic.mean(x))
@@ -68,16 +75,16 @@ label_residues <- function(pdb_viewer_data) {
 #' given labelled mean probability values
 #' protected values are coloured in red
 #' deprotected values are coloured in blue
-color_function <- function(output_labelled_data) {
+color_function <- function(output_labelled_data, scale_limits = c(0.03, 1, 0.03, 1)) {
   extracted_values <- output_labelled_data$hdx_values
   assigned_labels <- output_labelled_data$labels
   
   colormap <- colorRamp(brewer.pal(8, "Reds"))
-  domain <- c(0.03, 1) # min and max values
+  domain <- c(scale_limits[1], scale_limits[2]) # min and max values
   color_function_protected <- col_bin(colormap, domain)
   
   colormap <- colorRamp(brewer.pal(8, "Blues"))
-  domain <- c(0.03, 1) # min and max values
+  domain <- c(scale_limits[3], scale_limits[4]) # min and max values
   color_function_deprotected <- col_bin(colormap, domain)
   
   colours <- c()
@@ -92,7 +99,7 @@ color_function <- function(output_labelled_data) {
   return(colours)
 }
 
-map_hdx2pdb <- function(dataset, antibody, pdb_filepath) {
+map_hdx2pdb <- function(dataset, antibody, pdb_filepath, scale_limits = c(0.03, 1, 0.03, 1)) {
   pdb_content <- read.pdb(pdb_filepath)
   
   # Extract residue numbers from available residues in PDB coordinates
@@ -116,6 +123,8 @@ map_hdx2pdb <- function(dataset, antibody, pdb_filepath) {
     residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
     mean_values_pdb <- mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
     
+    #residues_pdb_hdx_diff <- setdiff(sequence_residue_numbers_pdb, sequence_residue_numbers_hdx)
+    
     pdb_viewer_data[[x]] <- list("values"= mean_values_pdb,"residues"= residue_numbers_hdx_pdb)
   }
   
@@ -126,7 +135,7 @@ map_hdx2pdb <- function(dataset, antibody, pdb_filepath) {
   
   # Define selection according to label
   residue_selections <- pdb_viewer_data$protection$residues
-  df <- data.frame(x=color_function(output_labelled_data), y=residue_selections)
+  df <- data.frame(x=color_function(output_labelled_data, scale_limits = scale_limits), y=residue_selections)
   color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
   
   return(color_parameters)
@@ -144,6 +153,8 @@ antibody_selection <- colnames(averaged_protection)[c(2:length(averaged_protecti
 pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
 #################################################
 
+#mychoice <- "dAb25_1"
+
 # Define shinny app
 ui <- fluidPage(
   titlePanel("HDX protection/deprotection viewer"),
@@ -151,24 +162,53 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("antibody", "Antibody", antibody_selection),
       selectInput("representation", "Representation", c("cartoon", "backbone", "licorice", "ball+stick", "spacefill", "surface")),
+      sliderInput("prot_range", "Protection colour-scale limits",min = 0, max = 100, value = c(0,100)),
+      sliderInput("deprot_range", "Deprotection colour-scale limits",min = 0, max = 100, value = c(0,100)),
     ),
-    mainPanel(
-      NGLVieweROutput("structure")
-    )
-  )
+    
+    mainPanel(NGLVieweROutput("structure"))
+  ),
+
+  dashboardBody(
+    fluidRow(
+      column(width = 12,
+             box(title = "Sequence Viewer",
+                 width = 12,
+                 status = "primary",
+                 div(style = 'overflow-x: scroll',
+                     tableOutput('trace_table')
+                     )
+                 )
+             )
+      )
+  ),
 )
 
+
 server <- function(input, output) {
+  
   output$structure <- renderNGLVieweR({
     
-    mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath)
-    
-    NGLVieweR(pdb_filepath) %>%
+  scale_limits <- c(input$prot_range[1], input$prot_range[2], input$deprot_range[1], input$deprot_range[2])/100
+  mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath, scale_limits)
+  
+  #colour antigen PDB according to protection/deprotection probability
+  NGLVieweR(pdb_filepath) %>%
       stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
       addRepresentation(input$representation) %>%
-      addRepresentation(input$representation, param = list(name="sele1", color=mycolor_parameters, backgroundColor="white")) #%>%
+      addRepresentation(input$representation, param = list(name="sele1", color=mycolor_parameters, backgroundColor="yellow")) #%>%
       #setQuality("high")
+    
+    })
+  
+  #render protection/deprotection probability for chosen antibody
+  observeEvent(input$antibody, {
+    # load precomputed protection/deprotection probabilities
+    filename_csv <- paste("data/hdx_", input$antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
+    dataset_labelled_Ab <- data.frame(read_csv(filename_csv))
+    output$trace_table <- renderTable(transpose(dataset_labelled_Ab))
   })
+  
 }
 
 shinyApp(ui, server)

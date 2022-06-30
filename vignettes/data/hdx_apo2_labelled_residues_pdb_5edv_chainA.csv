@@ -55,9 +55,9 @@ resnum,labels,hdx_values
 63,deprotected,0
 64,deprotected,0
 65,deprotected,0
-74,protected,0.007484276729559748
-75,protected,0.007484276729559748
-76,protected,0.007484276729559748
+74,protected,0.01661512928022362
+75,protected,0.01661512928022362
+76,protected,0.01661512928022362
 77,deprotected,0
 78,deprotected,0
 79,deprotected,0
@@ -229,9 +229,9 @@ resnum,labels,hdx_values
 279,deprotected,0
 280,deprotected,0
 281,deprotected,0
-305,protected,0.10883429419986024
-306,protected,0.10883429419986024
-307,protected,0.10883429419986024
+305,deprotected,0.01702669424743893
+306,deprotected,0.01702669424743893
+307,deprotected,0.01702669424743893
 308,deprotected,0
 309,deprotected,0
 310,deprotected,0
@@ -240,7 +240,7 @@ resnum,labels,hdx_values
 313,deprotected,0
 314,deprotected,0
 315,deprotected,0
-316,protected,0.009858156028368793
-317,protected,0.009858156028368793
-318,protected,0.009858156028368793
-319,protected,0.009858156028368793
+316,deprotected,0.015771313766596785
+317,deprotected,0.015771313766596785
+318,deprotected,0.015771313766596785
+319,deprotected,0.015771313766596785
