@@ -64,6 +64,7 @@ label_residues <- function(pdb_viewer_data) {
   }
   
   output_labelled_data <- data.frame("resnum"=pdb_viewer_data$protection$residues,
+                                     "aa"=pdb_viewer_data$protection$aa,
                                      "labels"=assigned_labels,
                                      "hdx_values"=extracted_values
   )
@@ -123,9 +124,12 @@ map_hdx2pdb <- function(dataset, antibody, pdb_filepath, scale_limits = c(0.03, 
     residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
     mean_values_pdb <- mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
     
+    aa_sequence_from_pdb <- sequence_from_pdb[sequence_residue_numbers_pdb %in% residue_numbers_hdx_pdb]
+    aa_sequence_from_pdb <- as.vector(aa_sequence_from_pdb)
     #residues_pdb_hdx_diff <- setdiff(sequence_residue_numbers_pdb, sequence_residue_numbers_hdx)
     
-    pdb_viewer_data[[x]] <- list("values"= mean_values_pdb,"residues"= residue_numbers_hdx_pdb)
+    # NOTE: We only visualise those residues for which HDX data and PDB coords are available
+    pdb_viewer_data[[x]] <- list("values"= mean_values_pdb,"residues"= residue_numbers_hdx_pdb, "aa"= aa_sequence_from_pdb)
   }
   
   # Save labelled data per residue in CSV file
@@ -153,8 +157,6 @@ antibody_selection <- colnames(averaged_protection)[c(2:length(averaged_protecti
 pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
 #################################################
 
-#mychoice <- "dAb25_1"
-
 # Define shinny app
 ui <- fluidPage(
   titlePanel("HDX protection/deprotection viewer"),
@@ -176,7 +178,8 @@ ui <- fluidPage(
                  width = 12,
                  status = "primary",
                  div(style = 'overflow-x: scroll',
-                     tableOutput('trace_table')
+                     #tableOutput('trace_table')
+                     DT::dataTableOutput('trace_table')
                      )
                  )
              )
@@ -205,10 +208,26 @@ server <- function(input, output) {
   observeEvent(input$antibody, {
     # load precomputed protection/deprotection probabilities
     filename_csv <- paste("data/hdx_", input$antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
-    dataset_labelled_Ab <- data.frame(read_csv(filename_csv))
-    output$trace_table <- renderTable(transpose(dataset_labelled_Ab))
+    df <- data.frame(read_csv(filename_csv))
+    df[,'hdx_values'] = round(df[,'hdx_values'],2) # round probability values to 2 significantd digits
+    cut_vals <- df$resnum
+    
+    df <- transpose(subset(df, select = -c(labels))) # ignore labels column and transpose dataframe
+    scale_limits <- c(input$prot_range[1], input$prot_range[2], input$deprot_range[1], input$deprot_range[2])/100
+    mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath, scale_limits)
+    
+    output$trace_table <- DT::renderDataTable({
+      datatable(df,
+                #fontWeight =  c(5, 'normal', 'bold'),
+                options = list(dom='t', ordering=F), # no search, no sorting
+                colnames = rep("", ncol(df)), # no column names
+                rownames = c('<b>resnumber</b>','<b>aa</b>','<b>probability</b>'), # rename rows
+                escape = FALSE
+                ) %>% formatStyle(columns=names(df),
+                                  backgroundColor=styleEqual(cut_vals, sapply(mycolor_parameters,"[[",1))
+        ) 
+    })
   })
-  
 }
 
 shinyApp(ui, server)
