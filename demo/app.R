@@ -13,6 +13,9 @@ library("psych") # to compute harmonic.mean
 library("data.table") # to transpose table
 library("shinydashboard")
 library("DT")
+library("markdown")
+library("shinyWidgets")
+library("shinyBS") # Additional Bootstrap Controls
 
 #' Return harmonic mean protection/deprotection probability per residue
 #' 
@@ -159,20 +162,38 @@ pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
 
 # Define shinny app
 ui <- fluidPage(
-  titlePanel("HDX protection/deprotection viewer"),
+  
+  titlePanel("HDX Viewer"),
+  setBackgroundColor("ghostwhite"),
+  
+  # Sidebar layout with input and output definitions ----
   sidebarLayout(
+    
+    # Sidebar panel for inputs ----
     sidebarPanel(
+      
       selectInput("antibody", "Antibody", antibody_selection),
       selectInput("representation", "Representation", c("cartoon", "backbone", "licorice", "ball+stick", "spacefill", "surface")),
       sliderInput("prot_range", "Protection colour-scale limits",min = 0, max = 100, value = c(0,100)),
       sliderInput("deprot_range", "Deprotection colour-scale limits",min = 0, max = 100, value = c(0,100)),
     ),
-    
-    mainPanel(NGLVieweROutput("structure"))
+  
+    # Main panel for displaying outputs ----
+    mainPanel(
+      
+      # Output: Tabset w/ plot, summary, and table ----
+      tabsetPanel(type = "tabs",
+                  tabPanel("PDB visualiser", NGLVieweROutput("structure")),
+                  #tabPanel("HDX Heatmap", )
+                  tabPanel("Description", includeMarkdown("data/description.md")),
+      )
+    )  
   ),
-
+  
   dashboardBody(
+    
     fluidRow(
+      
       column(width = 12,
              box(title = "Sequence Viewer",
                  width = 12,
@@ -180,52 +201,58 @@ ui <- fluidPage(
                  div(style = 'overflow-x: scroll',
                      #tableOutput('trace_table')
                      DT::dataTableOutput('trace_table')
-                     )
                  )
              )
       )
+    )
   ),
+  
+  bsTooltip(id = "antibody", title = "Select a binding antibody to highlight the associated epitope on HOIP-RBR.", 
+            placement = "bottom", trigger = "hover"),
 )
-
 
 server <- function(input, output) {
   
+  # Map average HDX data onto PDB structure ----
   output$structure <- renderNGLVieweR({
     
-  scale_limits <- c(input$prot_range[1], input$prot_range[2], input$deprot_range[1], input$deprot_range[2])/100
-  mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath, scale_limits)
-  
-  #colour antigen PDB according to protection/deprotection probability
-  NGLVieweR(pdb_filepath) %>%
+    scale_limits <- c(input$prot_range[1], input$prot_range[2], input$deprot_range[1], input$deprot_range[2])/100
+    mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath, scale_limits)
+    
+    # Colour antigen PDB according to (de)protection probability ----
+    NGLVieweR(pdb_filepath) %>%
       stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
       addRepresentation(input$representation) %>%
       addRepresentation(input$representation, param = list(name="sele1", color=mycolor_parameters, backgroundColor="yellow")) #%>%
-      #setQuality("high")
+    #setQuality("high")
     
-    })
+  })
   
-  #render protection/deprotection probability for chosen antibody
+  # Render (de)protection probability for chosen antibody ----
   observeEvent(input$antibody, {
-    # load precomputed protection/deprotection probabilities
+    
+    # Load pre-computed Deuterium (de)protection probabilities ----
     filename_csv <- paste("data/hdx_", input$antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
     df <- data.frame(read_csv(filename_csv))
-    df[,'hdx_values'] = round(df[,'hdx_values'],2) # round probability values to 2 significantd digits
+    df[,'hdx_values'] = round(df[,'hdx_values'],2) # round probability values to 2 significant digits
     cut_vals <- df$resnum
     
     df <- transpose(subset(df, select = -c(labels))) # ignore labels column and transpose dataframe
     scale_limits <- c(input$prot_range[1], input$prot_range[2], input$deprot_range[1], input$deprot_range[2])/100
     mycolor_parameters <- map_hdx2pdb(dataset, input$antibody, pdb_filepath, scale_limits)
     
+    # Render Sequence Viewer: Colour amino-acid residues according to Deuterium (de)protection ----
     output$trace_table <- DT::renderDataTable({
+      
       datatable(df,
                 #fontWeight =  c(5, 'normal', 'bold'),
                 options = list(dom='t', ordering=F), # no search, no sorting
                 colnames = rep("", ncol(df)), # no column names
                 rownames = c('<b>resnumber</b>','<b>aa</b>','<b>probability</b>'), # rename rows
                 escape = FALSE
-                ) %>% formatStyle(columns=names(df),
-                                  backgroundColor=styleEqual(cut_vals, sapply(mycolor_parameters,"[[",1))
-        ) 
+      ) %>% formatStyle(columns=names(df),
+                        backgroundColor=styleEqual(cut_vals, sapply(mycolor_parameters,"[[",1))
+      ) 
     })
   })
 }
