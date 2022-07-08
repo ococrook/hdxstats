@@ -1,0 +1,71 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+library("RColorBrewer")
+library("scales")
+library("pheatmap")
+```
+
+```{r}
+averaged_protection <- read.csv("vignettes/data/averaged_protection_both.csv")
+antibody_selection <- colnames(averaged_protection)[c(2:length(averaged_protection))]
+
+heatmap_data <- list()
+
+for (antibody in antibody_selection) {
+  filename_csv <- paste("vignettes/data/hdx_", antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
+  df <- data.frame(read.csv(filename_csv))
+  
+  hdx_values <- c()
+  for (i in seq(length(df$aa))){
+    if (df$labels[i] == "protected") {
+      hdx_values <- append(hdx_values, -1*df$hdx_values[i])
+    } else{
+      hdx_values <- append(hdx_values, df$hdx_values[i])
+    }
+  }
+  heatmap_data[[antibody]] <- hdx_values
+}
+
+heatmap_matrix <- matrix(unlist(heatmap_data), ncol = 245)
+rownames(heatmap_matrix) <- antibody_selection
+colnames(heatmap_matrix) <- df$aa
+
+colormap <- colorRamp(brewer.pal(8, "RdBu"))
+domain <- c(-1,1) # min and max values
+color_function <- col_bin(colormap, domain)
+```
+
+
+```{r}
+pheatmap(heatmap_matrix, 
+         color=colorRampPalette(brewer.pal(n=7, name="RdBu"))(100),
+         #color=color_function(heatmap_matrix),
+         cluster_rows=FALSE, 
+         cluster_cols=FALSE, 
+         width=25, 
+         height=4, 
+         cellwidth=7, 
+         cellheight=10,
+         fontsize=8,
+         filename="test.pdf"
+         )
+```
+
+

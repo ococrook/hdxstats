@@ -184,7 +184,7 @@ ui <- fluidPage(
       # Output: Tabset w/ plot, summary, and table ----
       tabsetPanel(type = "tabs",
                   tabPanel("PDB visualiser", NGLVieweROutput("structure")),
-                  #tabPanel("HDX Heatmap", )
+                  #tabPanel("Heatmap", )
                   tabPanel("Description", includeMarkdown("data/description.md")),
       )
     )  

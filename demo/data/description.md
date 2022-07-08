@@ -17,4 +17,4 @@
 * [Prof. Charlotte Deane](https://www.stats.ox.ac.uk/~deane/), _University of Oxford_, Oxford Protein Informatics group (OPIG)
 
 **Funding**
-[Add some text here]
+This development of this package was support by funding from GlaxoSmithKline, a Todd-Bird Junior Research Fellowship and the EPSRC (EP/R511742/1).
