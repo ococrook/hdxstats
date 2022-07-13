@@ -32,5 +32,4 @@ color_function <- col_bin(colormap, domain)
 
 #plot_ly(z=heatmap_matrix, color="RdBu")
 # heatmap(heatmap_matrix, Colv = NA, Rowv = NA, scale="column", cexRow=1.5, , cexCol=1.5, xlab="HOIP-RBR sequence", ylab="Antibody", col=rainbow(25))
-heatmap(heatmap_matrix, Colv = NA, Rowv = NA, scale="column", xlab="HOIP-RBR sequence", ylab="Antibody", col=rainbow(25), margins=c(5,5))
-
+#heatmap(heatmap_matrix, Colv = NA, Rowv = NA, scale="column", xlab="HOIP-RBR sequence", ylab="Antibody", col=rainbow(25), margins=c(5,5))

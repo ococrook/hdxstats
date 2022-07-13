@@ -1,20 +1,33 @@
+
 **Why this visualiser?**
 
-* Given the structure of HOIP-RBR (PDB id:`5edv`), this visuliser colours estimated regions <span style="color:red">protected</span> and <span style="color:blue">deprotected</span> from Deuterium uptake in Hydrogen-Deuterium Exchange experiments (HDX).  
+* This visualiser is meant to complement the results in Reference [1] by providing an interactive way of exploring the data therein.
 
-* Hydrogen-Deuterium Exchange (HDX) data was taken from Reference X.
+* Given the structure of HOIP-RBR (PDB id:[`5edv`](https://www.rcsb.org/structure/5edv)), this visualiser colours estimated regions <span style="color:red">protected</span> or <span style="color:blue">deprotected</span> from Deuterium uptake in Hydrogen-Deuterium Exchange (HDX) experiments.
+
+**How to use this visualiser**
+
+* By using the control panel on the left you highlight those residues in HOIP-RBR protected/deprotected from HDX upon binding to each single-domain _Antibody_, which you can select via the dropdown menu.
+
+* You can also explore different _Representations_ to gain a better sense of how HDX protection/deprotection relates to secondary structure, surface accessibility, and so on.
+
+* The _Sequence Viewer_ at the bottom dynamically highlights the residue numbers involved in  HDX protection or deprotection upon selecting an antibody. The amino-acid identities and estimated protection/deprotection probabilities are shown too per each residue.
+
+* You can also vary the colour-scale limits values to explore what parts in HOIP-RBR get highlighted according to their
+protection/deprotection intensity. _Note_: values outside the scale limits will automatically highlight residues in grey.
 
 
 **References**
-* Ref X
-* Ref Y
+[1] Identifying conformational heterogeneity in hydrogen-deuterium exchange mass spectrometry experiments via Bayesian biclustering, Hanwen Xing et al. 
 
 **Contacts**
-* [Dr. Broncio Aguilar-Sanjuan](https://github.com/broncio123), _University of Oxford_, Statistics Department, Oxford Protein Informatics group (OPIG)
-* [Dr. Olver Crook](https://olivercrook.co.uk/), _University of Oxford_, Statistics Department, Oxford Protein Informatics group (OPIG)
+* [Broncio Aguilar-Sanjuan](https://github.com/broncio123), Department of Statistics, University of Oxford, Oxford, UK.
+* [Olver Crook](https://olivercrook.co.uk/), Department of Statistics, University of Oxford, Oxford, UK.
+* Hanwen Xing, Department of Statistics, University of Oxford, Oxford, UK.
+* Chun-wa Chung, Structural and Biophysical Sciences, GlaxoSmithKline R&D, Stevenage, UK. 
 
 **Acknowledgements**
 * [Prof. Charlotte Deane](https://www.stats.ox.ac.uk/~deane/), _University of Oxford_, Oxford Protein Informatics group (OPIG)
 
 **Funding**
-This development of this package was support by funding from GlaxoSmithKline, a Todd-Bird Junior Research Fellowship and the EPSRC (EP/R511742/1).
+This development of this package was supported by funding from GlaxoSmithKline, a Todd-Bird Junior Research Fellowship and the EPSRC (EP/R511742/1).

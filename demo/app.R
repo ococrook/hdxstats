@@ -184,7 +184,7 @@ ui <- fluidPage(
       # Output: Tabset w/ plot, summary, and table ----
       tabsetPanel(type = "tabs",
                   tabPanel("PDB visualiser", NGLVieweROutput("structure")),
-                  #tabPanel("Heatmap", )
+                  tabPanel("Heatmap", includeMarkdown("data/heatmap.md"), uiOutput("pdfview")),
                   tabPanel("Description", includeMarkdown("data/description.md")),
       )
     )  
@@ -212,6 +212,11 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
+  
+  # Render Heatmap PDF ----
+  output$pdfview <- renderUI({
+    tags$iframe(style="height:665px; width:100%; overflow:hidden; padding: 0; transform: scale(0.9); zoom: 1", src='heatmap_all_average_hdx_data.png')
+    })
   
   # Map average HDX data onto PDB structure ----
   output$structure <- renderNGLVieweR({
@@ -248,7 +253,7 @@ server <- function(input, output) {
                 #fontWeight =  c(5, 'normal', 'bold'),
                 options = list(dom='t', ordering=F), # no search, no sorting
                 colnames = rep("", ncol(df)), # no column names
-                rownames = c('<b>resnumber</b>','<b>aa</b>','<b>probability</b>'), # rename rows
+                rownames = c('<b>Residue number</b>','<b>Amino-acid</b>','<b>Probability</b>'), # rename rows
                 escape = FALSE
       ) %>% formatStyle(columns=names(df),
                         backgroundColor=styleEqual(cut_vals, sapply(mycolor_parameters,"[[",1))
