@@ -3,11 +3,17 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+# DESCRIPTION
+
+R markdown notebook to generate a pretty heatmap plot (pheatmap) from all the protection/deprotection probability data for all binding antibody conditions of HOIP-RBR.
+
+First, load essential libraries
 ```{r}
 library("RColorBrewer")
 library("scales")
 library("pheatmap")
 ```
+
 
 ```{r}
 
@@ -34,7 +40,7 @@ for (antibody in antibody_selection) {
 
 heatmap_matrix <- matrix(unlist(heatmap_data), nrow = 245)
 colnames(heatmap_matrix) <- antibody_selection
-rownames(heatmap_matrix) <- df$aa
+rownames(heatmap_matrix) <- format(paste(df$aa, formatC(df$resnum, width=3, flag="0"), sep="-"), justify="centre")
 ```
 
 
@@ -51,3 +57,5 @@ pheatmap(t(heatmap_matrix),
          filename="heatmap_all_average_hdx_data.png"
          )
 ```
+
+
