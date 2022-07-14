@@ -47,7 +47,7 @@ pheatmap(t(heatmap_matrix),
          cellwidth=7.5, 
          cellheight=7.5,
          fontsize=6.5,
-         res=100,
+         res=50,
          filename="heatmap_all_average_hdx_data.png"
          )
 ```

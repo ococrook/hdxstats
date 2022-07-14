@@ -3,7 +3,7 @@
 
 * This visualiser is meant to complement the results in Reference [1] by providing an interactive way of exploring the data therein.
 
-* Given the structure of HOIP-RBR (PDB id:[`5edv`](https://www.rcsb.org/structure/5edv)), this visualiser colours estimated regions <span style="color:red">protected</span> or <span style="color:blue">deprotected</span> from Deuterium uptake in Hydrogen-Deuterium Exchange (HDX) experiments.
+* Given the structure of HOIP-RBR (PDB id:[`5edv`](https://www.rcsb.org/structure/5edv)) [2], this visualiser colours estimated regions <span style="color:red">protected</span> or <span style="color:blue">deprotected</span> from Deuterium uptake in Hydrogen-Deuterium Exchange (HDX) experiments.
 
 **How to use this visualiser**
 
@@ -14,11 +14,13 @@
 * The _Sequence Viewer_ at the bottom dynamically highlights the residue numbers involved in  HDX protection or deprotection upon selecting an antibody. The amino-acid identities and estimated protection/deprotection probabilities are shown too per each residue.
 
 * You can also vary the colour-scale limits values to explore what parts in HOIP-RBR get highlighted according to their
-protection/deprotection intensity. _Note_: values outside the scale limits will automatically highlight residues in grey.
-
+protection/deprotection intensity. _Note_ values outside the scale limits will automatically highlight residues in grey.
 
 **References**
-[1] Identifying conformational heterogeneity in hydrogen-deuterium exchange mass spectrometry experiments via Bayesian biclustering, Hanwen Xing et al. 
+
+[1] _Identifying conformational heterogeneity in hydrogen-deuterium exchange mass spectrometry experiments via Bayesian biclustering_, Hanwen Xing et al., 2022.
+
+[2] _Single-Domain Antibodies as Crystallization Chaperones to Enable Structure-Based Inhibitor Development for RBR E3 Ubiquitin Ligases_, Yi-Chun Isabella Tsai et al., 2020, Cell Chemical Biology 27, 83–93.
 
 **Contacts**
 * [Broncio Aguilar-Sanjuan](https://github.com/broncio123), Department of Statistics, University of Oxford, Oxford, UK.

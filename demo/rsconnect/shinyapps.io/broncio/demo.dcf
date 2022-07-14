@@ -5,9 +5,9 @@ account: broncio
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6507050
-bundleId: 6091271
+bundleId: 6094802
 url: https://broncio.shinyapps.io/demo/
-when: 1657631007.53843
-lastSyncTime: 1657631007.53846
+when: 1657719367.35207
+lastSyncTime: 1657719367.35212
 asMultiple: FALSE
 asStatic: FALSE
