@@ -24,7 +24,7 @@ protection/deprotection intensity. _Note_ values outside the scale limits will a
 
 **Contacts**
 * [Broncio Aguilar-Sanjuan](https://github.com/broncio123), Department of Statistics, University of Oxford, Oxford, UK.
-* [Olver Crook](https://olivercrook.co.uk/), Department of Statistics, University of Oxford, Oxford, UK.
+* [Oliver Crook](https://olivercrook.co.uk/), Department of Statistics, University of Oxford, Oxford, UK.
 * Hanwen Xing, Department of Statistics, University of Oxford, Oxford, UK.
 * Chun-wa Chung, Structural and Biophysical Sciences, GlaxoSmithKline R&D, Stevenage, UK. 
 
