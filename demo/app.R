@@ -135,6 +135,8 @@ map_hdx2pdb <- function(dataset, antibody, pdb_filepath, scale_limits = c(0.03, 
     pdb_viewer_data[[x]] <- list("values"= mean_values_pdb,"residues"= residue_numbers_hdx_pdb, "aa"= aa_sequence_from_pdb)
   }
   
+  
+  
   # Save labelled data per residue in CSV file
   output_labelled_data <- label_residues(pdb_viewer_data)
   #output_file <- paste("data/hdx_", antibody, "_labelled_residues_pdb_5edv_chainA.csv", sep="")
@@ -145,6 +147,11 @@ map_hdx2pdb <- function(dataset, antibody, pdb_filepath, scale_limits = c(0.03, 
   df <- data.frame(x=color_function(output_labelled_data, scale_limits = scale_limits), y=residue_selections)
   color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
   
+  # Colour PDB residues in dark grey when no HDX data available
+  residue_numbers_pdb_NOT_hdx <- setdiff(sequence_residue_numbers_pdb, sequence_residue_numbers_hdx)
+  color_parameters_null <- to_list(for(i in 1:length(residue_numbers_pdb_NOT_hdx)) c("#696969", residue_numbers_pdb_NOT_hdx[i]))
+  
+  #return(append(color_parameters, color_parameters_null))
   return(color_parameters)
 }
 #################################################
@@ -215,7 +222,7 @@ server <- function(input, output) {
   
   # Render Heatmap PDF ----
   output$pdfview <- renderUI({
-    tags$iframe(style="height:665px; width:100%; overflow:hidden; padding: 0; transform: scale(0.9); zoom: 1", src='heatmap_all_average_hdx_data.png')
+    tags$iframe(style="height:730px; width:100%; overflow:hidden; padding: 0; transform: scale(0.9); zoom: 1", src='heatmap_all_average_hdx_data.png')
     })
   
   # Map average HDX data onto PDB structure ----
