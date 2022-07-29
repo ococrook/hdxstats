@@ -67,7 +67,6 @@ hdxdiff2 <- hdxdifference(object = newqDF,
               cols = c(2,5),
               name = "-log10 p value (signed)")
 
-
 dMap <- list(hdxdiff1$diffMap, hdxdiff2$diffMap)
 out4 <- hdxheatmap(averageMaps = avMap, diffMaps = dMap)
 out4[[1]]/out4[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
