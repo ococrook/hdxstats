@@ -71,6 +71,7 @@ dMap <- list(hdxdiff1$diffMap, hdxdiff2$diffMap)
 out4 <- hdxheatmap(averageMaps = avMap, diffMaps = dMap)
 out4[[1]]/out4[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
+
 # Visualise data in PDB structure
 
 Load essential libraries
@@ -81,80 +82,18 @@ library("tidyverse")
 library("RColorBrewer")
 library("scales")
 library("comprehenr")
+library("bio3d")
 ```
 
 Visualise differential HDX data
 
 ```{r}
-# Load essential libraries
-library("shiny")
-library("NGLVieweR")
-library("tidyverse")
-library("RColorBrewer")
-library("scales")
-library("comprehenr")
-library("dplyr")
-library("bio3d")
-library("psych") # to compute harmonic.mean
-library("data.table") # to transpose table
-library("shinydashboard")
-library("DT")
-library("markdown")
-library("shinyWidgets")
-library("shinyBS") # Additional Bootstrap Controls
-```
-
-
-```{r}
-map_hdx2pdb <- function(dataset, pdb_filepath) {
-  
-  # Extract residue numbers from available residues in PDB coordinates ---
-  
-  pdb_content <- read.pdb(pdb_filepath)
-  sequence_from_pdb <- pdbseq(pdb_content)
-  sequence_residue_numbers_pdb <- strtoi(row.names(data.frame(sequence_from_pdb)))
-  n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
-  
-  # Work out residues and deprotection values to map onto PDB ---
-  
-  print(paste("Your HDX input dataset has ", length(colnames(dataset)), "entries"))
-  print(paste("And excluding NA data you only have", length(dataset[!is.na(dataset)]), "entries"))
-  print(paste("However, your input PDB has only", n_residues_from_pdb, "residues in total"))
-  
-  sequence_residue_numbers_hdx <- seq(length(dataset)) # NEED TO TWEAK THIS!!!
-  residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
-  aa_sequence_from_pdb <- sequence_from_pdb[sequence_residue_numbers_pdb %in% residue_numbers_hdx_pdb]
-  aa_sequence_from_pdb <- as.vector(aa_sequence_from_pdb)
-  
-  dataset_for_pdb_mapping <- dataset[residue_numbers_hdx_pdb]
-  pdb_viewer_data <- list("values"= dataset_for_pdb_mapping,"residues"= residue_numbers_hdx_pdb, "aa"= aa_sequence_from_pdb)
-  
-  # Define colour map --
-  colormap <- colorRampPalette(brewer.pal(n=9, name="RdBu"))
-  domain <- c(-2.0,2.0)
-  color_function <- col_bin(colormap, domain, na.color="#FFD700")
-  
-  residue_selections <- pdb_viewer_data$residues
-  df <- data.frame(x=unlist(lapply(pdb_viewer_data$values, color_function)), y=residue_selections)
-  color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
-  
-  # Colour PDB residues in dark grey when no HDX data availables
-  residue_numbers_pdb_NOT_hdx <- setdiff(sequence_residue_numbers_pdb, sequence_residue_numbers_hdx)
-  color_parameters_null <- to_list(for(i in 1:length(residue_numbers_pdb_NOT_hdx)) c("#696969", residue_numbers_pdb_NOT_hdx[i]))
-  
-  #return(append(color_parameters, color_parameters_null))
-  return(color_parameters)
-}
-```
-
-
-```{r}
-dataset <- hdxdiff1$averageMap
-scale_limits <- c(min(dataset[!is.na(dataset)]), max(dataset[!is.na(dataset)]))
-
-# Antigen PDB coordinate file
+dataset <- hdxdiff2$diffMap
+#dataset <- avMap25_1 
 pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
-mycolor_parameters <- map_hdx2pdb(dataset, pdb_filepath)
+
+source("../R/pdb-visualisation.R")
+mycolor_parameters <- hdx_to_pdb_colours(dataset, pdb_filepath)
 ```
 
 
