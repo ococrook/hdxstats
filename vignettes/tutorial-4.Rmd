@@ -85,11 +85,10 @@ library("comprehenr")
 library("bio3d")
 ```
 
-Visualise differential HDX data
+Map protection/deprotection heatmaps onto PDB
 
 ```{r}
-dataset <- hdxdiff2$diffMap
-#dataset <- avMap25_1 
+dataset <- avMap25_1 * sign(hdxdiff1$diffMap)
 pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
 
 source("../R/pdb-visualisation.R")
@@ -105,3 +104,21 @@ NGLVieweR(pdb_filepath) %>%
   #setSpin()
 ```
 
+Map protection/deprotection heatmaps onto PDB
+
+```{r}
+dataset <- avMap27_2 * sign(hdxdiff2$diffMap)
+pdb_filepath <- "data/5edv_chainA_clean_renumbered.pdb"
+
+source("../R/pdb-visualisation.R")
+mycolor_parameters <- hdx_to_pdb_colours(dataset, pdb_filepath)
+```
+
+
+```{r}
+NGLVieweR(pdb_filepath) %>%
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="white")) #%>%
+  #setSpin()
+```
