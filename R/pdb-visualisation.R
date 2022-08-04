@@ -7,35 +7,44 @@
 ##' 
 ##' @rdname pdb-visualisation
 define_color_function <- function(dataset, 
-                                  scale_limits = NULL){
+                                  scale_limits = NULL,
+                                  cmap_name = NULL){
   
-    colormap <- colorRamp(brewer.pal(n=9, name="RdBu"))
     if (is.null(scale_limits)) {
       # By default work out the numerical domain from the data
       scale_limits <- c(min(dataset[!is.na(dataset)]), 
                         max(dataset[!is.na(dataset)]))
-      
-      print("Negative values will be coloured in Blue, and positive ones on Red")
-    }
-    
-    print(paste("Your scale limits are ", round(scale_limits, 2)))
-    
-    colormap <- colorRamp(brewer.pal(8, "Blues"))
-    domain <- c(0.0, abs(scale_limits[1]))
-    color_function_deprotected <- col_bin(colormap, domain, na.color="#808080")
-    
-    colormap <- colorRamp(brewer.pal(8, "Reds"))
-    domain <- c(0.0, abs(scale_limits[2]))
-    color_function_protected <- col_bin(colormap, domain, na.color="#808080")
-    
-    output_function <- function(x){
-      if (!is.na(x) && x >= 0.0){
-        return(color_function_protected(abs(x)))
-      }else{
-        return(color_function_deprotected(abs(x)))
-      }
     }
   
+    print(paste("Your scale limits are ", round(scale_limits, 2)))
+  
+    if (!is.null(cmap_name) && cmap_name == "ProtDeprot") {
+        print("Negative values will be coloured in Blue, and positive ones on Red")
+        
+        colormap <- colorRamp(brewer.pal(8, "Blues"))
+        domain <- c(0.0, abs(scale_limits[1]))
+        color_function_deprotected <- col_bin(colormap, domain, na.color="#808080")
+        
+        colormap <- colorRamp(brewer.pal(8, "Reds"))
+        domain <- c(0.0, abs(scale_limits[2]))
+        color_function_protected <- col_bin(colormap, domain, na.color="#808080")
+        
+        output_function <- function(x){
+          if (!is.na(x) && x >= 0.0){
+            return(color_function_protected(abs(x)))
+          }else{
+            return(color_function_deprotected(abs(x)))
+          }
+        }
+        
+    }else if (is.null(cmap_name)) {
+        print("Your values will be coloured using Viridis")
+      
+        n_values <- length(unique(sort(dataset)))
+        col_pal = c("white", viridis(n_values))
+        output_function <- col_bin(col_pal, scale_limits, na.color="#808080")
+    }
+    
     return(output_function)
 }
 
@@ -51,7 +60,8 @@ define_color_function <- function(dataset,
 ##' @rdname pdb-visualisation
 hdx_to_pdb_colours <- function(dataset,
                                pdb_filepath,
-                               scale_limits = NULL){
+                               scale_limits = NULL,
+                               cmap_name = NULL){
   
     # Extract residue numbers from available residues in PDB coordinates ---
     
@@ -83,7 +93,7 @@ hdx_to_pdb_colours <- function(dataset,
     
     # Define colormap according to scale_limits--
     
-    color_function <- define_color_function(dataset, scale_limits)
+    color_function <- define_color_function(dataset, scale_limits, cmap_name)
     
     residue_selections <- pdb_viewer_data$residues
     df <- data.frame(x=unlist(lapply(pdb_viewer_data$values, color_function)), y=residue_selections)
