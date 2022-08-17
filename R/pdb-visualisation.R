@@ -1,5 +1,5 @@
 ##' Color function
-##' @author Broncio Aguilar-Sanjuan
+##' @author Broncio Aguilar-Sanjuan and Oliver Crook
 ##' @param dataset The dataset for which numerical values will be colour enconded
 ##' @param scale_limits You can force a range of numerical values to be mapped only
 ##' @return Returns a color function
@@ -49,7 +49,7 @@ define_color_function <- function(dataset,
 }
 
 ##' Map estimated (de)protection values to Blue-White-Red colormap values
-##' @author Broncio Aguilar-Sanjuan
+##' @author Broncio Aguilar-Sanjuan and Oliver Crook
 ##' @param dataset A list of estimated protection (positive) and deprotection (negative) values per residue
 ##' @param pdb_filepath The path to the PDB file for mapping of (de)protection values
 ##' @param scale_limits You can force a range of numerical values to be mapped only
