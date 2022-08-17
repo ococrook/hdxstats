@@ -55,13 +55,15 @@ data is contained within the package and so can be loaded by specificy
 the correct path.
 
 ```{r,}
-secApath <- system.file("extdata", "Project_2_SecA_Cluster_Data.csv",
-                        package = "hdxstats")
+#secApath <- system.file("inst/extdata", "Project_2_SecA_Cluster_Data.csv",
+#                        package = "hdxstats")
+secApath <- "../inst/extdata/Project_2_SecA_Cluster_Data.csv"
 ```
 
 We can now read in the .csv file and have a quick look at the .csv.
 ```{r,}
-secA <- read.csv(secApath)
+#secA <- read.csv(secApath)
+secA <- read.csv("../inst/extdata/Project_2_SecA_Cluster_Data.csv")
 head(secA) # have a look
 length(unique(secA$Sequence)) # peptide sequences
 unique(secA$State) # States
@@ -221,7 +223,7 @@ initilisation should also be provided. Sometimes the model can't be fit on the
 kinetics. This is either because there is not enough data or through lack of 
 convergence. An error will be reported in these cases but this should not 
 perturb the user. You may wish to try a few starting values if there 
-excessive models that fail fitting. 
+excessive models that fail fitting.
 
 ```{r,}
 res <- fitUptakeKinetics(object = secAqDF_norm1_sub,
