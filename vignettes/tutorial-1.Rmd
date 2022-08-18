@@ -30,7 +30,7 @@ library("scales")
 library("viridis")
 library("patchwork")
 library("Biostrings")
-
+library("xfun")
 ```
 
 # A well-defined HDX-MS experiment

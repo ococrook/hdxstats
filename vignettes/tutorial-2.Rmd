@@ -74,7 +74,7 @@ of models that have been fit for the peptides. This is simply a holder for a lis
 of `HdxStatModel` instances.
 
 ```{r,}
-all_models
+all_models@statmodels[[1]]
 ```
 
 We can easily examine individual fits by going to the underlying `HdxStatModel`
