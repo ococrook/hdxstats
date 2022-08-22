@@ -1,3 +1,83 @@
+
+parameter_file <- function(data) {
+  
+  #Print column names
+  print("INFO: I found these columns in your input CSV file")
+  data_columns <- colnames(data)
+  message <- paste(colnames(data))
+  print(message)
+
+  print("INFO: Specify the column name indicating the starting peptide residue numbers...")
+  Start <- readline(prompt = "Start (residue number) = ")
+  while (is.null(data[[Start]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Start <- readline(prompt = "Start (residue number) = ")
+  }
+  
+  print("INFO: Specify the column name indicating the ending peptide residue numbers...")
+  End <- readline(prompt = "End (residue number) = ")
+  while (is.null(data[[End]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    End <- readline(prompt = "End (residue number) = ")
+  }
+  
+  print("INFO: Specify the column name indicating the peptide sequences...")
+  Sequence <- readline(prompt = "Sequence (peptide) = " )
+  while (is.null(data[[Sequence]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Sequence <- readline(prompt = "Sequence (peptide) = " )
+  }
+  
+  print("INFO: Specify the column name indicating the peptide charge values...")
+  Charge <- readline(prompt = "Charge = ")
+  while (is.null(data[[Charge]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Charge <- readline(prompt = "Charge = ")
+  }
+  
+  print("INFO: Specify the column name indicating the Deuterium uptake values ...")
+  Deu_Uptake <- readline(prompt = "Deu_Uptake = ")
+  while (is.null(data[[Deu_Uptake]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Deu_Uptake <- readline(prompt = "Deu_Uptake = ")
+  }
+  
+  print("INFO: Specify the column name indicating the Deuterium exposure timepoints...")
+  Time_Exposure <- readline(prompt = "Time_Exposure = ")
+  while (is.null(data[[Time_Exposure]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Time_Exposure <- readline(prompt = "Time_Exposure = ")
+    # ADD ROUTINE TO FORMAT TIME OR INPUT TIME UNITS (format to seconds, remove triling s, should be numeric)
+  }
+  
+  print("INFO: Specify column names indicating relevant experimental conditions ...")
+  print("INFO: IMPORTANT. You can provide more than one column name separared by commas (,). I will merge them into a single label though.")
+  Conditions <- readline(prompt = "Conditions = ")
+  column_in_set <- unlist(strsplit(toString(gsub(" ", "", Conditions, fixed = TRUE)), split=",")) %in% data_columns
+  while (!all(column_in_set)){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Conditions <- readline(prompt = "Conditions = ")
+  }
+  
+  print("INFO: Specify the column name indicating experimental replicates ...")
+  Replicate <- readline(prompt = "Replicate = ")
+  while (is.null(data[[Replicate]])){
+    print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    Replicate <- readline(prompt = "Replicate = ")
+  }
+  
+  parameters <- list("Start" = Start, 
+                     "End" = End, 
+                     "Sequence" = Sequence,
+                     "Charge" = Charge,
+                     "Deu_Uptake" = Deu_Uptake,
+                     "Time_Exposure" = Time_Exposure,
+                     "Conditions" = Conditions,
+                     "Replicate" = Replicate)
+  
+  return(parameters)
+}
+
 ##' Pre-process data and output a QFeatures instance
 ##' @author Broncio Aguilar-Sanjuan and Oliver Crook
 ##' @param data
@@ -18,19 +98,20 @@ preprocess_data <- function(data,
   # Transform data
   print("INFO: I reformatted your data to a wide format given your selected columns")
   
+  #####################################################
   columns_names <- c("hx_time", "replicate_cnt", "hx_sample") # to mash up
   columns_fixed <- c("pep_sequence", "pep_charge") # to keep fixed
   columns_values <- c("d")
+  #####################################################
   
   data_wide <- pivot_wider(data.frame(data),
                            values_from = columns_values,
                            names_from = columns_names,
                            id_cols = columns_fixed)
   
-  # Remove NA's
-  print("INFO: I removed NA values")
-  
+  # Remove NA's # NOTE: KEEP THIS AS IT IS!
   data_wide <- data_wide[, colSums(is.na(data_wide)) != nrow(data_wide)]
+  print("INFO: I removed NA values")
   
   # Subtract columns from youir data
   print("INFO: I remove your selected columns from your output data")
@@ -55,6 +136,7 @@ preprocess_data <- function(data,
   data_qDF <- parseDeutData(object = DataFrame(data_wide),
                             design = new_object.colnames,
                             quantcol = initial_column:last_column)
+  #####################################################
   
   # Normalise data 
   if (normalise) {
@@ -166,20 +248,20 @@ analyse_kinetics <- function(data,
       print("INFO: You did not specify a 'formula' for your fitting model.")
       print("INFO: Fitting will be performed for (default): 'formula <- value ~ a * (1 - exp(-b*(timepoint)^p)) + d' ")
       
-      functional_analysis <- fitting_method(object = data,
-                                feature = peptide_selection,
-                                start = starting_parameters)
-      results <- list("functional_analysis" = functional_analysis, "method" = "differentialUptakeKinetics")
+      fitted_models <- fitting_method(object = data,
+                                      feature = peptide_selection,
+                                      start = starting_parameters)
+      results <- list("fitted_models" = fitted_models, "method" = "differentialUptakeKinetics")
     }
     
     else{
       print("INFO: You specified your own 'formula' for your fitting model.")
       
-      functional_analysis <- fitting_method(object = data,
-                                feature = peptide_selection,
-                                start = starting_parameters,
-                                formula = formula)
-      results <- list("functional_analysis" = functional_analysis, "method" = "differentialUptakeKinetics")
+      fitted_models <- fitting_method(object = data,
+                                      feature = peptide_selection,
+                                      start = starting_parameters,
+                                      formula = formula)
+      results <- list("fitted_models" = fitted_models, "method" = "differentialUptakeKinetics")
     }
     
   }
@@ -192,7 +274,7 @@ visualise_hdx_data <- function(results,
                                level = NULL,
                                pdb = NULL){
   
-  if (type == "kinetics"){
+  if (type == "kinetics" & results$method == "fitUptakeKinetics"){
     n_models <- length(results$fitted_models@statmodels)
     message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
     print(message)
@@ -202,8 +284,17 @@ visualise_hdx_data <- function(results,
     return(graphics)
     print("INFO: I appended all ggplot output objects to a list")
   }
-
-
+  
+  else if (type == "kinetics" & results$method == "differentialUptakeKinetics"){
+    n_models <- length(results$fitted_models)
+    message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
+    print(message)
+    
+    graphics = results$fitted_models@vis
+    return(graphics)
+    print("INFO: I appended all ggplot output objects to a list")
+  }
+  
   else if (type == "forest"){
     n_models <- length(results$fitted_models@statmodels)
     message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
@@ -239,7 +330,7 @@ visualise_hdx_data <- function(results,
 }
 
 graphics <- visualise_hdx_data(results, type="kinetics") # READY
-graphics <- visualise_hdx_data(results, type="forest") # READY
+graphics <- visualise_hdx_data(results, type="forest") # READY 
 graphics <- visualise_hdx_data(results, type="manhatten")# <<<<--- NEXT
 graphics <- visualise_hdx_data(results, type="peptide")
 graphics <- visualise_hdx_data(results, type="epitope", level="peptide")
@@ -264,6 +355,7 @@ graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb=
 # TUTORIAL flexible-fits.Rmd
 #MBPpath <- system.file("extdata", "MBP.csv", package = "hdxstats")
 
+#######################################################
 data_filepath <- "vignettes/data/MBPqDF.rsd"
 hdx_data <- extract_hdx_data(data_filepath) # DONE
 
@@ -299,9 +391,10 @@ results <- analyse_kinetics(data = data_selection,
                             peptide_selection = all_peptides[37], 
                             start = starting_parameters)
 
-graphics <- visualise_hdx_data(results, type="kinetics") # <<<<--- NEXT
-graphics <- visualise_hdx_data(results, type="forest")
-graphics <- visualise_hdx_data(results, type="manhatten")
+#######################################################
+graphics <- visualise_hdx_data(results, type="kinetics") # This applies to both regular and differential fits
+graphics <- visualise_hdx_data(results, type="forest") # This only applies to regular fits
+graphics <- visualise_hdx_data(results, type="manhatten") # This only applies to differential fits
 graphics <- visualise_hdx_data(results, type="epitope", level="peptide")
 graphics <- visualise_hdx_data(results, type="epitope", level="residue") # Return heatmap
 graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap
@@ -309,11 +402,3 @@ graphics <- visualise_hdx_data(results, type="protection", level="residue") # Re
 graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb="my_pdb_path")
 
 # GUI: Make GUI by assembling these building blocks
-
-
-# This condenses Tutorial 1
-# Note that differentialUptake can only be applied to all data in relation to a single selected peptide
-# If feature = all_peptides, this will procude a NULL output
-# THi ALREADY PROCESS functionals by default
-#all_peptides <- rownames(data_qDF)[[1]] # get all peptides
-#peptide_selection <- all_peptides[37]
