@@ -22,8 +22,8 @@ library("xfun")
 ```
 
 ```{r}
-data_filepath <- "vignettes/data/MBPqDF.rsd"
-hdx_data <- extract_hdx_data(data_filepath) # DONE
+#data_filepath <- "vignettes/data/MBPqDF_test.rsd"
+#hdx_data <- extract_hdx_data(data_filepath) # DONE
 
 
 # TEST 1

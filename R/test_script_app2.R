@@ -1,5 +1,6 @@
 
-parameter_file <- function(data) {
+make_parameter_file <- function(data, 
+                                save = FALSE) {
   
   #Print column names
   print("INFO: I found these columns in your input CSV file")
@@ -28,7 +29,7 @@ parameter_file <- function(data) {
     Sequence <- readline(prompt = "Sequence (peptide) = " )
   }
   
-  print("INFO: Specify the column name indicating the peptide charge values...")
+  print("INFO: Specify the column name indicating the peptide charge state...")
   Charge <- readline(prompt = "Charge = ")
   while (is.null(data[[Charge]])){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
@@ -43,15 +44,14 @@ parameter_file <- function(data) {
   }
   
   print("INFO: Specify the column name indicating the Deuterium exposure timepoints...")
-  Time_Exposure <- readline(prompt = "Time_Exposure = ")
-  while (is.null(data[[Time_Exposure]])){
+  Exposure_Time <- readline(prompt = "Exposure_Time = ")
+  while (is.null(data[[Exposure_Time]])){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
-    Time_Exposure <- readline(prompt = "Time_Exposure = ")
-    # ADD ROUTINE TO FORMAT TIME OR INPUT TIME UNITS (format to seconds, remove triling s, should be numeric)
+    Exposure_Time <- readline(prompt = "Exposure_Time = ")
   }
   
   print("INFO: Specify column names indicating relevant experimental conditions ...")
-  print("INFO: IMPORTANT. You can provide more than one column name separared by commas (,). I will merge them into a single label though.")
+  print("INFO: IMPORTANT. You can provide more than one column name separared by commas (,) - I will merge them into a single label though.")
   Conditions <- readline(prompt = "Conditions = ")
   column_in_set <- unlist(strsplit(toString(gsub(" ", "", Conditions, fixed = TRUE)), split=",")) %in% data_columns
   while (!all(column_in_set)){
@@ -66,14 +66,33 @@ parameter_file <- function(data) {
     Replicate <- readline(prompt = "Replicate = ")
   }
   
+  print("INFO: OPTIONAL. Specify the columns you want to ignore. Otherwise, leave blank.")
+  print("INFO: IMPORTANT. You can provide more than one column name separared by commas (,)")
+  Ignore <- readline(prompt = "Ignore = ")
+  
+  print("INFO: OPTIONAL. Specify other column names you want to tag along - I will merge these into a single string chain. Otherwise, leave blank.")
+  Other <- readline(prompt = "Other = ")
+  
   parameters <- list("Start" = Start, 
                      "End" = End, 
                      "Sequence" = Sequence,
                      "Charge" = Charge,
                      "Deu_Uptake" = Deu_Uptake,
-                     "Time_Exposure" = Time_Exposure,
+                     "Exposure_Time" = Exposure_Time,
                      "Conditions" = Conditions,
-                     "Replicate" = Replicate)
+                     "Replicate" = Replicate,
+                     "Ignore" = Ignore,
+                     "Other" = Other)
+  
+  if (file.exists(dirname(save))){
+    saveRDS(parameters, file = save)
+    message = paste("INFO: Saved your parameters in ", save)
+    print(message)
+    
+  } else{
+    print("ERROR: Your parameter_file was not saved. Provide a valid output path with 'save = outfile_path'")
+    print(paste("The output file path that you provided was: ", save))
+    }
   
   return(parameters)
 }
@@ -87,77 +106,96 @@ parameter_file <- function(data) {
 ##' @md
 ##' 
 preprocess_data <- function(data, 
-                            normalise = TRUE,
-                            save = TRUE) {
+                            normalise = FALSE,
+                            save = NULL,
+                            parameter_file = NULL,
+                            interactive = FALSE) {
   # Print column names
-  print("INFO: I found these columns in your input CSV file")
+  print("INFO: I found these columns in your input CSV file...")
   data_columns <- colnames(data)
   message <- paste(colnames(data))
   print(message)
+
+  if (interactive == TRUE){
+    print("INFO: You chose 'interactive' mode to parse the columns from your CSV content and define parameters to format your output QFeatures data object.")
+    parameters <- make_parameter_file(data)
+    if (!is.null(parameter_file)){
+      print("WARNING: You enabled 'interactive' as TRUE. This will override any 'parameter_file' you provided.")
+    }
+  }
+  else if (!is.null(parameter_file) & file_test("-f", parameter_file)){
+    print("INFO: You provided a 'parameter_file' form which I extract parameters to format your output QFeatures data object.")
+    parameters <- readRDS(parameter_file)
+    
+  }
+  else{
+    print("ERROR: You either provided a invalid 'parameter_file'. I will quit pre-processing.")
+    quit()
+  }
   
-  # Transform data
-  print("INFO: I reformatted your data to a wide format given your selected columns")
+  print("INFO: Reformatting your data to a wide format...")
   
-  #####################################################
-  columns_names <- c("hx_time", "replicate_cnt", "hx_sample") # to mash up
-  columns_fixed <- c("pep_sequence", "pep_charge") # to keep fixed
-  columns_values <- c("d")
-  #####################################################
+  # Set default delimiters: X, rep, cond.
+  delimiter.Exposure_Time <- "X"
+  delimiter.Replicate <- "rep"
+  delimiter.Conditions <- "cond"
+  # Set column selections for pivot_wider 
+  columns_names <- c(parameters$Exposure_Time, parameters$Replicate, parameters$Conditions)
+  columns_fixed <- c(parameters$Sequence, parameters$Charge) 
+  columns_values <- parameters$Deu_Uptake
+  # Add delimiters to column entries
+  data[[parameters$Replicate]] <- paste0(delimiter.Replicate, data[[parameters$Replicate]])
+  data[[parameters$Exposure_Time]] <- paste0(delimiter.Exposure_Time, data[[parameters$Exposure_Time]])
   
   data_wide <- pivot_wider(data.frame(data),
                            values_from = columns_values,
-                           names_from = columns_names,
-                           id_cols = columns_fixed)
+                           names_from = all_of(columns_names),
+                           id_cols = columns_fixed,
+                           names_sep = "_")
   
-  # Remove NA's # NOTE: KEEP THIS AS IT IS!
+  # Remove NA values
   data_wide <- data_wide[, colSums(is.na(data_wide)) != nrow(data_wide)]
-  print("INFO: I removed NA values")
-  
-  # Subtract columns from youir data
-  print("INFO: I remove your selected columns from your output data")
-  
-  columns_to_remove <- c(1,2) # subtract names from first two columns
+  # Take all column names except 'columns_fixed'
+  columns_to_remove <- 1:length(columns_fixed) # Remove columns_fixed
   old_columns_names <- colnames(data_wide)[-columns_to_remove]
-
-  # add X and rep markers to new column names
-  print("INFO: I reformatted your column labels")
-  
-  new_object.colnames <- paste0("X", old_columns_names)
-  new_object.colnames <- gsub("0_", "0rep", new_object.colnames)
-  new_object.colnames <- gsub("_", "cond", new_object.colnames)
-  new_object.colnames <- gsub("%", "", new_object.colnames) 
+  # Replace "_" with default delimiters and remove trailing strings
+  new_object.colnames <- gsub(paste("_", delimiter.Replicate, sep=""), delimiter.Replicate, old_columns_names)
+  new_object.colnames <- gsub("_", delimiter.Conditions, new_object.colnames)
   new_object.colnames <- gsub(" .*", "", new_object.colnames)
   
   # Parse data for selected columns
-  print("INFO: I parsed your data as a qDF object class instance")
+  print("INFO: Parsing your data as a qDF object class instance. Method: parseDeutData")
   
-  initial_column <- 3
-  last_column <- 102
+  initial_column <- length(columns_fixed)+1 # Fixed value by default
+  last_column <- length(columns_fixed)+length(new_object.colnames) # Change to length value
   data_qDF <- parseDeutData(object = DataFrame(data_wide),
                             design = new_object.colnames,
                             quantcol = initial_column:last_column)
-  #####################################################
   
   # Normalise data 
   if (normalise) {
-    print("INFO: Normalised data")
+    print("INFO: Normalising data ... Method: normalisehdx")
     
-    data_qDF_normalised <- normalisehdx(data_qDF,
-                                        sequence = unique(data$pep_sequence),
-                                        method = "pc")
-    data_qDF <- data_qDF_normalised
+    data_qDF <- normalisehdx(data_qDF,
+                            sequence = unique(data[[parameters$Sequence]]),
+                            method = "pc")
+    
   }
   else{
-    print("WARNING: Your output data is not normalised")
+    print("WARNING: Your output data is not normalised.")
   }
   
   # Save data
-  if (save) {
-    print("INFO: Saved output data in")
+  if (!is.null(save)) {
+    if (file.exists(dirname(save))) {
+      
+    saveRDS(data_qDF, file = save)
+    print(paste("INFO: Saved output data in ", save))
     
-    saveRDS(data_qDF, file='data/MBPqDF.rsd')
-  } else{
-    print("WARNING: Your output data was not saved")
+    }
+  } else {
+    print("WARNING: Your output data was not saved.")
+    print(paste("You provided the path ", save))
   }
   
   return(data_qDF)
@@ -169,37 +207,46 @@ preprocess_data <- function(data,
 ##' @return extract data provided an input filepath
 ##' @md
 ##' 
-extract_hdx_data <- function(data_path) {
+extract_hdx_data <- function(data_path,
+                             normalise = FALSE,
+                             save = NULL,
+                             parameter_file = NULL,
+                             interactive = FALSE) {
 
-  if (file_test("-f", data_path)){
+  if (file.exists(data_path)){
     if (file_ext(data_path) == "csv") {
-      print("You gave me a CSV file for your HDX-MSM data")
+      print("INFO: You gave me a CSV file of your HDX-MSM data")
       
       data <- read_csv(data_path)
       data.type <- "csv"
       }
     else if (file_ext(data_path) == "rsd"){
-      print("You gave me a RSD file for your HDX-MSM data")
-      print("I will assume your input data has alreayd been pre-processed")
+      print("INFO: You gave me a RSD file for your HDX-MSM data")
+      print("INFO: I will assume your input data has alreayd been pre-processed")
       
       data <- readRDS(data_path)
       return(data)
     }
     else{
-      print("You provided an input file format that I cannot recognise")
-      print("Provide a valid input. I will not continue execution.")
+      print("ERROR: You provided an input file format that I cannot recognise")
+      print("ERROR: Provide a valid input. I will provide a NULL output")
       return(NULL)
     }
   }
   else{
-    print("This is not a valid path. Try again.")
+    print("ERROR: This is not a valid path. Try again.")
     return(NULL)
   }
     
   # 2. Pre-process data
   if (data.type == "csv"){
     print("INFO: I will pre-process your data parse it using QFeatures ...")
-    data <- preprocess_data(data, normalise = FALSE, save = FALSE)
+    data <- preprocess_data(data, 
+                            normalise = normalise, 
+                            save = save, 
+                            parameter_file = parameter_file, 
+                            interactive = interactive)
+    
     print("INFO: I pre-processed you input CSV data content and now it's available as a QFeatures instance")
     
     return(data)

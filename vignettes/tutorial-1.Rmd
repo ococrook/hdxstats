@@ -31,6 +31,8 @@ library("viridis")
 library("patchwork")
 library("Biostrings")
 library("xfun")
+library("readr")
+library("tidyverse")
 ```
 
 # A well-defined HDX-MS experiment
