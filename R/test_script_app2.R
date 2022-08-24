@@ -84,14 +84,15 @@ make_parameter_file <- function(data,
                      "Ignore" = Ignore,
                      "Other" = Other)
   
-  if (file.exists(dirname(save))){
-    saveRDS(parameters, file = save)
-    message = paste("INFO: Saved your parameters in ", save)
-    print(message)
+  if (save) {
+    if (file.exists(dirname(save))) {
+      saveRDS(parameters, file = save)
+      message = paste("INFO: Saved your parameters in ", save)
+      print(message)
+    }
     
   } else{
-    print("ERROR: Your parameter_file was not saved. Provide a valid output path with 'save = outfile_path'")
-    print(paste("The output file path that you provided was: ", save))
+    print("WARNING: Your parameters were not saved. Provide a valid output path with 'save = outfile_path'")
     }
   
   return(parameters)
@@ -110,15 +111,10 @@ preprocess_data <- function(data,
                             save = NULL,
                             parameter_file = NULL,
                             interactive = FALSE) {
-  # Print column names
-  print("INFO: I found these columns in your input CSV file...")
-  data_columns <- colnames(data)
-  message <- paste(colnames(data))
-  print(message)
 
   if (interactive == TRUE){
     print("INFO: You chose 'interactive' mode to parse the columns from your CSV content and define parameters to format your output QFeatures data object.")
-    parameters <- make_parameter_file(data)
+    parameters <- make_parameter_file(data, save = FALSE)
     if (!is.null(parameter_file)){
       print("WARNING: You enabled 'interactive' as TRUE. This will override any 'parameter_file' you provided.")
     }
@@ -217,7 +213,7 @@ extract_hdx_data <- function(data_path,
     if (file_ext(data_path) == "csv") {
       print("INFO: You gave me a CSV file of your HDX-MSM data")
       
-      data <- read_csv(data_path)
+      data <- read_csv(data_path, show_col_types = FALSE)
       data.type <- "csv"
       }
     else if (file_ext(data_path) == "rsd"){
@@ -374,78 +370,4 @@ visualise_hdx_data <- function(results,
   #   print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhatten', 'peptide', 'epitope', 'protection' ")
   #   return(NULL)
   # }
-}
 
-graphics <- visualise_hdx_data(results, type="kinetics") # READY
-graphics <- visualise_hdx_data(results, type="forest") # READY 
-graphics <- visualise_hdx_data(results, type="manhatten")# <<<<--- NEXT
-graphics <- visualise_hdx_data(results, type="peptide")
-graphics <- visualise_hdx_data(results, type="epitope", level="peptide")
-graphics <- visualise_hdx_data(results, type="epitope", level="residue") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="residue") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb="my_pdb_path")
-
-
-########################################################################
-# TUTORIAL 1 & 2
-#data_filepath <- "/homes/sanjuan/R/x86_64-pc-linux-gnu-library/4.1/hdxstats/extdata/MBP.csv"
-#data_filepath <- system.file("extdata", csv_filename, package = "hdxstats")
-#data_filepath <- "vignettes/data/MBPqDF.rsd" # or, CSV file
-
-# TUTORIAL 3 & 4 (HOIP assays)
-#data_filepath <- system.file("extdata", "N64184_1a2_state.csv", package = "hdxstats")
-
-# TUTORIAL secA-casestudy
-#data_path <- "inst/extdata/Project_2_SecA_Cluster_Data.csv"
-
-# TUTORIAL flexible-fits.Rmd
-#MBPpath <- system.file("extdata", "MBP.csv", package = "hdxstats")
-
-#######################################################
-data_filepath <- "vignettes/data/MBPqDF.rsd"
-hdx_data <- extract_hdx_data(data_filepath) # DONE
-
-
-# TEST 1
-# INPUT
-data_selection <- hdx_data[,1:24]
-all_peptides <- rownames(data_selection)[[1]]
-starting_parameters <- list(a = NULL, b = 0.001,  d = NULL, p = 1)
-# OUTPUT
-results <- analyse_kinetics(data = data_selection, 
-                            method = "fit", 
-                            peptide_selection = all_peptides, 
-                            start = starting_parameters)
-# TEST 2
-# INPUT
-data_selection <- hdx_data[,61:100]
-all_peptides <- rownames(data_selection)[[1]]
-starting_parameters <- list(a = NULL, b = 0.001,  d = NULL, p = 1)
-# OUTPUT
-results <- analyse_kinetics(data = data_selection, 
-                            method = "fit", 
-                            peptide_selection = all_peptides, 
-                            start = starting_parameters)
-# TEST 3
-# INPUT
-data_selection <- hdx_data[,1:100]
-all_peptides <- rownames(data_selection)[[1]] # get all peptides
-starting_parameters <- list(a = NULL, b = 0.0001,  d = NULL, p = 1)
-# OUTPUT
-results <- analyse_kinetics(data = data_selection, 
-                            method = "dfit", 
-                            peptide_selection = all_peptides[37], 
-                            start = starting_parameters)
-
-#######################################################
-graphics <- visualise_hdx_data(results, type="kinetics") # This applies to both regular and differential fits
-graphics <- visualise_hdx_data(results, type="forest") # This only applies to regular fits
-graphics <- visualise_hdx_data(results, type="manhatten") # This only applies to differential fits
-graphics <- visualise_hdx_data(results, type="epitope", level="peptide")
-graphics <- visualise_hdx_data(results, type="epitope", level="residue") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="residue") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb="my_pdb_path")
-
-# GUI: Make GUI by assembling these building blocks
