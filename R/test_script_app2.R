@@ -5,64 +5,81 @@ make_parameter_file <- function(data,
   #Print column names
   print("INFO: I found these columns in your input CSV file")
   data_columns <- colnames(data)
-  message <- paste(colnames(data))
-  print(message)
+  column_message <- paste(colnames(data))
+  print(column_message)
 
-  print("INFO: Specify the column name indicating the starting peptide residue numbers...")
+
+  print("INFO: Specify the column name indicating the starting peptide residue numbers... OR, enter NA")
   Start <- readline(prompt = "Start (residue number) = ")
-  while (is.null(data[[Start]])){
+  while (is.null(data[[Start]]) & Start != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Start <- readline(prompt = "Start (residue number) = ")
   }
   
-  print("INFO: Specify the column name indicating the ending peptide residue numbers...")
+  print("INFO: Specify the column name indicating the ending peptide residue numbers... OR, enter NA")
   End <- readline(prompt = "End (residue number) = ")
-  while (is.null(data[[End]])){
+  while (is.null(data[[End]]) & End != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     End <- readline(prompt = "End (residue number) = ")
   }
   
-  print("INFO: Specify the column name indicating the peptide sequences...")
+  print("INFO: Specify the column name indicating the peptide sequences... OR, enter NA")
   Sequence <- readline(prompt = "Sequence (peptide) = " )
-  while (is.null(data[[Sequence]])){
+  while (is.null(data[[Sequence]]) & Sequence != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Sequence <- readline(prompt = "Sequence (peptide) = " )
   }
   
-  print("INFO: Specify the column name indicating the peptide charge state...")
+  print("INFO: Specify the column name indicating the peptide charge state... OR, enter NA")
   Charge <- readline(prompt = "Charge = ")
-  while (is.null(data[[Charge]])){
+  while (is.null(data[[Charge]]) & Charge != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Charge <- readline(prompt = "Charge = ")
   }
   
-  print("INFO: Specify the column name indicating the Deuterium uptake values ...")
+  print("INFO: Specify the column name indicating the Deuterium uptake values ... OR, enter NA")
   Deu_Uptake <- readline(prompt = "Deu_Uptake = ")
-  while (is.null(data[[Deu_Uptake]])){
+  while (is.null(data[[Deu_Uptake]]) & Deu_Uptake != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Deu_Uptake <- readline(prompt = "Deu_Uptake = ")
   }
   
-  print("INFO: Specify the column name indicating the Deuterium exposure timepoints...")
+  print("INFO: Specify the column name indicating the Deuterium exposure timepoints... OR, enter NA")
   Exposure_Time <- readline(prompt = "Exposure_Time = ")
-  while (is.null(data[[Exposure_Time]])){
+  while (is.null(data[[Exposure_Time]]) & Exposure_Time != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Exposure_Time <- readline(prompt = "Exposure_Time = ")
   }
   
-  print("INFO: Specify column names indicating relevant experimental conditions ...")
+  print("INFO: Specify column names indicating relevant experimental conditions ... OR, enter NA")
   print("INFO: IMPORTANT. You can provide more than one column name separared by commas (,) - I will merge them into a single label though.")
   Conditions <- readline(prompt = "Conditions = ")
   column_in_set <- unlist(strsplit(toString(gsub(" ", "", Conditions, fixed = TRUE)), split=",")) %in% data_columns
-  while (!all(column_in_set)){
+  while (!all(column_in_set) & Conditions != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Conditions <- readline(prompt = "Conditions = ")
   }
   
-  print("INFO: Specify the column name indicating experimental replicates ...")
+  print("INFO: Specify the column name indicating experimental replicates ... OR, enter NA")
   Replicate <- readline(prompt = "Replicate = ")
-  while (is.null(data[[Replicate]])){
+  while (is.null(data[[Replicate]]) & Replicate != "NA"){
     print("ERROR: Not a valid column name in your input CSV data. Try again.")
+    print(column_message)
+    
     Replicate <- readline(prompt = "Replicate = ")
   }
   
@@ -73,6 +90,22 @@ make_parameter_file <- function(data,
   print("INFO: OPTIONAL. Specify other column names you want to tag along - I will merge these into a single string chain. Otherwise, leave blank.")
   Other <- readline(prompt = "Other = ")
   
+  print("INFO: Indicate whether I should convert your 'Exposure_Time' values. Options: TRUE or FALSE")
+  convert_time <- readline(prompt = "convert_time = ")
+  if (convert_time) {
+    print("INFO: what are the original time units of your data? Available units: h (Hours), m (Minutes), s (Seconds).")
+    
+    original_time_units <- readline(prompt = "original_time_units = ")
+    while (!original_time_units %in% c("s", "m", "h")) {
+      print("ERROR: Not a valid time unit. Available units: h (Hours), m (Minutes), s (Seconds).")
+      original_time_units <- readline(prompt = "original_time_units = ")
+    }
+  }
+  else{
+    convert_time <- FALSE
+    original_time_units <- "NA"
+  }
+  
   parameters <- list("Start" = Start, 
                      "End" = End, 
                      "Sequence" = Sequence,
@@ -82,11 +115,14 @@ make_parameter_file <- function(data,
                      "Conditions" = Conditions,
                      "Replicate" = Replicate,
                      "Ignore" = Ignore,
-                     "Other" = Other)
+                     "Other" = Other,
+                     "convert_time" = convert_time,
+                     "original_time_units" = original_time_units)
   
-  if (save) {
+  if (save != FALSE) {
     if (file.exists(dirname(save))) {
       saveRDS(parameters, file = save)
+      
       message = paste("INFO: Saved your parameters in ", save)
       print(message)
     }
@@ -129,16 +165,34 @@ preprocess_data <- function(data,
     quit()
   }
   
-  print("INFO: Reformatting your data to a wide format...")
+  print("INFO: Stripped your 'Exposure_Time' values from non-numeric characters.")
+  data[[parameters$Exposure_Time]] <- as.numeric(gsub("[^0-9.-]", "", data[[parameters$Exposure_Time]]))
   
+  if (parameters$convert_time){
+    if (parameters$original_time_units == 'h') {
+      print("INFO: Your original_time_units == 'h'. I will convert your 'Exposure_Time' values to seconds (s).")
+      data[[parameters$Exposure_Time]] <- 3600*data[[parameters$Exposure_Time]]
+    }
+    else if (parameters$original_time_units == 'm') {
+      print("INFO: Your original_time_units == 'm'. I will convert your 'Exposure_Time' values to seconds (s).")
+      data[[parameters$Exposure_Time]] <- 60*data[[parameters$Exposure_Time]]
+    }
+    else if (parameters$original_time_units == 's') {
+      print("INFO: Your original_time_units == 's'. I will not convert your 'Exposure_Time' values.")
+    }
+  }
+  
+  print("INFO: Reformatting your data to a wide format...")
   # Set default delimiters: X, rep, cond.
-  delimiter.Exposure_Time <- "X"
-  delimiter.Replicate <- "rep"
-  delimiter.Conditions <- "cond"
-  # Set column selections for pivot_wider 
+  delimiter.Exposure_Time <- "X" # <T>
+  delimiter.Replicate <- "rep" # <R>
+  delimiter.Conditions <- "cond" # <C>
+  
+  # Set column selections for pivot_wider
   columns_names <- c(parameters$Exposure_Time, parameters$Replicate, parameters$Conditions)
   columns_fixed <- c(parameters$Sequence, parameters$Charge) 
   columns_values <- parameters$Deu_Uptake
+  
   # Add delimiters to column entries
   data[[parameters$Replicate]] <- paste0(delimiter.Replicate, data[[parameters$Replicate]])
   data[[parameters$Exposure_Time]] <- paste0(delimiter.Exposure_Time, data[[parameters$Exposure_Time]])

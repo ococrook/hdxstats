@@ -103,7 +103,7 @@ columns_fixed <- c("pep_sequence", "pep_charge")
 # transform data
 data_wide <- pivot_wider(data.frame(data),
                         values_from = d,  # Deu_Uptake
-                        names_from = columns_names, # Exposure_Time, Replicate, Other
+                        names_from = columns_names, # Exposure_Time, Replicate, Conditions, Other (NA or "")
                         id_cols = columns_fixed) # Sequence, Charge
                         
 
@@ -117,8 +117,8 @@ HOIP <- read.csv(HOIPpath)
 
 HOIP_wide <- pivot_wider(data.frame(HOIP),
                          values_from = Center, # Deu_Uptake
-                         names_from = c("Exposure", "State"), # Exposure_Time, State
-                         id_cols = c("Sequence")) # Sequence
+                         names_from = c("Exposure", "State"), # Exposure_Time, Replicate (NA), Conditions, Other
+                         id_cols = c("Sequence")) # Sequence, Charge (NA)
 
 ```
 
@@ -129,7 +129,7 @@ secA <- read.csv("inst/extdata/Project_2_SecA_Cluster_Data.csv")
 
 secA_wide <- pivot_wider(data.frame(secA),
                         values_from = "Center",  # Deu_Uptake
-                        names_from = c("Exposure", "File", "State"), # Exposure_Time, Other, State
+                        names_from = c("Exposure", "File", "State"), # Exposure_Time, Replicate, Conditions, Other (NA or "")
                         id_cols = c("Sequence", "z")) # Sequence, Charge
 
 ```
