@@ -146,6 +146,7 @@ preprocess_data <- function(data,
                             normalise = FALSE,
                             save = NULL,
                             parameter_file = NULL,
+                            parameters = NULL, 
                             interactive = FALSE) {
 
   if (interactive == TRUE){
@@ -182,6 +183,18 @@ preprocess_data <- function(data,
     }
   }
   
+  if (parameters$Replicate == "NA"){
+    print("INFO: Your 'Replicate' column appears to be NA. I will add this column with 1 values just to label your data.")
+    data$Replicate <- 1
+    parameters$Replicate <- "Replicate"
+  }
+  
+  if (parameters$Charge == "NA"){
+    print("INFO: Your 'Charge' column appears to be NA. I will add this column with 0 values just to label your data.")
+    data$Charge <- 0
+    parameters$Charge <- "Charge"
+  }
+  
   print("INFO: Reformatting your data to a wide format...")
   # Set default delimiters: X, rep, cond.
   delimiter.Exposure_Time <- "X" # <T>
@@ -201,7 +214,7 @@ preprocess_data <- function(data,
                            values_from = columns_values,
                            names_from = all_of(columns_names),
                            id_cols = columns_fixed,
-                           names_sep = "_")
+                           names_sep = "<>")
   
   # Remove NA values
   data_wide <- data_wide[, colSums(is.na(data_wide)) != nrow(data_wide)]
@@ -209,8 +222,8 @@ preprocess_data <- function(data,
   columns_to_remove <- 1:length(columns_fixed) # Remove columns_fixed
   old_columns_names <- colnames(data_wide)[-columns_to_remove]
   # Replace "_" with default delimiters and remove trailing strings
-  new_object.colnames <- gsub(paste("_", delimiter.Replicate, sep=""), delimiter.Replicate, old_columns_names)
-  new_object.colnames <- gsub("_", delimiter.Conditions, new_object.colnames)
+  new_object.colnames <- gsub(paste("<>", delimiter.Replicate, sep=""), delimiter.Replicate, old_columns_names)
+  new_object.colnames <- gsub("<>", delimiter.Conditions, new_object.colnames)
   new_object.colnames <- gsub(" .*", "", new_object.colnames)
   
   # Parse data for selected columns
@@ -220,7 +233,8 @@ preprocess_data <- function(data,
   last_column <- length(columns_fixed)+length(new_object.colnames) # Change to length value
   data_qDF <- parseDeutData(object = DataFrame(data_wide),
                             design = new_object.colnames,
-                            quantcol = initial_column:last_column)
+                            quantcol = initial_column:last_column,
+                            rownames = data_wide[[parameters$Sequence]])
   
   # Normalise data 
   if (normalise) {
@@ -229,7 +243,6 @@ preprocess_data <- function(data,
     data_qDF <- normalisehdx(data_qDF,
                             sequence = unique(data[[parameters$Sequence]]),
                             method = "pc")
-    
   }
   else{
     print("WARNING: Your output data is not normalised.")
