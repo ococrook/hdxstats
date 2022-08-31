@@ -110,25 +110,32 @@ in a very specific way so that later functions can automatically infer the desig
 from the column names. We provide in the format X(time)rep(replicate)cond(condition)
 ```{r,}
 colnames(secA[-c(1,2)])
-
+#################################
+# DONE
 new.colnames <- gsub("0_", "0rep", paste0("X", colnames(secA)[-c(1,2)]))
+
+#################################
+# DONE
 new.colnames <- gsub("X0.25_", "X15rep", new.colnames) # convert to seconds too
 new.colnames <- gsub("X1_", "X60rep", new.colnames) # convert to seconds too
 new.colnames <- gsub("X5_", "X300rep", new.colnames) # convert to seconds too
 new.colnames <- gsub("X30.000002_", "X1800rep", new.colnames) # convert to seconds too
+
+#################################
 new.colnames <- gsub(new.colnames, pattern = "rep.*?SecA_", replacement = "rep")
 new.colnames <- gsub(new.colnames, pattern = "rep.*?_[0-9]_", replacement = "repcond")
 repnumber <- c(seq.int(5), rep(c(1,2,3), times = 19),
                seq.int(5), rep(c(1,2,3), times = 4),
                seq.int(5), rep(c(1,2,3), times = 4), rep(c(4,5,6), each = 3))
+
 new.colnames <- stringr::str_replace_all(string = new.colnames,
-                                pattern = "rep",
-                                replacement = paste0("rep", repnumber))
+                                         pattern = "rep",
+                                         replacement = paste0("rep", repnumber))
 new.colnames
 ```
 We will now parse the data into an object of class `QFeatures`, we have provided
 a function to assist with this in the package. If you want to do this yourself
-use the `readQFeatures` function from the `QFeatures` package.
+use the `readQFeatures` function from the `QFeatures` package.    
 ```{r,}
 secAqDF <- parseDeutData(object = DataFrame(secA),
                         design = new.colnames,
@@ -147,7 +154,6 @@ secA_newdf <- cbind(DataFrame(secA)[,1:2], secA_newdf)
 secAqDF_norm <- parseDeutData(secA_newdf, design = new.colnames, quantcol = 3:105, sequence = "Sequence", charge = "z")
 ```
 
-
 Normalised by exchange amides
 
 ```{r,}
@@ -162,7 +168,7 @@ secAqDF_norm1 <- normalisehdx(secAqDF_norm,
 To help us get used to the `QFeatures` we show how to generate a heatmap
 of these data from this object:
 
-```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+```{r, fig.height = 20, fig.width = 80, fig.align = "left"}
 pheatmap(t(assay(secAqDF_norm1)),
          cluster_rows = FALSE, 
          cluster_cols = FALSE,

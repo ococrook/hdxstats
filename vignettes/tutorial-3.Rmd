@@ -141,10 +141,11 @@ the original matrix, we reprocess the data. We then fit a simplified kinetic
 model, where only the plateau is inferred.
 
 ```{r,}
+# Take all peptide rows, and select columns corresponding to the unbound (APO) and a selected bound (dAb25_1) states
 cn <- new.colnames[c(1:3,10:12)]
 HOIP_wide_nrm <- data.frame(HOIP_wide)
-HOIP_wide_nrm[, c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)] # normalise by intercept
-HOIP_wide_nrm[, c(11:13)] <- HOIP_wide_nrm[,c(11:13)] - HOIP_wide_nrm[,c(11)] # normalised by intercept
+HOIP_wide_nrm[, c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)] # Normalise by intercept: APO unbound state
+HOIP_wide_nrm[, c(11:13)] <- HOIP_wide_nrm[,c(11:13)] - HOIP_wide_nrm[,c(11)] # Normalised by intercept: dAb25_1 bound state
 
 newqDF <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
                         design = cn,
@@ -179,10 +180,9 @@ res_all@statmodels[[53]]@vis ) + plot_layout(guides = 'collect')
 We can make a Manhattan plot to better specially visualise what's happening.
 
 ```{r, fig.width= 22, fig.height = 15}
-#We need to provide an indication of "difference" so we can examine deprotected
+# We need to provide an indication of "difference" so we can examine deprotected
 # or prected regions
 diffdata <- assay(newqDF)[,6] - assay(newqDF)[,3]
-
 
 sigplots <- manhattanplot(params = funresdAb25_1,
                           sequences = HOIP$Sequence, 

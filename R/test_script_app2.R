@@ -145,25 +145,33 @@ make_parameter_file <- function(data,
 preprocess_data <- function(data, 
                             normalise = FALSE,
                             save = NULL,
+                            parameters = NULL,
                             parameter_file = NULL,
-                            parameters = NULL, 
                             interactive = FALSE) {
 
   if (interactive == TRUE){
     print("INFO: You chose 'interactive' mode to parse the columns from your CSV content and define parameters to format your output QFeatures data object.")
     parameters <- make_parameter_file(data, save = FALSE)
     if (!is.null(parameter_file)){
-      print("WARNING: You enabled 'interactive' as TRUE. This will override any 'parameter_file' you provided.")
+      print("WARNING: You enabled 'interactive' as TRUE. This will override any 'parameter_file' or 'parameters' you provided.")
     }
   }
-  else if (!is.null(parameter_file) & file_test("-f", parameter_file)){
-    print("INFO: You provided a 'parameter_file' form which I extract parameters to format your output QFeatures data object.")
-    parameters <- readRDS(parameter_file)
-    
+  
+  if (!is.null(parameter_file)){
+    print("INFO: You provided a 'parameter_file', I will extract parameters from this to format your output QFeatures data object.")
+    if (file_test("-f", parameter_file)){
+      parameters <- readRDS(parameter_file)
+    }
   }
-  else{
-    print("ERROR: You either provided a invalid 'parameter_file'. I will quit pre-processing.")
-    quit()
+  
+  if (!is.null(parameters)){
+    if (is.list(parameters)){
+      print("INFO: You provided a list of 'parameters', I will extract parameters from this to format your output QFeatures data object.")
+    }
+  }
+  
+  if (is.null(parameter_file) & is.null(parameters)) {
+    print("ERROR: You either provided a invalid 'parameter_file' or list of 'parameters'. I will quit pre-processing.")
   }
   
   print("INFO: Stripped your 'Exposure_Time' values from non-numeric characters.")
@@ -224,7 +232,7 @@ preprocess_data <- function(data,
   # Replace "_" with default delimiters and remove trailing strings
   new_object.colnames <- gsub(paste("<>", delimiter.Replicate, sep=""), delimiter.Replicate, old_columns_names)
   new_object.colnames <- gsub("<>", delimiter.Conditions, new_object.colnames)
-  new_object.colnames <- gsub(" .*", "", new_object.colnames)
+  new_object.colnames <- gsub(" .*", "", new_object.colnames) # ??????
   
   # Parse data for selected columns
   print("INFO: Parsing your data as a qDF object class instance. Method: parseDeutData")
@@ -234,15 +242,17 @@ preprocess_data <- function(data,
   data_qDF <- parseDeutData(object = DataFrame(data_wide),
                             design = new_object.colnames,
                             quantcol = initial_column:last_column,
-                            rownames = data_wide[[parameters$Sequence]])
+                            rownames = data_wide[[parameters$Sequence]],
+                            sequence = parameters$Sequence,
+                            charge = parameters$Charge)
   
   # Normalise data 
   if (normalise) {
     print("INFO: Normalising data ... Method: normalisehdx")
     
     data_qDF <- normalisehdx(data_qDF,
-                            sequence = unique(data[[parameters$Sequence]]),
-                            method = "pc")
+                             sequence = unique(data[[parameters$Sequence]]),
+                             method = "pc")
   }
   else{
     print("WARNING: Your output data is not normalised.")
@@ -257,8 +267,7 @@ preprocess_data <- function(data,
     
     }
   } else {
-    print("WARNING: Your output data was not saved.")
-    print(paste("You provided the path ", save))
+    print("WARNING: Your output data was not saved. You can provide an output path with 'save = my_path'")
   }
   
   return(data_qDF)
@@ -273,6 +282,7 @@ preprocess_data <- function(data,
 extract_hdx_data <- function(data_path,
                              normalise = FALSE,
                              save = NULL,
+                             parameters = NULL,
                              parameter_file = NULL,
                              interactive = FALSE) {
 
@@ -307,7 +317,8 @@ extract_hdx_data <- function(data_path,
     data <- preprocess_data(data, 
                             normalise = normalise, 
                             save = save, 
-                            parameter_file = parameter_file, 
+                            parameters = parameters,
+                            parameter_file = parameter_file,
                             interactive = interactive)
     
     print("INFO: I pre-processed you input CSV data content and now it's available as a QFeatures instance")
@@ -381,7 +392,9 @@ analyse_kinetics <- function(data,
 
 visualise_hdx_data <- function(results,
                                type = NULL,
+                               reference = NULL,
                                level = NULL,
+                               fasta = NULL,
                                pdb = NULL){
   
   if (type == "kinetics" & results$method == "fitUptakeKinetics"){
