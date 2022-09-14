@@ -28,7 +28,7 @@ devtools::install_github("ococrook/hdxstats")
 
 See vignettes for example analysis, including epitope mapping.
 
-# Conpatible experimental designs
+# Compatible experimental designs
 
 We suggest discussing with a statistican prior to performing experiments. However, the following rules of thumb will be useful:
 
