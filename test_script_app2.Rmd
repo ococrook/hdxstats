@@ -42,8 +42,12 @@ myparameters <- make_parameter_file(data)
 hdx_data <- extract_hdx_data(csv_filepath, parameters = myparameters)
 
 # CASE 3: Parse data, given input data file path. Work out parameters for pre-processing using interactive mode
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/myparameters.hdxp", interactive = TRUE)
+
 ```
+```{r}
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/myparameters.hdxp")
+```
+
 
 # Data Analysis of Deuterium Uptake Kinetics
 
@@ -75,24 +79,26 @@ results$method
 View fitting curves of Deu-uptake kinetics for all available conditions associated to selected peptides
 
 ```{r, fig.width= 22, fig.height = 7}
-graphics_kinetic <- visualise_hdx_data(results, type="kinetics") 
-graphics_kinetic[[1]] | graphics_kinetic[[2]] | graphics_kinetic[[3]]
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics") 
+graphics_kinetics[[1]] | graphics_kinetics[[2]] | graphics_kinetics[[3]]
 ```
 
 View forest plots showing the difference between uptake measurements between conditions, plus the dispersion between their respective fitting model parameters
 
 ```{r, fig.width= 22, fig.height = 10}
-graphics <- visualise_hdx_data(results, type="forest")
+graphics_forest <- visualise_hdx_data(results, type="forest")
+graphics_forest[[1]] | graphics_forest[[2]] | graphics_forest[[3]]
 ```
+
 Combine graphical outputs in a single canvas
 
 ```{r, fig.width= 22, fig.height = 10}
-graphics[[1]] | graphics_kinetic[[1]]
+graphics_forest[[1]] | graphics_kinetic[[1]]
 ```
 Display numerical values as a table 
 
 ```{r}
-graphics[[1]]$data
+graphics_forest[[1]]$data
 ```
 
 ### Perform Data Analysis: Differential fitting
@@ -115,13 +121,13 @@ results <- analyse_kinetics(data = data_selection,
 ```
 
 ```{r}
-graphics <- visualise_hdx_data(results, type="kinetics")
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics")
 ```
 
 View graphical output for reference peptide shown in LHS Top corner. 
 
 ```{r}
-graphics
+graphics_kinetics
 ```
 
 ## TEST CASE 2
@@ -146,7 +152,6 @@ hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/N641
 
 
 ```{r}
-
 # INPUT 
 data_selection <- hdx_data[,1:33]
 all_peptides <- rownames(data_selection)[[1]] # get all peptides
@@ -203,6 +208,32 @@ pheatmap(t(assay(hdx_data)),
          fontsize = 14,
          legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(hdx_data))),
          legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+
+
+```{r}
+# Find out how many unique peptides and charge states exist
+length(rownames(assay(hdx_data)))
+# Extract all column values for a given peptide and charge state ( all states, all replicates, all timepoints)
+peptide_charge <- "LGGTQ_1"
+peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
+peptide_charge_data <- longFormat(peptide_charge_data)
+peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2])
+peptide_charge_conditions <- unique(peptide_charge_data$condition)
+# For a fixed confition
+state <- "SecA_AMPPNP"
+ldf <- peptide_charge_data %>% subset(condition == state)
+ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
+ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
+# Identify if number of replicates for 0 timepoint match for subsequent timepoints and report if not the case
+#sum(ldf$timepoint == 0)
+#length(unique(ldf$timepoint))
+ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+# Subtract Deu uptake value at 0 timepoint
+replicate_number <- 1
+single_replicate_data <- ldf %>% subset(replicates == replicate_number)
+x <- single_replicate_data %>% subset(timepoint == 0)
+single_replicate_data$value <- single_replicate_data$value - x$value
 ```
 
 

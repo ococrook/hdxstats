@@ -242,7 +242,7 @@ preprocess_data <- function(data,
   data_qDF <- parseDeutData(object = DataFrame(data_wide),
                             design = new_object.colnames,
                             quantcol = initial_column:last_column,
-                            rownames = data_wide[[parameters$Sequence]],
+                            #rownames = data_wide[[parameters$Sequence]],
                             sequence = parameters$Sequence,
                             charge = parameters$Charge)
   
@@ -450,4 +450,61 @@ visualise_hdx_data <- function(results,
   #   print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhatten', 'peptide', 'epitope', 'protection' ")
   #   return(NULL)
   # }
+
+
+######################
+# My new function
+mynormalisehdx <- function(object,
+                          sequences = NULL,
+                          method = "pc",
+                          correction = NULL){
+  
+  # checks
+  stopifnot("Object is not an instance of QFeatures"=class(object) == "QFeatures")
+  stopifnot("method is not one of pc or bc"=method %in% c("pc", "bc"))
+  
+  if (method == "bc"){
+    stopifnot("correction must be numeric"=class(correction) == "numeric")
+    stopifnot("correction must have compatible dimensions"=length(correction) == nrow(object))
+  }
+  
+  if (method == "pc"){
+    num_exch_sites <- exchangeableAmides(sequences)
+    x <- t(vapply(1:nrow(assay(object)),
+                  function(n) assay(object)[n,]/max(num_exch_sites[n], 1),
+                  FUN.VALUE = numeric(ncol(assay(object)))))
+    
+  }
+  
+  if (method == "undeuterated"){
+    # Subtract row minimum value, regardless of replicate and condition
+    x <- DataFrame(data.frame(assay(object) - apply(assay(object), 1, function(x) min(x, na.rm = TRUE))))
+
+  }
+  
+  if (method == "intercept"){
+    # Subtract Deu uptake value for initial timepoint for fixed replicate and condition, per peptide and charge state
+    ldf <- longFormat(object)
+    ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
+    ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
+    ldf$condition <- as.factor(str_match(ldf$colname, "cond\\s*(.*)")[, 2])
+    
+    ldf[ldf$rowname == "LGGTQ_1", ]
+    ldf %>% subset(rowname == "LGGTQ_1") %>% subset(condition == "SecA") 
+      
+  } else if (method == "bc"){
+    
+    x <- t(vapply(1:nrow(assay(object)),
+                  function(n) assay(object)[n,]/correction[n],
+                  FUN.VALUE = numeric(ncol(assay(object)))))
+  }
+  
+  # parse as qFeatures object
+  x <- DataFrame(x)
+  x$rownames <- rownames(object)[[1]]
+  qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+  
+  return(qFeat)
+}
+
 
