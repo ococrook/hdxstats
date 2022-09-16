@@ -215,13 +215,13 @@ pheatmap(t(assay(hdx_data)),
 # Find out how many unique peptides and charge states exist
 length(rownames(assay(hdx_data)))
 # Extract all column values for a given peptide and charge state ( all states, all replicates, all timepoints)
-peptide_charge <- "LGGTQ_1"
+peptide_charge <- "YESALKKANL_1" #"LGGTQ_1"
 peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
 peptide_charge_data <- longFormat(peptide_charge_data)
-peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2])
+peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2]) # Modify this for data analysis functions since they expect a numeric for replicates
 peptide_charge_conditions <- unique(peptide_charge_data$condition)
 # For a fixed confition
-state <- "SecA_AMPPNP"
+state <- "SecA"
 ldf <- peptide_charge_data %>% subset(condition == state)
 ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
 ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
@@ -233,7 +233,59 @@ ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colna
 replicate_number <- 1
 single_replicate_data <- ldf %>% subset(replicates == replicate_number)
 x <- single_replicate_data %>% subset(timepoint == 0)
+if (is.null(x$value) | is.na(x$value)){
+  print("Found a NULL or NA vakue for timepoint 0")
+  print(x)
+}else{
 single_replicate_data$value <- single_replicate_data$value - x$value
+print(single_replicate_data)
+}
+```
+
+
+```{r}
+message <-paste("INFO: You have", length(rownames(assay(hdx_data))), "peptide-charge paired values")
+print(message)
+for (peptide_charge in rownames(assay(hdx_data))){
+  peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
+  peptide_charge_data <- longFormat(peptide_charge_data)
+  peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2])
+  
+  peptide_charge_conditions <- unique(peptide_charge_data$condition)
+  message <- paste("INFO: For ", peptide_charge, ", you have", length(peptide_charge_conditions), "conditions")
+  print(message)
+  
+  for (state in peptide_charge_conditions){
+    ldf <- peptide_charge_data %>% subset(condition == state)
+    ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
+    ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
+    
+    ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+    # Subtract Deu uptake value at 0 timepoint
+    message <- paste("INFO: You have", length(unique(ldf$replicates)), "replicates, for", state)
+    print(message)
+    
+    for (n_replicate in unique(ldf$replicates)){
+      single_replicate_data <- ldf %>% subset(replicates == n_replicate)
+      x <- single_replicate_data %>% subset(timepoint == 0)
+      
+      if (is.null(x$value) | is.na(x$value)){
+        print("Found a NULL or NA vakue for timepoint 0")
+        print(x)
+      }else{
+        single_replicate_data$value <- single_replicate_data$value - x$value
+        print(single_replicate_data)
+      }
+      if (any(single_replicate_data$value < 0) | any(is.na(single_replicate_data$value))){
+        print("BEFORE")
+        print(single_replicate_data)
+        single_replicate_data$value <- single_replicate_data$value - x$value
+        print("AFTER")
+        print(single_replicate_data)
+      }
+    }
+  }
+}
 ```
 
 
