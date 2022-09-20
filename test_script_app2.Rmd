@@ -190,14 +190,13 @@ csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data_edited.csv"
 Had to pre-process its content to add Replicate column
 
 ```{r}
-data <- read_csv(csv_filepath)
-make_parameter_file(data, save = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
+#data <- read_csv(csv_filepath)
+#make_parameter_file(data, save = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
 ```
 
 ```{r}
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
 ```
-
 
 ```{r, fig.height = 20, fig.width = 80, fig.align = "center"}
 pheatmap(t(assay(hdx_data)),
@@ -215,13 +214,14 @@ pheatmap(t(assay(hdx_data)),
 # Find out how many unique peptides and charge states exist
 length(rownames(assay(hdx_data)))
 # Extract all column values for a given peptide and charge state ( all states, all replicates, all timepoints)
-peptide_charge <- "YESALKKANL_1" #"LGGTQ_1"
+peptide_charge <- "VIMDF_1" # "SSQYESAL_1"
+Deu_min_global <- apply(assay(hdx_data), 1, function(x) min(x, na.rm = TRUE))[[peptide_charge]]
 peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
 peptide_charge_data <- longFormat(peptide_charge_data)
 peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2]) # Modify this for data analysis functions since they expect a numeric for replicates
 peptide_charge_conditions <- unique(peptide_charge_data$condition)
 # For a fixed confition
-state <- "SecA"
+state <- "SecAYEG_AMPPNP"
 ldf <- peptide_charge_data %>% subset(condition == state)
 ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
 ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
@@ -229,16 +229,28 @@ ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
 #sum(ldf$timepoint == 0)
 #length(unique(ldf$timepoint))
 ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+
 # Subtract Deu uptake value at 0 timepoint
-replicate_number <- 1
+replicate_number <- 3
 single_replicate_data <- ldf %>% subset(replicates == replicate_number)
-x <- single_replicate_data %>% subset(timepoint == 0)
-if (is.null(x$value) | is.na(x$value)){
-  print("Found a NULL or NA vakue for timepoint 0")
-  print(x)
+x <- single_replicate_data %>% subset(timepoint == 0) # NOTE: Sometimes there will be more than one 0 timepoint
+message <- paste("INFO: You have", length(x$value),"Deu uptake values for the zero timepoint.")
+print(message)
+
+if (all(is.na(x$value))){
+    message <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
+    print(message)
+    single_replicate_data$value <- single_replicate_data$value - Deu_min_global
+    print(single_replicate_data)
 }else{
-single_replicate_data$value <- single_replicate_data$value - x$value
-print(single_replicate_data)
+    message <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
+    print(message)
+    Deu_min <- min(x$value, na.rm = TRUE)
+    print("BEFORE")
+    print(single_replicate_data)
+    single_replicate_data$value <- single_replicate_data$value - Deu_min
+    print("AFTER")
+    print(single_replicate_data)
 }
 ```
 
@@ -246,15 +258,19 @@ print(single_replicate_data)
 ```{r}
 message <-paste("INFO: You have", length(rownames(assay(hdx_data))), "peptide-charge paired values")
 print(message)
+ldf_new <- rbind()
 for (peptide_charge in rownames(assay(hdx_data))){
   peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
   peptide_charge_data <- longFormat(peptide_charge_data)
   peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2])
   
+  Deu_min_global <- apply(assay(hdx_data), 1, function(x) min(x, na.rm = TRUE))[[peptide_charge]]
+  
   peptide_charge_conditions <- unique(peptide_charge_data$condition)
   message <- paste("INFO: For ", peptide_charge, ", you have", length(peptide_charge_conditions), "conditions")
   print(message)
   
+  #ldf_new <- rbind()
   for (state in peptide_charge_conditions){
     ldf <- peptide_charge_data %>% subset(condition == state)
     ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
@@ -269,23 +285,29 @@ for (peptide_charge in rownames(assay(hdx_data))){
       single_replicate_data <- ldf %>% subset(replicates == n_replicate)
       x <- single_replicate_data %>% subset(timepoint == 0)
       
-      if (is.null(x$value) | is.na(x$value)){
-        print("Found a NULL or NA vakue for timepoint 0")
-        print(x)
-      }else{
-        single_replicate_data$value <- single_replicate_data$value - x$value
-        print(single_replicate_data)
-      }
-      if (any(single_replicate_data$value < 0) | any(is.na(single_replicate_data$value))){
-        print("BEFORE")
-        print(single_replicate_data)
-        single_replicate_data$value <- single_replicate_data$value - x$value
-        print("AFTER")
-        print(single_replicate_data)
-      }
+      if (all(is.na(x$value))){
+        message <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
+        print(message)
+        single_replicate_data$value <- single_replicate_data$value - Deu_min_global
+        #print(single_replicate_data)
+        ldf_new <- rbind(ldf_new, single_replicate_data)
+        }else{
+            message <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
+            print(message)
+            Deu_min <- min(x$value, na.rm = TRUE)
+            single_replicate_data$value <- single_replicate_data$value - Deu_min
+            #print(single_replicate_data)
+            ldf_new <- rbind(ldf_new, single_replicate_data)
+        }
     }
   }
 }
+
+x <- DataFrame(ldf_new)
+x_wide <- pivot_wider(data.frame(x), values_from = value, id_cols = rowname, names_from = colname)
+x_wide_df <- DataFrame(x_wide)
+x_wide_df$rownames <- x_wide$rowname
+qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 1:ncol(assay(hdx_data)), name = names(hdx_data), fnames = "rownames")
 ```
 
 
