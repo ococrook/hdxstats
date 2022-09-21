@@ -353,7 +353,9 @@ analyse_kinetics <- function(data,
     fitting_method <- fitUptakeKinetics
     fitted_models <- fitting_method(object = data,
                                     feature = peptide_selection,
-                                    start = starting_parameters)
+                                    start = starting_parameters,
+                                    formula = formula,
+                                    maxAttempts = 1)
     functional_analysis <- processFunctional(object = data,
                                              params = fitted_models)
     
@@ -461,7 +463,7 @@ mynormalisehdx <- function(object,
   
   # checks
   stopifnot("Object is not an instance of QFeatures"=class(object) == "QFeatures")
-  stopifnot("method is not one of pc or bc"=method %in% c("pc", "bc"))
+  stopifnot("method is not one of pc or bc"=method %in% c("pc", "bc", "undeuterated", "intercept"))
   
   if (method == "bc"){
     stopifnot("correction must be numeric"=class(correction) == "numeric")
@@ -474,37 +476,95 @@ mynormalisehdx <- function(object,
                   function(n) assay(object)[n,]/max(num_exch_sites[n], 1),
                   FUN.VALUE = numeric(ncol(assay(object)))))
     
+    # parse as qFeatures object
+    x <- DataFrame(x)
+    x$rownames <- rownames(object)[[1]]
+    qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+    
+    return(qFeat)
   }
   
   if (method == "undeuterated"){
     # Subtract row minimum value, regardless of replicate and condition
     x <- DataFrame(data.frame(assay(object) - apply(assay(object), 1, function(x) min(x, na.rm = TRUE))))
 
+    # parse as qFeatures object
+    x <- DataFrame(x)
+    x$rownames <- rownames(object)[[1]]
+    qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+    
+    return(qFeat)
+    
   }
   
   if (method == "intercept"){
-    # Subtract Deu uptake value for initial timepoint for fixed replicate and condition, per peptide and charge state
-    ldf <- longFormat(object)
-    ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
-    ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
-    ldf$condition <- as.factor(str_match(ldf$colname, "cond\\s*(.*)")[, 2])
+    message <-paste("INFO: You have", length(rownames(assay(object))), "peptide-charge paired values")
+    print(message)
+    ldf_new <- rbind()
+    for (peptide_charge in rownames(assay(object))){
+      peptide_charge_data <- as.data.frame(assay(object))[peptide_charge, ]
+      peptide_charge_data <- longFormat(peptide_charge_data)
+      peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2])
+      
+      Deu_min_global <- apply(assay(object), 1, function(x) min(x, na.rm = TRUE))[[peptide_charge]]
+      
+      peptide_charge_conditions <- unique(peptide_charge_data$condition)
+      message <- paste("INFO: For ", peptide_charge, ", you have", length(peptide_charge_conditions), "conditions")
+      print(message)
+      
+      #ldf_new <- rbind()
+      for (state in peptide_charge_conditions){
+          ldf <- peptide_charge_data %>% subset(condition == state)
+          ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
+          ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
+          
+          ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+          # Subtract Deu uptake value at 0 timepoint
+          message <- paste("INFO: You have", length(unique(ldf$replicates)), "replicates, for", state)
+          print(message)
+          
+          for (n_replicate in unique(ldf$replicates)){
+              single_replicate_data <- ldf %>% subset(replicates == n_replicate)
+              x <- single_replicate_data %>% subset(timepoint == 0)
+              
+              if (all(is.na(x$value))){
+                  message <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
+                  print(message)
+                  single_replicate_data$value <- single_replicate_data$value - Deu_min_global
+                  #print(single_replicate_data)
+                  ldf_new <- rbind(ldf_new, single_replicate_data)
+              }else{
+                  message <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
+                  print(message)
+                  Deu_min <- min(x$value, na.rm = TRUE)
+                  single_replicate_data$value <- single_replicate_data$value - Deu_min
+                  #print(single_replicate_data)
+                  ldf_new <- rbind(ldf_new, single_replicate_data)
+              }
+          }
+      }
+    }
     
-    ldf[ldf$rowname == "LGGTQ_1", ]
-    ldf %>% subset(rowname == "LGGTQ_1") %>% subset(condition == "SecA") 
+    x <- DataFrame(ldf_new)
+    x_wide <- pivot_wider(data.frame(x), values_from = value, id_cols = rowname, names_from = colname)
+    x_wide_df <- DataFrame(x_wide)
+    x_wide_df$rownames <- x_wide$rowname
+    qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 2:ncol(assay(object)), name = names(object), fnames = "rownames")
+    
+    return(qFeat)
       
   } else if (method == "bc"){
     
     x <- t(vapply(1:nrow(assay(object)),
                   function(n) assay(object)[n,]/correction[n],
                   FUN.VALUE = numeric(ncol(assay(object)))))
+  
+    # parse as qFeatures object
+    x <- DataFrame(x)
+    x$rownames <- rownames(object)[[1]]
+    qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+    
+    return(qFeat)
   }
-  
-  # parse as qFeatures object
-  x <- DataFrame(x)
-  x$rownames <- rownames(object)[[1]]
-  qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
-  
-  return(qFeat)
 }
-
 

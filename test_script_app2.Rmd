@@ -44,6 +44,8 @@ hdx_data <- extract_hdx_data(csv_filepath, parameters = myparameters)
 # CASE 3: Parse data, given input data file path. Work out parameters for pre-processing using interactive mode
 
 ```
+
+
 ```{r}
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/myparameters.hdxp")
 ```
@@ -136,7 +138,7 @@ Single-domain antibody (sdAb) binding assays to HOIP.
 
 
 ```{r}
-csv_filepath <- "/homes/sanjuan/R/x86_64-pc-linux-gnu-library/4.1/hdxstats/extdata/N64184_1a2_state.csv" 
+csv_filepath <- "/home/sanjuan/R/x86_64-pc-linux-gnu-library/4.2/hdxstats/extdata/N64184_1a2_state.csv" 
 ```
 
 
@@ -174,6 +176,51 @@ custom_colors <- scale_color_manual(values = colorRampPalette(brewer.pal(8, name
 graphics + custom_colors
 ```
 
+Remove intercept Deu uptake values 
+
+```{r env, message = FALSE, warning = FALSE, echo = FALSE}
+hdx_data_nointercept <- mynormalisehdx(hdx_data, method = "intercept")
+```
+
+Let's select column data for the APO state and a bound state with a single domain antibody labelled as `dAb25_1` 
+```{r}
+data_selection <- hdx_data_nointercept[,c(1:3, 10:12)]
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL)
+formula = value ~ a * (1 - exp(-0.05*(timepoint)))
+
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides, 
+                            start = starting_parameters,
+                            formula = formula)
+```
+Let's have  look at some of the data analysis output data
+
+```{r}
+results$functional_analysis@results
+```
+
+```{r}
+which(results$functional_analysis@results$ebayes.fdr < 0.05)
+```
+
+```{r}
+graphics <- visualise_hdx_data(results, type="kinetics")
+```
+
+```{r, fig.width= 22, fig.height = 15}
+graphics[[36]] + 
+graphics[[42]] +
+graphics[[43]] +
+graphics[[65]] +
+graphics[[68]] +
+graphics[[70]] +
+graphics[[52]] +
+graphics[[53]] +
+plot_layout(guides = 'collect')
+```
+
 
 # TEST CASE 3
 
@@ -197,6 +244,9 @@ Had to pre-process its content to add Replicate column
 ```{r}
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
 ```
+
+
+
 
 ```{r, fig.height = 20, fig.width = 80, fig.align = "center"}
 pheatmap(t(assay(hdx_data)),
