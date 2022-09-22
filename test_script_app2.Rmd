@@ -221,6 +221,53 @@ graphics[[53]] +
 plot_layout(guides = 'collect')
 ```
 
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="manhatten", reference = NULL)# <<<<--- NEXT
+data_diff <- assay(data_selection)[,6] - assay(data_selection)[,3]
+
+sigplots <- manhattanplot(params = results$functional_analysis,
+                          sequences = rownames(assay(hdx_data_nointercept)), 
+                          region = HOIP[, c("Start", "End")],
+                          difference = data_diff,
+                          nrow = 1)
+
+sigplots[[1]] + plot_layout(guides = 'collect')
+```
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
+
+fpath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+HOIPfasta <- readAAStringSet(filepath = fpath, "fasta")
+
+scores <- results$functional_analysis@results$ebayes.fdr
+
+out <- plotEpitopeMap(AAString = HOIPfasta[[1]],
+                      peptideSeqs = unlist(lapply(strsplit(rownames(assay(hdx_data_nointercept)), split="_"), function(x) head(x,n=1))),
+                      numlines = 2,
+                      maxmismatch = 2,
+                      by = 1, # NOTE: What's the role of this arg that's never called in function?
+                      scores = 1 * (-log10(scores[unique(rownames(assay(hdx_data_nointercept)))])  > -log10(0.05)) + 0.0001,
+                      name = "significant")
+
+out[[1]]/(out[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
+
+scores <- results$functional_analysis@results$ebayes.fdr
+out2 <- plotEpitopeMapResidue(AAString = HOIPfasta[[1]],
+                              peptideSeqs = unlist(lapply(strsplit(rownames(assay(hdx_data_nointercept)), split="_"), function(x) head(x,n=1))),
+                              numlines = 2,
+                              maxmismatch = 1,
+                              by = 5,
+                              scores = scores[unique(rownames(assay(hdx_data_nointercept)))],
+                              name = "-log10 p value")
+
+out2[[1]]/out2[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
 
 # TEST CASE 3
 

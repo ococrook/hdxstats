@@ -430,11 +430,11 @@ visualise_hdx_data <- function(results,
     return(graphics)
     print("INFO: I appended all 'forestPlot' output objects to a list")
   }
+
+  else if (type == "manhatten"){
+    return(NULL)
+  }
 }
-  # 
-  # else if (type == "manhatten"){
-  #   return(NULL)
-  # }
   # 
   # else if (type == "peptide"){
   #   return(NULL)
