@@ -222,17 +222,35 @@ plot_layout(guides = 'collect')
 ```
 
 ```{r, fig.width= 12, fig.height = 4}
-#graphics <- visualise_hdx_data(results, type="manhatten", reference = NULL)# <<<<--- NEXT
-data_diff <- assay(data_selection)[,6] - assay(data_selection)[,3]
+#graphics <- visualise_hdx_data(results, data_selection=data_selection, type="manhatten", reference = NULL)# <<<<--- NEXT
+n_cols <- length(as.vector(colnames(data_selection))$incoperation)
 
-sigplots <- manhattanplot(params = results$functional_analysis,
-                          sequences = rownames(assay(hdx_data_nointercept)), 
-                          region = HOIP[, c("Start", "End")],
-                          difference = data_diff,
-                          nrow = 1)
+message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+print(message)
+print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
 
-sigplots[[1]] + plot_layout(guides = 'collect')
+data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
+
+graphics <- list()
+for (i in 1:(n_cols/2)){
+    graphics[i] <- manhattanplot(params = results$functional_analysis,
+                                 sequences = rownames(results$functional_analysis@results), 
+                                 region = as.data.frame(data_selection@metadata)[, c("Start", "End")],
+                                 difference = data_diff[,i],
+                                 nrow = 1)
+}
+
+message <- paste("INFO: You have ", length(graphics), "Manhattan plots")
+print(message)
+
+graphics[[2]] + plot_layout(guides = 'collect')
 ```
+```{r, fig.width= 12, fig.height = 4}
+graphics_manhatten <- visualise_hdx_data(results, data_selection= data_selection, type="manhatten")
+graphics_manhatten[[2]] / graphics_manhatten[[3]] + plot_layout(guides = 'collect')
+```
+
 
 ```{r, fig.width= 12, fig.height = 4}
 #graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
@@ -254,6 +272,42 @@ out[[1]]/(out[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = 
 ```
 
 ```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
+
+fasta <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+data_selection <- hdx_data_nointercept
+
+#################################
+fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+print(message)
+
+scores <- results$functional_analysis@results$ebayes.fdr
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+# NOTE: What about the charged states? Do they get usually ignored?
+
+graphics <- plotEpitopeMap(AAString = fasta_data[[1]],
+                      peptideSeqs = peptide_sequences,
+                      numlines = 2,
+                      maxmismatch = 2,
+                      by = 1, # NOTE: What's the role of this arg that's never called in function?
+                      scores = 1 * (-log10(scores[unique(peptide_charge_names)])  > -log10(0.05)) + 0.0001,
+                      name = "significant")
+
+graphics[[1]]/(graphics[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+```{r, fig.width= 12, fig.height = 4}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+graphics_epitope <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = fasta_filepath)
+
+graphics_epitope[[1]]/(graphics_epitope[[2]]) + 
+plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+
+
+```{r, fig.width= 12, fig.height = 4}
 #graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
 
 scores <- results$functional_analysis@results$ebayes.fdr
@@ -266,6 +320,102 @@ out2 <- plotEpitopeMapResidue(AAString = HOIPfasta[[1]],
                               name = "-log10 p value")
 
 out2[[1]]/out2[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
+
+fasta <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+#######################################
+fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+print(message)
+
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+
+scores <- results$functional_analysis@results$ebayes.fdr
+
+graphics_epitope <- plotEpitopeMapResidue(AAString = fasta_data[[1]],
+                                          peptideSeqs = peptide_sequences,
+                                          numlines = 2,
+                                          maxmismatch = 1,
+                                          by = 5,
+                                          scores = scores[unique(peptide_charge_names)],
+                                          name = "-log10 p value")
+
+graphics_epitope[[1]]/graphics_epitope[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r, fig.width= 12, fig.height = 4}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+graphics_epitope <- visualise_hdx_data(results, type="epitope", level="residue", fasta = fasta_filepath)
+
+graphics_epitope[[1]]/(graphics_epitope[[2]]) + 
+plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+Map data onto PDB
+
+Load essential libraries
+
+```{r,}
+library("NGLVieweR")
+library("tidyverse")
+library("RColorBrewer")
+library("scales")
+library("comprehenr")
+library("bio3d")
+```
+
+Map protection/deprotection heatmaps onto PDB
+
+```{r}
+source("R/pdb-visualisation.R")
+```
+
+
+```{r}
+scores <- results$functional_analysis@results$ebayes.fdr
+
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+
+graphics_data <- ComputeAverageMap(AAString = fasta_data[[1]],
+                            peptideSeqs = unique(peptide_sequences),
+                            numlines = 2, maxmismatch = 1,
+                            by = 10, scores = scores[unique(peptide_charge_names)],
+                            name = "-log10 p value")
+```
+
+
+```{r}
+dataset <- graphics_data
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+mycolor_parameters <- hdx_to_pdb_colours(dataset, pdb_filepath)
+```
+
+
+```{r}
+
+graphics <- NGLVieweR(pdb_filepath) %>%
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="white")) #%>%
+  #setSpin()
+```
+
+
+```{r}
+graphics
+```
+
+
+
+```{r}
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+graphics_pdbview <- visualise_hdx_data(results, type="epitope", level= "residue", pdb= pdb_filepath)
+
+graphics_pdbview %>% setSpin()
 ```
 
 
@@ -409,18 +559,16 @@ qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 1:ncol(assay(hdx_data)), na
 
 
 ```{r}
-graphics <- visualise_hdx_data(results, type="kinetics") # READY
-graphics <- visualise_hdx_data(results, type="forest") # READY
+#graphics <- visualise_hdx_data(results, type="kinetics") # READY
+#graphics <- visualise_hdx_data(results, type="forest") # READY
 
 # NOTE: This only works to compare ONLY TWO distinct conditions, for the same timepoint, for all peptide fragments
 # This needs to define a BASELINE state/condition and an ALTERNATE sate/condition
 # NOTE: Data must be normalised by intercept 
-graphics <- visualise_hdx_data(results, type="manhatten", reference = NULL)# <<<<--- NEXT
-
-# NOTE: NOT SURE ??
-graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
-graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
-graphics <- visualise_hdx_data(results, type="epitope", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB
+#graphics <- visualise_hdx_data(results, type="manhatten", reference = NULL)# <<<<--- NEXT
+#graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap # <<<<--- NEXT
+#graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap # <<<<--- NEXT
+#graphics <- visualise_hdx_data(results, type="epitope", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB # <<<<--- NEXT
 
 graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap for peptide residue-number ranges
 graphics <- visualise_hdx_data(results, type="protection", level="residue", fasta = "my_fasta_path") # Return heatmap

@@ -246,6 +246,8 @@ preprocess_data <- function(data,
                             sequence = parameters$Sequence,
                             charge = parameters$Charge)
   
+  data_qDF@metadata <- list("Start" = data[[parameters$Start]], "End" = data[[parameters$End]])
+  
   # Normalise data 
   if (normalise) {
     print("INFO: Normalising data ... Method: normalisehdx")
@@ -393,6 +395,7 @@ analyse_kinetics <- function(data,
 }
 
 visualise_hdx_data <- function(results,
+                               data_selection = NULL,
                                type = NULL,
                                reference = NULL,
                                level = NULL,
@@ -432,18 +435,91 @@ visualise_hdx_data <- function(results,
   }
 
   else if (type == "manhatten"){
-    return(NULL)
+      n_cols <- length(as.vector(colnames(data_selection))$incoperation)
+      
+      message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+      print(message)
+      print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+      print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+      
+      data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
+      
+      graphics <- list()
+      for (i in 1:(n_cols/2)){
+          graphics[i] <- manhattanplot(params = results$functional_analysis,
+                                       sequences = rownames(results$functional_analysis@results), 
+                                       region = as.data.frame(data_selection@metadata)[, c("Start", "End")],
+                                       difference = data_diff[,i],
+                                       nrow = 1)
+      }
+      
+      message <- paste("INFO: You have ", length(graphics), "Manhattan plots")
+      print(message)
+      return(graphics)
+      print("INFO: I appended all ggplot output objects to a list")
   }
+  else if (type == "epitope"){
+      scores <- results$functional_analysis@results$ebayes.fdr
+      peptide_charge_names <- rownames(results$functional_analysis@results)
+      peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+      # NOTE: What about the charged states? Do they get usually ignored?
+      
+      if (level == "peptide" & !is.null(fasta)){
+          
+          fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+          message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+          print(message)
+          
+          graphics <- plotEpitopeMap(AAString = fasta_data[[1]],
+                                     peptideSeqs = peptide_sequences,
+                                     numlines = 2,
+                                     maxmismatch = 2,
+                                     by = 1, # NOTE: What's the role of this arg that's never called in function?
+                                     scores = 1 * (-log10(scores[unique(peptide_charge_names)])  > -log10(0.05)) + 0.0001,
+                                     name = "significant")
+          
+          message <- paste("INFO: You have ", length(graphics), "parts for your Epitope map")
+          print(message)
+          return(graphics)
+          print("INFO: I appended all ggplot output objects to a list")
+          
+      }else if (level == "residue" & !is.null(fasta)){
+          
+          fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+          message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+          print(message)
+          
+          graphics <- plotEpitopeMapResidue(AAString = fasta_data[[1]],
+                                            peptideSeqs = peptide_sequences,
+                                            numlines = 2,
+                                            maxmismatch = 1,
+                                            by = 5,
+                                            scores = scores[unique(peptide_charge_names)],
+                                            name = "-log10 p value")
+          
+          message <- paste("INFO: You have ", length(graphics), "parts for your Epitope map")
+          print(message)
+          return(graphics)
+          print("INFO: I appended all ggplot output objects to a list")
+          
+      }else if (level == "residue" & !is.null(pdb)){
+          
+          graphics_data <- ComputeAverageMap(AAString = fasta_data[[1]],
+                                             peptideSeqs = unique(peptide_sequences),
+                                             numlines = 2, maxmismatch = 1,
+                                             by = 10, scores = scores[unique(peptide_charge_names)],
+                                             name = "-log10 p value")
+          
+          mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb)
+          graphics <- NGLVieweR(pdb_filepath) %>%
+                      stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+                      addRepresentation("cartoon") %>%
+                      addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="white"))
+          
+          return(graphics)
+      }
+    }
 }
-  # 
-  # else if (type == "peptide"){
-  #   return(NULL)
-  # }
-  # 
-  # else if (type == "epitope"){
-  #   return(NULL)
-  # }
-  # 
   # else if (type == "protection"){
   #   return(NULL)
   # }
@@ -480,6 +556,7 @@ mynormalisehdx <- function(object,
     x <- DataFrame(x)
     x$rownames <- rownames(object)[[1]]
     qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+    qFeat@metadata <- object@metadata
     
     return(qFeat)
   }
@@ -492,6 +569,7 @@ mynormalisehdx <- function(object,
     x <- DataFrame(x)
     x$rownames <- rownames(object)[[1]]
     qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+    qFeat@metadata <- object@metadata
     
     return(qFeat)
     
@@ -550,6 +628,7 @@ mynormalisehdx <- function(object,
     x_wide_df <- DataFrame(x_wide)
     x_wide_df$rownames <- x_wide$rowname
     qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 2:ncol(assay(object)), name = names(object), fnames = "rownames")
+    qFeat@metadata <- object@metadata
     
     return(qFeat)
       
@@ -563,6 +642,7 @@ mynormalisehdx <- function(object,
     x <- DataFrame(x)
     x$rownames <- rownames(object)[[1]]
     qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
+    qFeat@metadata <- object@metadata
     
     return(qFeat)
   }
