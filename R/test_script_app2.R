@@ -364,7 +364,7 @@ analyse_kinetics <- function(data,
     results <- list("fitted_models" = fitted_models, "functional_analysis" = functional_analysis, "method" = "fitUptakeKinetics")
   }
 
-  else if (method == "dfit"){
+  if (method == "dfit"){
     print("INFO: Performing differential fitting of Deuterium uptake kinetics. Method: 'hdxstats::differentialUptakeKinetics' ")
     
     fitting_method <- differentialUptakeKinetics
@@ -459,6 +459,7 @@ visualise_hdx_data <- function(results,
       print("INFO: I appended all ggplot output objects to a list")
   }
   else if (type == "epitope"){
+      
       scores <- results$functional_analysis@results$ebayes.fdr
       peptide_charge_names <- rownames(results$functional_analysis@results)
       peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
@@ -483,7 +484,7 @@ visualise_hdx_data <- function(results,
           return(graphics)
           print("INFO: I appended all ggplot output objects to a list")
           
-      }else if (level == "residue" & !is.null(fasta)){
+      }else if (level == "residue" & !is.null(fasta) & is.null(pdb)){
           
           fasta_data <- readAAStringSet(filepath = fasta, "fasta")
           message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
@@ -502,7 +503,11 @@ visualise_hdx_data <- function(results,
           return(graphics)
           print("INFO: I appended all ggplot output objects to a list")
           
-      }else if (level == "residue" & !is.null(pdb)){
+      }else if (level == "residue" & !is.null(fasta) & !is.null(pdb)){
+          
+          fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+          message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+          print(message)
           
           graphics_data <- ComputeAverageMap(AAString = fasta_data[[1]],
                                              peptideSeqs = unique(peptide_sequences),
@@ -519,15 +524,101 @@ visualise_hdx_data <- function(results,
           return(graphics)
       }
     }
+  else if (type == "protection"){
+      
+      scores <- results$functional_analysis@results$ebayes.fdr
+      peptide_charge_names <- rownames(results$functional_analysis@results)
+      peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+      
+      if (level == "residue" & !is.null(fasta) & is.null(pdb)){
+          
+          fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+          n_cols <- length(as.vector(colnames(data_selection))$incoperation)
+          
+          message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+          print(message)
+          print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+          print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+          
+          hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
+                                           peptideSeqs = unique(peptide_sequences),
+                                           numlines = 2, 
+                                           maxmismatch = 1,
+                                           by = 10, 
+                                           scores = scores[unique(peptide_charge_names)],
+                                           name = "-log10 p value")
+          hdx_diff <- list()
+          graphics <- list()
+          qDF <- data_selection
+          for (i in 1:(n_cols/2)){
+              hdx_diff[[i]] <- hdxdifference(object = data_selection,
+                                             AAString = fasta_data[[1]],
+                                             peptideSeqs = unique(peptide_sequences),
+                                             numlines = 2,
+                                             maxmismatch = 1,
+                                             by = 10,
+                                             scores = scores[unique(peptide_charge_names)],
+                                             cols = c(i,(n_cols/2 + i)),
+                                             name = "-log10 p value (signed)")
+              
+              graphics[[i]] <- hdxheatmap(averageMaps = list(hdx_average), diffMaps = list(hdx_diff[[i]]$diffMap)) 
+          }
+          
+          message <- paste("INFO: You have ", length(graphics), "Protection/Deprotection heatmaps")
+          print(message)
+          return(graphics)
+          print("INFO: I appended all output heatmaps to a list")
+      }
+      if (level == "residue" & !is.null(fasta) & !is.null(pdb)){
+          
+          fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+          n_cols <- length(as.vector(colnames(data_selection))$incoperation)
+          
+          message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+          print(message)
+          print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+          print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+          
+          hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
+                                           peptideSeqs = unique(peptide_sequences),
+                                           numlines = 2, 
+                                           maxmismatch = 1,
+                                           by = 10, 
+                                           scores = scores[unique(peptide_charge_names)],
+                                           name = "-log10 p value")
+          hdx_diff <- list()
+          graphics <- list()
+          qDF <- data_selection
+          for (i in 1:(n_cols/2)){
+              hdx_diff[[i]] <- hdxdifference(object = data_selection,
+                                             AAString = fasta_data[[1]],
+                                             peptideSeqs = unique(peptide_sequences),
+                                             numlines = 2,
+                                             maxmismatch = 1,
+                                             by = 10,
+                                             scores = scores[unique(peptide_charge_names)],
+                                             cols = c(i,(n_cols/2 + i)),
+                                             name = "-log10 p value (signed)")
+          }
+          
+          graphics <- list()
+          for (i in 1:(n_cols/2)){
+          graphics_data <- hdx_average + sign(hdx_diff[[i]]$diffMap)
+          mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb, cmap_name="ProtDeprot")
+          graphics[[i]] <- NGLVieweR(pdb_filepath) %>%
+              stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+              addRepresentation("cartoon") %>%
+              addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="white"))
+          }
+          
+          return(graphics)
+      }
+      
+  }else {
+    print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhatten', 'peptide', 'epitope', 'protection' ")
+    return(NULL)
+  }
 }
-  # else if (type == "protection"){
-  #   return(NULL)
-  # }
-  # 
-  # else {
-  #   print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhatten', 'peptide', 'epitope', 'protection' ")
-  #   return(NULL)
-  # }
 
 
 ######################

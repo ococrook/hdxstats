@@ -413,9 +413,105 @@ graphics
 
 ```{r}
 pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
-graphics_pdbview <- visualise_hdx_data(results, type="epitope", level= "residue", pdb= pdb_filepath)
+graphics_pdbview <- visualise_hdx_data(results, type="epitope", level="residue", fasta=fasta_filepath, pdb=pdb_filepath)
 
-graphics_pdbview %>% setSpin()
+graphics_pdbview #%>% setSpin()
+```
+
+
+Protection/Deprotection heatmap 
+
+```{r}
+fasta <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+
+scores <- results$functional_analysis@results$ebayes.fdr
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+
+n_cols <- length(as.vector(colnames(data_selection))$incoperation)
+
+message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+print(message)
+print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+
+hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
+                                 peptideSeqs = unique(peptide_sequences),
+                                 numlines = 2, 
+                                 maxmismatch = 1,
+                                 by = 10, 
+                                 scores = scores[unique(peptide_charge_names)],
+                                 name = "-log10 p value")
+hdx_diff <- list()
+graphics <- list()
+qDF <- data_selection
+for (i in 1:(n_cols/2)){
+    hdx_diff[[i]] <- hdxdifference(object = data_selection,
+                                    AAString = fasta_data[[1]],
+                                    peptideSeqs = unique(peptide_sequences),
+                                    numlines = 2,
+                                    maxmismatch = 1,
+                                    by = 10,
+                                    scores = scores[unique(peptide_charge_names)],
+                                    cols = c(i,(n_cols/2 + i)),
+                                    name = "-log10 p value (signed)")
+    
+    graphics[[i]] <- hdxheatmap(averageMaps = list(hdx_average), diffMaps = list(hdx_diff[[i]]$diffMap)) 
+}
+
+message <- paste("INFO: You have ", length(graphics), "Protection/Deprotection heatmaps")
+print(message)
+```
+
+```{r, fig.width= 12, fig.height = 4}
+graphics[[3]][[1]] / graphics[[3]][[2]] + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+qDF <- data_selection
+graphics_protection <- visualise_hdx_data(results, 
+                                          type="protection", 
+                                          data_selection=data_selection,
+                                          level="residue",
+                                          fasta = fasta_filepath)
+```
+
+```{r, fig.width= 12, fig.height = 4}
+graphics <- graphics_protection
+graphics[[2]][[1]] / graphics[[2]][[2]] +
+    plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r}
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+graphics <- list()
+for (i in 1:(n_cols/2)){
+    graphics_data <- hdx_average + sign(hdx_diff[[i]]$diffMap)
+    mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb, cmap_name = "ProtDeprot")
+    graphics[[i]] <- NGLVieweR(pdb_filepath) %>%
+      stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+      addRepresentation("cartoon") %>%
+      addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="Prot"))
+}
+```
+
+```{r}
+graphics[[3]]
+```
+
+```{r}
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+graphics_pdbview <- visualise_hdx_data(results, 
+                                       data_selection=data_selection,
+                                       type="protection", 
+                                       level="residue", 
+                                       fasta=fasta_filepath, 
+                                       pdb=pdb_filepath)
+```
+```{r}
+graphics_pdbview[[3]] %>% setSpin()
 ```
 
 
@@ -570,7 +666,7 @@ qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 1:ncol(assay(hdx_data)), na
 #graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap # <<<<--- NEXT
 #graphics <- visualise_hdx_data(results, type="epitope", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB # <<<<--- NEXT
 
-graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap for peptide residue-number ranges
+#graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap for peptide residue-number ranges
 graphics <- visualise_hdx_data(results, type="protection", level="residue", fasta = "my_fasta_path") # Return heatmap
 graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB
 
