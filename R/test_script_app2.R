@@ -356,8 +356,8 @@ analyse_kinetics <- function(data,
     fitted_models <- fitting_method(object = data,
                                     feature = peptide_selection,
                                     start = starting_parameters,
-                                    formula = formula,
-                                    maxAttempts = 1)
+                                    formula = formula)#,
+                                    #maxAttempts = 1)
     functional_analysis <- processFunctional(object = data,
                                              params = fitted_models)
     
@@ -434,7 +434,7 @@ visualise_hdx_data <- function(results,
     print("INFO: I appended all 'forestPlot' output objects to a list")
   }
 
-  else if (type == "manhatten"){
+  else if (type == "manhattan"){
       n_cols <- length(as.vector(colnames(data_selection))$incoperation)
       
       message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
@@ -615,7 +615,7 @@ visualise_hdx_data <- function(results,
       }
       
   }else {
-    print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhatten', 'peptide', 'epitope', 'protection' ")
+    print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhattan', 'peptide', 'epitope', 'protection' ")
     return(NULL)
   }
 }
@@ -738,4 +738,3 @@ mynormalisehdx <- function(object,
     return(qFeat)
   }
 }
-

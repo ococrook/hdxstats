@@ -480,7 +480,7 @@ graphics_protection <- visualise_hdx_data(results,
 
 ```{r, fig.width= 12, fig.height = 4}
 graphics <- graphics_protection
-graphics[[2]][[1]] / graphics[[2]][[2]] +
+graphics[[3]][[1]] / graphics[[3]][[2]] +
     plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
 
@@ -489,7 +489,7 @@ pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
 graphics <- list()
 for (i in 1:(n_cols/2)){
     graphics_data <- hdx_average + sign(hdx_diff[[i]]$diffMap)
-    mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb, cmap_name = "ProtDeprot")
+    mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb = pdb_filepath, cmap_name = "ProtDeprot")
     graphics[[i]] <- NGLVieweR(pdb_filepath) %>%
       stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
       addRepresentation("cartoon") %>%
@@ -511,46 +511,73 @@ graphics_pdbview <- visualise_hdx_data(results,
                                        pdb=pdb_filepath)
 ```
 ```{r}
-graphics_pdbview[[3]] %>% setSpin()
+graphics_pdbview[[3]] #%>% setSpin()
 ```
-
 
 # TEST CASE 3
 
-Original raw data
+Pre-processed the raw data manually to add Replicate column
 ```{r}
-#csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data.csv"
+#csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data.csv" # Original raw data
 #data <- read_csv(csv_filepath)
 #data$Replicate <- unlist(lapply(strsplit(data$File, split="_"), function(x) tail(x, n=1)))
 #write_csv(data, file = "inst/extdata/Project_2_SecA_Cluster_Data_edited.csv")
+```
 
+Curate raw data according to parameter file and save as QFeatures object
+```{r}
 csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data_edited.csv"
-```
-
-Had to pre-process its content to add Replicate column
-
-```{r}
-#data <- read_csv(csv_filepath)
-#make_parameter_file(data, save = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
-```
-
-```{r}
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
 ```
+Post-process the data, remove undeuterated values an normalise by exchangable amides
+```{r}
+hdx_data_undeuterated <- mynormalisehdx(hdx_data, method = "undeuterated")
+sequences <- unique(rownames(hdx_data_undeuterated)[[1]])
+hdx_data_normalised <- mynormalisehdx(hdx_data_undeuterated, sequences = sequences, method = "pc")
+```
+
+Select data for conditions (states) of interest: `secA` (APO state) and `secA_ADP` (bound state)
+```{r}
+data_selection <- hdx_data_normalised[,c(1:17, 63:79)]
+```
 
 
 
-
-```{r, fig.height = 20, fig.width = 80, fig.align = "center"}
-pheatmap(t(assay(hdx_data)),
+```{r, fig.height = 12, fig.width = 80, fig.align = "center"}
+pheatmap(t(assay(data_selection)),
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
          color = brewer.pal(n = 9, name = "BuPu"),
          main = "secA heatmap", 
          fontsize = 14,
-         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(hdx_data))),
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(data_selection))),
          legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
 ```
+
+```{r}
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL, b = NULL,  d = NULL, p = 1)
+
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides, 
+                            start = starting_parameters)
+```
+```{r}
+results$functional_analysis@results
+```
+
+```{r}
+graphics_kinetics <- visualise_hdx_data(results, type = "kinetics")
+graphics_forest <- visualise_hdx_data(results, type="forest")
+```
+```{r, fig.height = 2, fig.width = 10, fig.align = "center"}
+graphics_kinetics[[4]] + graphics_kinetics[[24]] + graphics_kinetics[[25]]
+```
+```{r}
+graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
+```
+
 
 
 ```{r}
@@ -652,25 +679,3 @@ x_wide_df <- DataFrame(x_wide)
 x_wide_df$rownames <- x_wide$rowname
 qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 1:ncol(assay(hdx_data)), name = names(hdx_data), fnames = "rownames")
 ```
-
-
-```{r}
-#graphics <- visualise_hdx_data(results, type="kinetics") # READY
-#graphics <- visualise_hdx_data(results, type="forest") # READY
-
-# NOTE: This only works to compare ONLY TWO distinct conditions, for the same timepoint, for all peptide fragments
-# This needs to define a BASELINE state/condition and an ALTERNATE sate/condition
-# NOTE: Data must be normalised by intercept 
-#graphics <- visualise_hdx_data(results, type="manhatten", reference = NULL)# <<<<--- NEXT
-#graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap # <<<<--- NEXT
-#graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap # <<<<--- NEXT
-#graphics <- visualise_hdx_data(results, type="epitope", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB # <<<<--- NEXT
-
-#graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap for peptide residue-number ranges
-graphics <- visualise_hdx_data(results, type="protection", level="residue", fasta = "my_fasta_path") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB
-
-# GUI: Make GUI by assembling these building blocks
-
-```
-

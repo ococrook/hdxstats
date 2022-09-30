@@ -110,10 +110,10 @@ results <- analyse_kinetics(data = data_selection,
 
 
 ```{r}
-graphics <- visualise_hdx_data(results, type="kinetics")
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics")
 
 custom_colors <- scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11))
-graphics + custom_colors
+graphics_kinetics + custom_colors
 ```
 
 Remove intercept Deu uptake values 
@@ -152,9 +152,9 @@ plot_layout(guides = 'collect')
 ```
 
 ```{r, fig.width= 14, fig.height = 6}
-graphics_manhatten <- visualise_hdx_data(results, data_selection= data_selection, type="manhatten")
+graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
 
-graphics_manhatten[[2]] / graphics_manhatten[[3]] + plot_layout(guides = 'collect')
+graphics_manhattan[[2]] / graphics_manhattan[[3]] + plot_layout(guides = 'collect')
 ```
 
 
@@ -169,18 +169,50 @@ plot_layout(guides = 'collect') & theme(legend.position = "right")
 
 ```{r, fig.width= 12, fig.height = 4}
 fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
-graphics_epitope <- visualise_hdx_data(results, type="epitope", level="residue", fasta = fasta_filepath)
+graphics_epitope_heatmap <- visualise_hdx_data(results, type="epitope", level="residue", fasta = fasta_filepath)
 
-graphics_epitope[[1]]/(graphics_epitope[[2]]) + 
+graphics_epitope_heatmap[[1]]/(graphics_epitope_heatmap[[2]]) + 
 plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
 
 ```{r}
 pdb_filepath <- "../vignettes/data/5edv_chainA_clean_renumbered.pdb"
 fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
-graphics_pdbview <- visualise_hdx_data(results, type="epitope", level= "residue", fasta= fasta_filepath, pdb= pdb_filepath)
-
-graphics_pdbview %>% setSpin()
+graphics_epitope_pdbview <- visualise_hdx_data(results, 
+                                               type="epitope", 
+                                               level= "residue", 
+                                               fasta= fasta_filepath,
+                                               pdb= pdb_filepath)
+graphics_epitope_pdbview #%>% setSpin()
 ```
 
+```{r}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+qDF <- data_selection
+graphics_protection_heatmap <- visualise_hdx_data(results, 
+                                          type="protection", 
+                                          data_selection=data_selection,
+                                          level="residue",
+                                          fasta = fasta_filepath)
+```
+
+```{r, fig.width= 12, fig.height = 4}
+graphics_protection_heatmap[[3]][[1]] / graphics_protection_heatmap[[3]][[2]] +
+    plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+
+```{r}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+pdb_filepath <- "../vignettes/data/5edv_chainA_clean_renumbered.pdb"
+
+graphics_protection_pdbview <- visualise_hdx_data(results, 
+                                       data_selection=data_selection,
+                                       type="protection", 
+                                       level="residue", 
+                                       fasta=fasta_filepath, 
+                                       pdb=pdb_filepath)
+
+graphics_protection_pdbview
+```
 
