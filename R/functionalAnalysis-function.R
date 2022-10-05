@@ -69,7 +69,7 @@ differentialUptakeKinetics <- function(object,
             nonlin_mod <- vector(mode = "list", length = maxAttempts)
             for(j in seq_len(maxAttempts)){
             
-                if (is.null(start$b) & maxAttempts > 1){
+                if (is.null(start$b) & (maxAttempts > 1) & ("b" %in% names(start))){
                     start$b <- 10^(j - maxAttempts)
                 }
 
