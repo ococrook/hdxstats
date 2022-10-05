@@ -8,7 +8,7 @@ Authors@R: c(person(family = "Crook", given = "Oliver M.",
 		      person(family = "Aguilar-Sanjuan", given = "Broncio",
 		            email = "broncio.aguilarsanjuan@stats.ox.ac.uk",
 		            comment = c(ORCID = "0000-0001-8068-6417"),
-		            role = c("aut", "cre")))
+		            role = c("ctb")))
 Description: The hdxstats package enables the analysis and visualisation
     of hydrogen deuterium exchange mass spectromery experiments. It supports
     all types of HDX-MS experiments but provides additional support for epitope

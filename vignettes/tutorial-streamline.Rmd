@@ -19,6 +19,10 @@ vignette: |
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library("hdxstats")
+```
+
 
 # Data curation pipeline
 
