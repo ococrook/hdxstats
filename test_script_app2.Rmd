@@ -168,7 +168,6 @@ results <- analyse_kinetics(data = data_selection,
                             formula = formula)
 ```
 
-
 ```{r}
 graphics <- visualise_hdx_data(results, type="kinetics")
 
@@ -540,7 +539,6 @@ Select data for conditions (states) of interest: `secA` (APO state) and `secA_AD
 ```{r}
 data_selection <- hdx_data_normalised[,c(1:17, 63:79)]
 ```
-
 
 
 ```{r, fig.height = 12, fig.width = 80, fig.align = "center"}
