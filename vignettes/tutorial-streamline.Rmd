@@ -21,8 +21,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library("hdxstats")
+library("pheatmap")
+library("RColorBrewer")
+library("viridisLite")
+library("ggplot2")
 ```
-
 
 # Data curation pipeline
 
@@ -32,11 +35,11 @@ library("hdxstats")
 
 ```{r}
 # INPUT
-csv_filepath <- csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats") # input csv with HDX-MS datas
+csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats") # input csv with HDX-MS datas
 
 # OUTPUT
-output_file = "/home/sanjuan/research/hdxstats/vignettes/data/MBP_qDF.rsd" # QFeatures object output path
-output_parameters = "/home/sanjuan/research/hdxstats/vignettes/data/MBP_qDF.hdxp"
+output_file = "../vignettes/tests/MBP_qDF.rsd" # QFeatures object output path
+output_parameters = "../vignettes/tests/MBP_qDF.hdxp"
 
 # Run curation pipeline with 'interactive' mode
 hdx_data <- extract_hdx_data(csv_filepath, save_qDF = output_file, save_parameters = output_parameters, interactive = TRUE)
@@ -48,10 +51,10 @@ If you have an input CSV file and a `parameter_file`
 ```{r}
 # INPUT
 csv_filepath <- csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats") # input csv with HDX-MS datas
-parameter_file = "/home/sanjuan/research/hdxstats/vignettes/data/MBP_qDF.hdxp"
+parameter_file <- "../vignettes/tests/MBP_qDF.hdxp"
 
 # OUTPUT
-output_file = "/home/sanjuan/research/hdxstats/vignettes/data/MBP_qDF.rsd" # QFeatures object output path
+output_file = "../vignettes/tests/MBP_qDF.rsd" # QFeatures object output path
 
 # Run curation pipeline provided 'parameter_file'
 hdx_data <- extract_hdx_data(csv_filepath, save_qDF = output_file, parameter_file = parameter_file)
@@ -64,7 +67,8 @@ hdx_data <- extract_hdx_data(csv_filepath, save_qDF = output_file, parameter_fil
 Use `parameter_file`
 ```{r}
 csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats")
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../inst/extdata/MBP_qDF.hdxp")
+parameter_file <- system.file("extdata", "MBP_qDF.hdxp", package = "hdxstats") # parameter file
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
 ```
 
 ```{r, fig.height = 12, fig.width = 12, fig.align = "center"}
@@ -139,8 +143,9 @@ Single-domain antibody (sdAb) binding assays to HOIP
 
 Use `parameter_file`
 ```{r}
-csv_filepath <- "/home/sanjuan/R/x86_64-pc-linux-gnu-library/4.2/hdxstats/extdata/N64184_1a2_state.csv"
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../inst/extdata/N64184_1a2_state.hdxp")
+csv_filepath <- system.file("extdata", "N64184_1a2_state.csv", package = "hdxstats")
+parameter_file <- system.file("extdata", "N64184_1a2_state.hdxp", package = "hdxstats")
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
 ```
 
 ```{r, fig.height = 6, fig.width = 12, fig.align = "center"}
@@ -174,7 +179,7 @@ results <- analyse_kinetics(data = data_selection,
 
 ```{r}
 graphics_kinetics <- visualise_hdx_data(results, type="kinetics")
-
+# Customise plot
 custom_colors <- scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11))
 graphics_kinetics + custom_colors
 ```
@@ -182,7 +187,7 @@ graphics_kinetics + custom_colors
 Remove intercept Deu uptake values 
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
-hdx_data_nointercept <- mynormalisehdx(hdx_data, method = "intercept")
+hdx_data_nointercept <- normalisehdx(hdx_data, method = "intercept")
 ```
 
 Let's select column data for the APO state and a bound state with a single domain antibody labelled as `dAb25_1` 
@@ -243,7 +248,7 @@ plot_layout(guides = 'collect') & theme(legend.position = "right")
 
 ```{r}
 # INPUT
-pdb_filepath <- "/home/sanjuan/research/hdxstats/vignettes/data/5edv_chainA_clean_renumbered.pdb"
+pdb_filepath <- system.file("extdata", "5edv_chainA_clean_renumbered.pdb", package = "hdxstats")
 fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
 
 # OUTPUT
