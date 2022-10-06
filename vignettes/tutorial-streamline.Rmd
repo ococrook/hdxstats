@@ -63,8 +63,8 @@ hdx_data <- extract_hdx_data(csv_filepath, save_qDF = output_file, parameter_fil
 
 Use `parameter_file`
 ```{r}
-csv_filepath <- csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats")
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../vignettes/data/MBP_qDF.hdxp")
+csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats")
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../inst/extdata/MBP_qDF.hdxp")
 ```
 
 ```{r, fig.height = 12, fig.width = 12, fig.align = "center"}
@@ -140,7 +140,7 @@ Single-domain antibody (sdAb) binding assays to HOIP
 Use `parameter_file`
 ```{r}
 csv_filepath <- "/home/sanjuan/R/x86_64-pc-linux-gnu-library/4.2/hdxstats/extdata/N64184_1a2_state.csv"
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../vignettes/data/N64184_1a2_state.hdxp")
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../inst/extdata/N64184_1a2_state.hdxp")
 ```
 
 ```{r, fig.height = 6, fig.width = 12, fig.align = "center"}
@@ -284,7 +284,7 @@ graphics_protection_pdbview <- visualise_hdx_data(results,
                                        data_selection=data_selection,
                                        type="protection", 
                                        level="residue", 
-                                       fasta=fasta_filepath, 
+                                       fasta=fasta_filepath,
                                        pdb=pdb_filepath)
 
 graphics_protection_pdbview
@@ -306,7 +306,7 @@ Use `parameter_file`
 
 ```{r}
 csv_filepath <- "../inst/extdata/Project_2_SecA_Cluster_Data_edited.csv"
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../inst/extdata/Project_2_SecA_Cluster_Data.hdxp")
 ```
 
 ```{r, fig.height = 12, fig.width = 50, fig.align = "center"}
