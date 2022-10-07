@@ -9,7 +9,7 @@ output:
 abstract: "This vignette describes how to analyse a mass-spectrometry based  hydrogen
   deuterium exchange experiment, in particular we focus different models we could fit \n"
 vignette: |
-  %\VignetteIndexEntry{flexible modelling of differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteIndexEntry{flexible modelling of differential hydrogen deuterium exchange mass spectrometry data: flexible fits}
   %\VignetteEngine{knitr::rmarkdown}
   %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
 ---

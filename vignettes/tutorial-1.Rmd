@@ -10,7 +10,7 @@ output:
     toc_float: yes
 abstract: "This vignette describes some of the basic objects and functions of `hdxstats`, an R package to analyse a mass-spectrometry based  hydrogen deuterium exchange (HDX) experiment, with focus on empirical Bayes functional models and visualisations. \n"
 vignette: |
-  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data, tutorial 1}
   %\VignetteEngine{knitr::rmarkdown}
   %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
 ---

@@ -11,7 +11,7 @@ abstract: "This vignette describes how to analyse a mass-spectrometry based  hyd
   deuterium exchange experiment, in particular we focus on empirical Bayes functional
   models and visualisations. \n"
 vignette: |
-  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data: tutorial 2}
   %\VignetteEngine{knitr::rmarkdown}
   %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
 ---

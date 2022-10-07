@@ -18,9 +18,12 @@ __[Tutorial 4](tutorial-4.Rmd)__ Protection/deprotection maps
 
 * TOC
 
-__[Tutorial 5](tutorial-5.Rmd)__ Multi-level testing
+__[Flexible Fits](flexible-fits.Rmd)__ Fitting non-standard kinetics
 
-* TOC
+
+__[secA Case Study](hdxstats-secA-casestudy.Rmd)__ secA case study
+
+
 __More to come...__
 
 We encourage users to contribute with applications of the software package and the development of capabilities that extend it. 
