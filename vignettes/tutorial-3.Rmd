@@ -154,7 +154,7 @@ newqDF <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
 res_all <- fitUptakeKinetics(object = newqDF[,1:6],
                              feature = rownames(newqDF[,1:6])[[1]],
                              start = list(a = NULL),
-                             formula = value ~ a * (1 - exp(-0.05*(timepoint))))
+                             formula = value ~ a * (1 - exp(-0.05*(timepoint))), maxAttempts = 1)
   
 funresdAb25_1 <- processFunctional(object = newqDF[,1:6],
                                    params = res_all)
@@ -217,7 +217,6 @@ We can further visualise this a barcode of particular residues, here we use
 residue level averaging to obtain results at the residue level.
 
 ```{r, fig.width= 22, fig.height = 15}
-
 scores <- funresdAb25_1@results$ebayes.fdr
 out2 <- plotEpitopeMapResidue(AAString = HOIPfasta[[1]],
                               peptideSeqs = unique(HOIP$Sequence),
@@ -240,9 +239,10 @@ avMap25_1 <- ComputeAverageMap(AAString = HOIPfasta[[1]],
                                by = 10, scores = scores[unique(HOIP$Sequence)],
                                name = "-log10 p value")
 
-## generate results from other dAB
-cn <- new.colnames[c(1:3,19:21)]
+## generate results from another dAB
+cn <- new.colnames[c(1:3,19:21)] #  selecting columns
 HOIP_wide_nrm <- data.frame(HOIP_wide)
+# Remove Deu value intercepts for all timepoints
 HOIP_wide_nrm[,c(2:4)] <- HOIP_wide_nrm[,c(2:4)] - HOIP_wide_nrm[,c(2)]
 HOIP_wide_nrm[,c(20:22)] <- HOIP_wide_nrm[,c(20:22)] - HOIP_wide_nrm[,c(20)] 
 
@@ -254,7 +254,8 @@ newqDF2 <- parseDeutData(object = DataFrame(HOIP_wide_nrm),
 res_all2 <- fitUptakeKinetics(object = newqDF2[,1:6],
                              feature = rownames(newqDF2[,1:6])[[1]],
                              start = list(a = NULL),
-                             formula = value ~ a * (1 - exp(-0.07*(timepoint))))
+                             formula = value ~ a * (1 - exp(-0.07*(timepoint))),
+                             maxAttempts = 1)
   
 funresdAb27_2 <- processFunctional(object = newqDF[,1:6],
                                    params = res_all2)

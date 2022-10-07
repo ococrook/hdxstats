@@ -55,15 +55,13 @@ data is contained within the package and so can be loaded by specificy
 the correct path.
 
 ```{r,}
-#secApath <- system.file("inst/extdata", "Project_2_SecA_Cluster_Data.csv",
-#                        package = "hdxstats")
+#secApath <- system.file("inst/extdata", "Project_2_SecA_Cluster_Data.csv", package = "hdxstats")
 secApath <- "../inst/extdata/Project_2_SecA_Cluster_Data.csv"
 ```
 
 We can now read in the .csv file and have a quick look at the .csv.
 ```{r,}
-#secA <- read.csv(secApath)
-secA <- read.csv("../inst/extdata/Project_2_SecA_Cluster_Data.csv")
+secA <- read.csv(secApath)
 head(secA) # have a look
 length(unique(secA$Sequence)) # peptide sequences
 unique(secA$State) # States
@@ -120,10 +118,25 @@ new.colnames <- gsub("X0.25_", "X15rep", new.colnames) # convert to seconds too
 new.colnames <- gsub("X1_", "X60rep", new.colnames) # convert to seconds too
 new.colnames <- gsub("X5_", "X300rep", new.colnames) # convert to seconds too
 new.colnames <- gsub("X30.000002_", "X1800rep", new.colnames) # convert to seconds too
-
+#################################
+# TEST
+# States <- c("SecA", "SecAYEG", "SecAYEG_ADP", "SecAYEG_AMPPNP", "SecA_ADP", "SecA_AMPPNP")
+for (i in 1:length(new.colnames)){
+  x <- strsplit(new.colnames[[i]], split = "SecA")
+  
+  if (length(x[[1]]) == 3){
+    y <- tail(strsplit(x[[1]][[2]], split="_")[[1]], n=1)
+  }
+  else if (length(x[[1]]) == 2){
+    y <- tail(strsplit(x[[1]][[1]], split="_")[[1]], n=1)
+  }
+  print(paste(length(x[[1]]), new.colnames[[i]], x, y))
+}
 #################################
 new.colnames <- gsub(new.colnames, pattern = "rep.*?SecA_", replacement = "rep")
 new.colnames <- gsub(new.colnames, pattern = "rep.*?_[0-9]_", replacement = "repcond")
+#################################
+# NOTE: The sequence of numbers doesn't really matter for the analysis, although data exploration graphical outputs are expected to change
 repnumber <- c(seq.int(5), rep(c(1,2,3), times = 19),
                seq.int(5), rep(c(1,2,3), times = 4),
                seq.int(5), rep(c(1,2,3), times = 4), rep(c(4,5,6), each = 3))
@@ -131,6 +144,7 @@ repnumber <- c(seq.int(5), rep(c(1,2,3), times = 19),
 new.colnames <- stringr::str_replace_all(string = new.colnames,
                                          pattern = "rep",
                                          replacement = paste0("rep", repnumber))
+#################################
 new.colnames
 ```
 We will now parse the data into an object of class `QFeatures`, we have provided
@@ -168,7 +182,7 @@ secAqDF_norm1 <- normalisehdx(secAqDF_norm,
 To help us get used to the `QFeatures` we show how to generate a heatmap
 of these data from this object:
 
-```{r, fig.height = 20, fig.width = 80, fig.align = "left"}
+```{r, fig.height = 20, fig.width = 85, fig.align = "left"}
 pheatmap(t(assay(secAqDF_norm1)),
          cluster_rows = FALSE, 
          cluster_cols = FALSE,

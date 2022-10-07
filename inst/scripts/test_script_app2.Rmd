@@ -42,8 +42,14 @@ myparameters <- make_parameter_file(data)
 hdx_data <- extract_hdx_data(csv_filepath, parameters = myparameters)
 
 # CASE 3: Parse data, given input data file path. Work out parameters for pre-processing using interactive mode
-hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/myparameters.hdxp", interactive = TRUE)
+
 ```
+
+
+```{r}
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/myparameters.hdxp")
+```
+
 
 # Data Analysis of Deuterium Uptake Kinetics
 
@@ -75,24 +81,26 @@ results$method
 View fitting curves of Deu-uptake kinetics for all available conditions associated to selected peptides
 
 ```{r, fig.width= 22, fig.height = 7}
-graphics_kinetic <- visualise_hdx_data(results, type="kinetics") 
-graphics_kinetic[[1]] | graphics_kinetic[[2]] | graphics_kinetic[[3]]
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics") 
+graphics_kinetics[[1]] | graphics_kinetics[[2]] | graphics_kinetics[[3]]
 ```
 
 View forest plots showing the difference between uptake measurements between conditions, plus the dispersion between their respective fitting model parameters
 
 ```{r, fig.width= 22, fig.height = 10}
-graphics <- visualise_hdx_data(results, type="forest")
+graphics_forest <- visualise_hdx_data(results, type="forest")
+graphics_forest[[1]] | graphics_forest[[2]] | graphics_forest[[3]]
 ```
+
 Combine graphical outputs in a single canvas
 
 ```{r, fig.width= 22, fig.height = 10}
-graphics[[1]] | graphics_kinetic[[1]]
+graphics_forest[[1]] | graphics_kinetic[[1]]
 ```
 Display numerical values as a table 
 
 ```{r}
-graphics[[1]]$data
+graphics_forest[[1]]$data
 ```
 
 ### Perform Data Analysis: Differential fitting
@@ -115,13 +123,13 @@ results <- analyse_kinetics(data = data_selection,
 ```
 
 ```{r}
-graphics <- visualise_hdx_data(results, type="kinetics")
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics")
 ```
 
 View graphical output for reference peptide shown in LHS Top corner. 
 
 ```{r}
-graphics
+graphics_kinetics
 ```
 
 ## TEST CASE 2
@@ -130,7 +138,7 @@ Single-domain antibody (sdAb) binding assays to HOIP.
 
 
 ```{r}
-csv_filepath <- "/homes/sanjuan/R/x86_64-pc-linux-gnu-library/4.1/hdxstats/extdata/N64184_1a2_state.csv" 
+csv_filepath <- "/home/sanjuan/R/x86_64-pc-linux-gnu-library/4.2/hdxstats/extdata/N64184_1a2_state.csv" 
 ```
 
 
@@ -146,7 +154,6 @@ hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/N641
 
 
 ```{r}
-
 # INPUT 
 data_selection <- hdx_data[,1:33]
 all_peptides <- rownames(data_selection)[[1]] # get all peptides
@@ -161,7 +168,6 @@ results <- analyse_kinetics(data = data_selection,
                             formula = formula)
 ```
 
-
 ```{r}
 graphics <- visualise_hdx_data(results, type="kinetics")
 
@@ -169,62 +175,505 @@ custom_colors <- scale_color_manual(values = colorRampPalette(brewer.pal(8, name
 graphics + custom_colors
 ```
 
+Remove intercept Deu uptake values 
+
+```{r env, message = FALSE, warning = FALSE, echo = FALSE}
+hdx_data_nointercept <- mynormalisehdx(hdx_data, method = "intercept")
+```
+
+Let's select column data for the APO state and a bound state with a single domain antibody labelled as `dAb25_1` 
+```{r}
+data_selection <- hdx_data_nointercept[,c(1:3, 10:12)]
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL)
+formula = value ~ a * (1 - exp(-0.05*(timepoint)))
+
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides, 
+                            start = starting_parameters,
+                            formula = formula)
+```
+Let's have  look at some of the data analysis output data
+
+```{r}
+results$functional_analysis@results
+```
+
+```{r}
+which(results$functional_analysis@results$ebayes.fdr < 0.05)
+```
+
+```{r}
+graphics <- visualise_hdx_data(results, type="kinetics")
+```
+
+```{r, fig.width= 22, fig.height = 15}
+graphics[[36]] + 
+graphics[[42]] +
+graphics[[43]] +
+graphics[[65]] +
+graphics[[68]] +
+graphics[[70]] +
+graphics[[52]] +
+graphics[[53]] +
+plot_layout(guides = 'collect')
+```
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, data_selection=data_selection, type="manhatten", reference = NULL)# <<<<--- NEXT
+n_cols <- length(as.vector(colnames(data_selection))$incoperation)
+
+message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+print(message)
+print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+
+data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
+
+graphics <- list()
+for (i in 1:(n_cols/2)){
+    graphics[i] <- manhattanplot(params = results$functional_analysis,
+                                 sequences = rownames(results$functional_analysis@results), 
+                                 region = as.data.frame(data_selection@metadata)[, c("Start", "End")],
+                                 difference = data_diff[,i],
+                                 nrow = 1)
+}
+
+message <- paste("INFO: You have ", length(graphics), "Manhattan plots")
+print(message)
+
+graphics[[2]] + plot_layout(guides = 'collect')
+```
+```{r, fig.width= 12, fig.height = 4}
+graphics_manhatten <- visualise_hdx_data(results, data_selection= data_selection, type="manhatten")
+graphics_manhatten[[2]] / graphics_manhatten[[3]] + plot_layout(guides = 'collect')
+```
+
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
+
+fpath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+HOIPfasta <- readAAStringSet(filepath = fpath, "fasta")
+
+scores <- results$functional_analysis@results$ebayes.fdr
+
+out <- plotEpitopeMap(AAString = HOIPfasta[[1]],
+                      peptideSeqs = unlist(lapply(strsplit(rownames(assay(hdx_data_nointercept)), split="_"), function(x) head(x,n=1))),
+                      numlines = 2,
+                      maxmismatch = 2,
+                      by = 1, # NOTE: What's the role of this arg that's never called in function?
+                      scores = 1 * (-log10(scores[unique(rownames(assay(hdx_data_nointercept)))])  > -log10(0.05)) + 0.0001,
+                      name = "significant")
+
+out[[1]]/(out[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
+
+fasta <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+data_selection <- hdx_data_nointercept
+
+#################################
+fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+print(message)
+
+scores <- results$functional_analysis@results$ebayes.fdr
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+# NOTE: What about the charged states? Do they get usually ignored?
+
+graphics <- plotEpitopeMap(AAString = fasta_data[[1]],
+                      peptideSeqs = peptide_sequences,
+                      numlines = 2,
+                      maxmismatch = 2,
+                      by = 1, # NOTE: What's the role of this arg that's never called in function?
+                      scores = 1 * (-log10(scores[unique(peptide_charge_names)])  > -log10(0.05)) + 0.0001,
+                      name = "significant")
+
+graphics[[1]]/(graphics[[2]]) + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+```{r, fig.width= 12, fig.height = 4}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+graphics_epitope <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = fasta_filepath)
+
+graphics_epitope[[1]]/(graphics_epitope[[2]]) + 
+plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
+
+scores <- results$functional_analysis@results$ebayes.fdr
+out2 <- plotEpitopeMapResidue(AAString = HOIPfasta[[1]],
+                              peptideSeqs = unlist(lapply(strsplit(rownames(assay(hdx_data_nointercept)), split="_"), function(x) head(x,n=1))),
+                              numlines = 2,
+                              maxmismatch = 1,
+                              by = 5,
+                              scores = scores[unique(rownames(assay(hdx_data_nointercept)))],
+                              name = "-log10 p value")
+
+out2[[1]]/out2[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r, fig.width= 12, fig.height = 4}
+#graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
+
+fasta <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+#######################################
+fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+print(message)
+
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+
+scores <- results$functional_analysis@results$ebayes.fdr
+
+graphics_epitope <- plotEpitopeMapResidue(AAString = fasta_data[[1]],
+                                          peptideSeqs = peptide_sequences,
+                                          numlines = 2,
+                                          maxmismatch = 1,
+                                          by = 5,
+                                          scores = scores[unique(peptide_charge_names)],
+                                          name = "-log10 p value")
+
+graphics_epitope[[1]]/graphics_epitope[[2]]  + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r, fig.width= 12, fig.height = 4}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+graphics_epitope <- visualise_hdx_data(results, type="epitope", level="residue", fasta = fasta_filepath)
+
+graphics_epitope[[1]]/(graphics_epitope[[2]]) + 
+plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+Map data onto PDB
+
+Load essential libraries
+
+```{r,}
+library("NGLVieweR")
+library("tidyverse")
+library("RColorBrewer")
+library("scales")
+library("comprehenr")
+library("bio3d")
+```
+
+Map protection/deprotection heatmaps onto PDB
+
+```{r}
+source("R/pdb-visualisation.R")
+```
+
+
+```{r}
+scores <- results$functional_analysis@results$ebayes.fdr
+
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+
+graphics_data <- ComputeAverageMap(AAString = fasta_data[[1]],
+                            peptideSeqs = unique(peptide_sequences),
+                            numlines = 2, maxmismatch = 1,
+                            by = 10, scores = scores[unique(peptide_charge_names)],
+                            name = "-log10 p value")
+```
+
+
+```{r}
+dataset <- graphics_data
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+mycolor_parameters <- hdx_to_pdb_colours(dataset, pdb_filepath)
+```
+
+
+```{r}
+
+graphics <- NGLVieweR(pdb_filepath) %>%
+  stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+  addRepresentation("cartoon") %>%
+  addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="white")) #%>%
+  #setSpin()
+```
+
+
+```{r}
+graphics
+```
+
+
+
+```{r}
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+graphics_pdbview <- visualise_hdx_data(results, type="epitope", level="residue", fasta=fasta_filepath, pdb=pdb_filepath)
+
+graphics_pdbview #%>% setSpin()
+```
+
+
+Protection/Deprotection heatmap 
+
+```{r}
+fasta <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+fasta_data <- readAAStringSet(filepath = fasta, "fasta")
+
+scores <- results$functional_analysis@results$ebayes.fdr
+peptide_charge_names <- rownames(results$functional_analysis@results)
+peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
+
+n_cols <- length(as.vector(colnames(data_selection))$incoperation)
+
+message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+print(message)
+print(colnames(assay(data_selection)[,1:(n_cols/2)]))
+print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+
+hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
+                                 peptideSeqs = unique(peptide_sequences),
+                                 numlines = 2, 
+                                 maxmismatch = 1,
+                                 by = 10, 
+                                 scores = scores[unique(peptide_charge_names)],
+                                 name = "-log10 p value")
+hdx_diff <- list()
+graphics <- list()
+qDF <- data_selection
+for (i in 1:(n_cols/2)){
+    hdx_diff[[i]] <- hdxdifference(object = data_selection,
+                                    AAString = fasta_data[[1]],
+                                    peptideSeqs = unique(peptide_sequences),
+                                    numlines = 2,
+                                    maxmismatch = 1,
+                                    by = 10,
+                                    scores = scores[unique(peptide_charge_names)],
+                                    cols = c(i,(n_cols/2 + i)),
+                                    name = "-log10 p value (signed)")
+    
+    graphics[[i]] <- hdxheatmap(averageMaps = list(hdx_average), diffMaps = list(hdx_diff[[i]]$diffMap)) 
+}
+
+message <- paste("INFO: You have ", length(graphics), "Protection/Deprotection heatmaps")
+print(message)
+```
+
+```{r, fig.width= 12, fig.height = 4}
+graphics[[3]][[1]] / graphics[[3]][[2]] + plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+qDF <- data_selection
+graphics_protection <- visualise_hdx_data(results, 
+                                          type="protection", 
+                                          data_selection=data_selection,
+                                          level="residue",
+                                          fasta = fasta_filepath)
+```
+
+```{r, fig.width= 12, fig.height = 4}
+graphics <- graphics_protection
+graphics[[3]][[1]] / graphics[[3]][[2]] +
+    plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r}
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+graphics <- list()
+for (i in 1:(n_cols/2)){
+    graphics_data <- hdx_average + sign(hdx_diff[[i]]$diffMap)
+    mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb = pdb_filepath, cmap_name = "ProtDeprot")
+    graphics[[i]] <- NGLVieweR(pdb_filepath) %>%
+      stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%
+      addRepresentation("cartoon") %>%
+      addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="Prot"))
+}
+```
+
+```{r}
+graphics[[3]]
+```
+
+```{r}
+pdb_filepath <- "vignettes/data/5edv_chainA_clean_renumbered.pdb"
+graphics_pdbview <- visualise_hdx_data(results, 
+                                       data_selection=data_selection,
+                                       type="protection", 
+                                       level="residue", 
+                                       fasta=fasta_filepath, 
+                                       pdb=pdb_filepath)
+```
+```{r}
+graphics_pdbview[[3]] #%>% setSpin()
+```
 
 # TEST CASE 3
 
-Original raw data
+Pre-processed the raw data manually to add Replicate column
 ```{r}
-#csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data.csv"
+#csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data.csv" # Original raw data
 #data <- read_csv(csv_filepath)
 #data$Replicate <- unlist(lapply(strsplit(data$File, split="_"), function(x) tail(x, n=1)))
 #write_csv(data, file = "inst/extdata/Project_2_SecA_Cluster_Data_edited.csv")
+```
 
+Curate raw data according to parameter file and save as QFeatures object
+```{r}
 csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data_edited.csv"
-```
-
-Had to pre-process its content to add Replicate column
-
-```{r}
-data <- read_csv(csv_filepath)
-make_parameter_file(data, save = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
-```
-
-```{r}
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "vignettes/data/Project_2_SecA_Cluster_Data.hdxp")
 ```
+Post-process the data, remove undeuterated values an normalise by exchangable amides
+```{r}
+hdx_data_undeuterated <- mynormalisehdx(hdx_data, method = "undeuterated")
+sequences <- unique(rownames(hdx_data_undeuterated)[[1]])
+hdx_data_normalised <- mynormalisehdx(hdx_data_undeuterated, sequences = sequences, method = "pc")
+```
+
+Select data for conditions (states) of interest: `secA` (APO state) and `secA_ADP` (bound state)
+```{r}
+data_selection <- hdx_data_normalised[,c(1:17, 63:79)]
+```
 
 
-```{r, fig.height = 20, fig.width = 80, fig.align = "center"}
-pheatmap(t(assay(hdx_data)),
+```{r, fig.height = 12, fig.width = 80, fig.align = "center"}
+pheatmap(t(assay(data_selection)),
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
          color = brewer.pal(n = 9, name = "BuPu"),
          main = "secA heatmap", 
          fontsize = 14,
-         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(hdx_data))),
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(data_selection))),
          legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+
+```{r}
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL, b = NULL,  d = NULL, p = 1)
+
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides, 
+                            start = starting_parameters)
+```
+```{r}
+results$functional_analysis@results
+```
+
+```{r}
+graphics_kinetics <- visualise_hdx_data(results, type = "kinetics")
+graphics_forest <- visualise_hdx_data(results, type="forest")
+```
+```{r, fig.height = 2, fig.width = 10, fig.align = "center"}
+graphics_kinetics[[4]] + graphics_kinetics[[24]] + graphics_kinetics[[25]]
+```
+```{r}
+graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
+```
+
+
+
+```{r}
+# Find out how many unique peptides and charge states exist
+length(rownames(assay(hdx_data)))
+# Extract all column values for a given peptide and charge state ( all states, all replicates, all timepoints)
+peptide_charge <- "VIMDF_1" # "SSQYESAL_1"
+Deu_min_global <- apply(assay(hdx_data), 1, function(x) min(x, na.rm = TRUE))[[peptide_charge]]
+peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
+peptide_charge_data <- longFormat(peptide_charge_data)
+peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2]) # Modify this for data analysis functions since they expect a numeric for replicates
+peptide_charge_conditions <- unique(peptide_charge_data$condition)
+# For a fixed confition
+state <- "SecAYEG_AMPPNP"
+ldf <- peptide_charge_data %>% subset(condition == state)
+ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
+ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
+# Identify if number of replicates for 0 timepoint match for subsequent timepoints and report if not the case
+#sum(ldf$timepoint == 0)
+#length(unique(ldf$timepoint))
+ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+
+# Subtract Deu uptake value at 0 timepoint
+replicate_number <- 3
+single_replicate_data <- ldf %>% subset(replicates == replicate_number)
+x <- single_replicate_data %>% subset(timepoint == 0) # NOTE: Sometimes there will be more than one 0 timepoint
+message <- paste("INFO: You have", length(x$value),"Deu uptake values for the zero timepoint.")
+print(message)
+
+if (all(is.na(x$value))){
+    message <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
+    print(message)
+    single_replicate_data$value <- single_replicate_data$value - Deu_min_global
+    print(single_replicate_data)
+}else{
+    message <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
+    print(message)
+    Deu_min <- min(x$value, na.rm = TRUE)
+    print("BEFORE")
+    print(single_replicate_data)
+    single_replicate_data$value <- single_replicate_data$value - Deu_min
+    print("AFTER")
+    print(single_replicate_data)
+}
 ```
 
 
 ```{r}
-graphics <- visualise_hdx_data(results, type="kinetics") # READY
-graphics <- visualise_hdx_data(results, type="forest") # READY
+message <-paste("INFO: You have", length(rownames(assay(hdx_data))), "peptide-charge paired values")
+print(message)
+ldf_new <- rbind()
+for (peptide_charge in rownames(assay(hdx_data))){
+  peptide_charge_data <- as.data.frame(assay(hdx_data))[peptide_charge, ]
+  peptide_charge_data <- longFormat(peptide_charge_data)
+  peptide_charge_data$condition <- as.factor(str_match(peptide_charge_data$colname, "cond\\s*(.*)")[, 2])
+  
+  Deu_min_global <- apply(assay(hdx_data), 1, function(x) min(x, na.rm = TRUE))[[peptide_charge]]
+  
+  peptide_charge_conditions <- unique(peptide_charge_data$condition)
+  message <- paste("INFO: For ", peptide_charge, ", you have", length(peptide_charge_conditions), "conditions")
+  print(message)
+  
+  #ldf_new <- rbind()
+  for (state in peptide_charge_conditions){
+    ldf <- peptide_charge_data %>% subset(condition == state)
+    ldf$timepoint <- as.numeric(str_match(ldf$colname, "X\\s*(.*?)\\s*rep")[, 2])
+    ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
+    
+    ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+    # Subtract Deu uptake value at 0 timepoint
+    message <- paste("INFO: You have", length(unique(ldf$replicates)), "replicates, for", state)
+    print(message)
+    
+    for (n_replicate in unique(ldf$replicates)){
+      single_replicate_data <- ldf %>% subset(replicates == n_replicate)
+      x <- single_replicate_data %>% subset(timepoint == 0)
+      
+      if (all(is.na(x$value))){
+        message <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
+        print(message)
+        single_replicate_data$value <- single_replicate_data$value - Deu_min_global
+        #print(single_replicate_data)
+        ldf_new <- rbind(ldf_new, single_replicate_data)
+        }else{
+            message <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
+            print(message)
+            Deu_min <- min(x$value, na.rm = TRUE)
+            single_replicate_data$value <- single_replicate_data$value - Deu_min
+            #print(single_replicate_data)
+            ldf_new <- rbind(ldf_new, single_replicate_data)
+        }
+    }
+  }
+}
 
-# NOTE: This only works to compare ONLY TWO distinct conditions, for the same timepoint, for all peptide fragments
-# This needs to define a BASELINE state/condition and an ALTERNATE sate/condition
-# NOTE: Data must be normalised by intercept 
-graphics <- visualise_hdx_data(results, type="manhatten", reference = NULL)# <<<<--- NEXT
-
-# NOTE: NOT SURE ??
-graphics <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = "my_fasta_path") # Return an EpitopeMap
-graphics <- visualise_hdx_data(results, type="epitope", level="residue", fasta = "my_fasta_path") # Return heatmap
-graphics <- visualise_hdx_data(results, type="epitope", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB
-
-graphics <- visualise_hdx_data(results, type="protection", level="peptide") # Return heatmap for peptide residue-number ranges
-graphics <- visualise_hdx_data(results, type="protection", level="residue", fasta = "my_fasta_path") # Return heatmap
-graphics <- visualise_hdx_data(results, type="protection", level="residue", pdb="my_pdb_path") # Return heatmap projected onto PDB
-
-# GUI: Make GUI by assembling these building blocks
-
+x <- DataFrame(ldf_new)
+x_wide <- pivot_wider(data.frame(x), values_from = value, id_cols = rowname, names_from = colname)
+x_wide_df <- DataFrame(x_wide)
+x_wide_df$rownames <- x_wide$rowname
+qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 1:ncol(assay(hdx_data)), name = names(hdx_data), fnames = "rownames")
 ```
-

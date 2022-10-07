@@ -1,0 +1,382 @@
+---
+title: "hdxstat-streamline"
+author:
+- name: Broncio Aguilar-Sanjuan
+- name: Oliver M. Crook
+date: "05/10/2022"
+package: hdxstats
+output:
+  BiocStyle::html_document:
+    toc_float: yes
+abstract: "This vignette describes the essential HDX-MS data curation, analysis, and visualisation functions from `hdxstats-streamline`, a module with routines using functions from `hdxstats`, an R package to analyse a mass-spectrometry based  hydrogen deuterium exchange (HDX) experiment, with focus on empirical Bayes functional models and visualisations. \n"
+vignette: |
+  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("hdxstats")
+library("pheatmap")
+library("RColorBrewer")
+library("viridisLite")
+library("ggplot2")
+```
+
+# Data curation pipeline
+
+## Example 1
+
+* If you have an input CSV file only
+
+```{r}
+# INPUT
+csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats") # input csv with HDX-MS datas
+
+# OUTPUT
+output_file = "../vignettes/tests/MBP_qDF.rsd" # QFeatures object output path
+output_parameters = "../vignettes/tests/MBP_qDF.hdxp"
+
+# Run curation pipeline with 'interactive' mode
+hdx_data <- extract_hdx_data(csv_filepath, save_qDF = output_file, save_parameters = output_parameters, interactive = TRUE)
+```
+
+## Example 2
+
+If you have an input CSV file and a `parameter_file`
+```{r}
+# INPUT
+csv_filepath <- csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats") # input csv with HDX-MS datas
+parameter_file <- "../vignettes/tests/MBP_qDF.hdxp"
+
+# OUTPUT
+output_file = "../vignettes/tests/MBP_qDF.rsd" # QFeatures object output path
+
+# Run curation pipeline provided 'parameter_file'
+hdx_data <- extract_hdx_data(csv_filepath, save_qDF = output_file, parameter_file = parameter_file)
+```
+
+# CASE STUDY 1
+
+## Curate HDX-MS CSV data
+
+Use `parameter_file`
+```{r}
+csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats")
+parameter_file <- system.file("extdata", "MBP_qDF.hdxp", package = "hdxstats") # parameter file
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
+```
+
+```{r, fig.height = 12, fig.width = 12, fig.align = "center"}
+pheatmap(t(assay(hdx_data)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "MBP: Deu Incorporation", 
+         fontsize = 14,
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(hdx_data))),
+         legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+
+## Analyse Deuterium Uptake Kinetics
+
+```{r}
+# INPUT
+data_selection <- hdx_data[,1:100]
+all_peptides <- rownames(data_selection)[[1]]
+starting_parameters <- list(a = NULL, b = 0.001,  d = NULL, p = 1)
+
+# OUTPUT
+results <- analyse_kinetics(data = data_selection,
+                            method = "dfit",
+                            peptide_selection = all_peptides[37],
+                            start = starting_parameters)
+```
+
+## Visualise Functional Analysis Results
+
+View fitting curves of Deu-uptake kinetics for all available conditions associated to selected peptides
+
+```{r, fig.width= 4, fig.height = 2}
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics") 
+graphics_kinetics
+```
+
+## Play with another selection
+
+```{r}
+# INPUT
+data_selection <- hdx_data[,1:24]
+all_peptides <- rownames(data_selection)[[1]]
+starting_parameters <- list(a = NULL, b = 0.001,  d = NULL, p = 1)
+
+# OUTPUT
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides,
+                            start = starting_parameters)
+```
+
+
+```{r}
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics")
+graphics_forest <- visualise_hdx_data(results, type="forest")
+```
+
+Combine graphical outputs in a single canvas
+
+```{r, fig.width= 22, fig.height = 10}
+(graphics_kinetics[[1]] | graphics_kinetics[[2]] | graphics_kinetics[[3]]) /
+  (graphics_forest[[1]] | graphics_forest[[2]] | graphics_forest[[3]] ) 
+```
+
+
+# CASE STUDY 2
+
+Single-domain antibody (sdAb) binding assays to HOIP
+
+## Curate HDX-MS CSV data
+
+Use `parameter_file`
+```{r}
+csv_filepath <- system.file("extdata", "N64184_1a2_state.csv", package = "hdxstats")
+parameter_file <- system.file("extdata", "N64184_1a2_state.hdxp", package = "hdxstats")
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
+```
+
+```{r, fig.height = 6, fig.width = 12, fig.align = "center"}
+pheatmap(t(assay(hdx_data)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "HOIP-RBR / dAb: Deu Incorporation", 
+         fontsize = 14,
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(hdx_data))),
+         legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+
+## Analyse Deuterium Uptake Kinetics 
+
+```{r}
+# INPUT 
+data_selection <- hdx_data[,1:33]
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL, b = 0.01,  d = NULL)
+formula = value ~ a * (1 - exp(-b*(timepoint))) + d
+
+# OUTPUT
+results <- analyse_kinetics(data = data_selection, 
+                            method = "dfit", 
+                            peptide_selection = all_peptides[3], 
+                            start = starting_parameters,
+                            formula = formula)
+```
+
+
+```{r}
+graphics_kinetics <- visualise_hdx_data(results, type="kinetics")
+# Customise plot
+custom_colors <- scale_color_manual(values = colorRampPalette(brewer.pal(8, name = "Set2"))(11))
+graphics_kinetics + custom_colors
+```
+
+Remove intercept Deu uptake values 
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+hdx_data_nointercept <- normalisehdx(hdx_data, method = "intercept")
+```
+
+Let's select column data for the APO state and a bound state with a single domain antibody labelled as `dAb25_1` 
+```{r}
+# INPUT 
+data_selection <- hdx_data_nointercept[,c(1:3, 10:12)]
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL)
+formula = value ~ a * (1 - exp(-0.05*(timepoint)))
+
+# OUTPUT
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides, 
+                            start = starting_parameters,
+                            formula = formula)
+```
+
+```{r, fig.width= 22, fig.height = 15}
+graphics <- visualise_hdx_data(results, type="kinetics")
+
+graphics[[36]] + 
+graphics[[42]] +
+graphics[[43]] +
+graphics[[65]] +
+graphics[[68]] +
+graphics[[70]] +
+graphics[[52]] +
+graphics[[53]] +
+plot_layout(guides = 'collect')
+```
+
+## Visualise Functional Analysis Results
+
+```{r, fig.width= 14, fig.height = 6}
+graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
+
+graphics_manhattan[[2]] / graphics_manhattan[[3]] + plot_layout(guides = 'collect')
+```
+
+
+```{r, fig.width= 12, fig.height = 4}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+graphics_epitope <- visualise_hdx_data(results, type="epitope", level="peptide", fasta = fasta_filepath)
+
+graphics_epitope[[1]]/(graphics_epitope[[2]]) + 
+plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+
+```{r, fig.width= 12, fig.height = 4}
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+graphics_epitope_heatmap <- visualise_hdx_data(results, type="epitope", level="residue", fasta = fasta_filepath)
+
+graphics_epitope_heatmap[[1]]/(graphics_epitope_heatmap[[2]]) + 
+plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+```{r}
+# INPUT
+pdb_filepath <- system.file("extdata", "5edv_chainA_clean_renumbered.pdb", package = "hdxstats")
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+
+# OUTPUT
+graphics_epitope_pdbview <- visualise_hdx_data(results, 
+                                               type="epitope", 
+                                               level= "residue", 
+                                               fasta= fasta_filepath,
+                                               pdb= pdb_filepath)
+graphics_epitope_pdbview #%>% setSpin()
+```
+
+```{r}
+# INPUT
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+qDF <- data_selection
+
+# OUTPUT
+graphics_protection_heatmap <- visualise_hdx_data(results, 
+                                          type="protection", 
+                                          data_selection=data_selection,
+                                          level="residue",
+                                          fasta = fasta_filepath)
+```
+
+```{r, fig.width= 12, fig.height = 4}
+graphics_protection_heatmap[[3]][[1]] / graphics_protection_heatmap[[3]][[2]] +
+    plot_layout(guides = 'collect') & theme(legend.position = "right")
+```
+
+
+```{r}
+# INPUT
+fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
+pdb_filepath <- "/home/sanjuan/research/hdxstats/vignettes/data/5edv_chainA_clean_renumbered.pdb"
+
+# OUTPUT
+graphics_protection_pdbview <- visualise_hdx_data(results, 
+                                       data_selection=data_selection,
+                                       type="protection", 
+                                       level="residue", 
+                                       fasta=fasta_filepath,
+                                       pdb=pdb_filepath)
+
+graphics_protection_pdbview
+```
+
+# CASE STUDY 3
+
+Sec translocon
+
+## Curate HDX-MS CSV data
+
+Use `parameter_file`
+```{r}
+#csv_filepath <- "inst/extdata/Project_2_SecA_Cluster_Data.csv" # Original raw data
+#data <- read_csv(csv_filepath)
+#data$Replicate <- unlist(lapply(strsplit(data$File, split="_"), function(x) tail(x, n=1)))
+#write_csv(data, file = "inst/extdata/Project_2_SecA_Cluster_Data_edited.csv")
+```
+
+```{r}
+csv_filepath <- "../inst/extdata/Project_2_SecA_Cluster_Data_edited.csv"
+hdx_data <- extract_hdx_data(csv_filepath, parameter_file = "../inst/extdata/Project_2_SecA_Cluster_Data.hdxp")
+```
+
+```{r, fig.height = 12, fig.width = 50, fig.align = "center"}
+pheatmap(t(assay(hdx_data)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "secA : Deu Incorporation", 
+         fontsize = 14,
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(hdx_data))),
+         legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+
+Post-process the data, remove undeuterated values an normalise by exchangable amides
+```{r}
+hdx_data_undeuterated <- mynormalisehdx(hdx_data, method = "undeuterated")
+sequences <- unique(rownames(hdx_data_undeuterated)[[1]])
+hdx_data_normalised <- mynormalisehdx(hdx_data_undeuterated, sequences = sequences, method = "pc")
+```
+
+Select data for conditions (states) of interest: `secA` (APO state) and `secA_ADP` (bound state)
+```{r}
+data_selection <- hdx_data_normalised[,c(1:17, 63:79)]
+```
+
+
+```{r, fig.height = 12, fig.width = 50, fig.align = "center"}
+pheatmap(t(assay(data_selection)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "secA heatmap", 
+         fontsize = 14,
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(data_selection))),
+         legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+
+## Analyse Deuterium Uptake Kinetics
+
+```{r}
+# INPUT
+all_peptides <- rownames(data_selection)[[1]] # get all peptides
+starting_parameters <- list(a = NULL, b = NULL,  d = NULL, p = 1)
+
+# OUTPUT
+results <- analyse_kinetics(data = data_selection,
+                            method = "fit",
+                            peptide_selection = all_peptides, 
+                            start = starting_parameters)
+```
+```{r}
+results$functional_analysis@results
+```
+
+```{r}
+graphics_kinetics <- visualise_hdx_data(results, type = "kinetics")
+graphics_forest <- visualise_hdx_data(results, type="forest")
+```
+
+```{r, fig.height = 2, fig.width = 10, fig.align = "center"}
+graphics_kinetics[[4]] + graphics_kinetics[[24]] + graphics_kinetics[[25]]
+```
+## Visualise Functional Analysis Results
+
+```{r}
+graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
+```
+

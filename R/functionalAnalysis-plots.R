@@ -798,7 +798,7 @@ hdxdifference <- function(object,
     rownames(peptideMap) <- seq.int(1:nrow(peptideMap))
     
     ## compute differences
-    diff <- assay(qDF)[, cols[2]] - assay(qDF)[, cols[1]]
+    diff <- assay(object)[, cols[2]] - assay(object)[, cols[1]]
     
     for (i in seq_along(start)){
             

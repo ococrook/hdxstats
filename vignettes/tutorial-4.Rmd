@@ -45,6 +45,7 @@ indicates protection whilst red deprotection. The binding epitope is very
 clear from these diagrams.
 
 ```{r, fig.width= 22, fig.height = 15}
+
 scores <- funresdAb27_2@results$ebayes.fdr
 hdxdiff1 <- hdxdifference(object = newqDF2,
               AAString = HOIPfasta[[1]],
@@ -75,7 +76,6 @@ out4[[1]]/out4[[2]]  + plot_layout(guides = 'collect') & theme(legend.position =
 # Visualise data in PDB structure
 
 Load essential libraries
-
 ```{r,}
 library("NGLVieweR")
 library("tidyverse")
@@ -85,7 +85,7 @@ library("comprehenr")
 library("bio3d")
 ```
 
-Map protection/deprotection heatmaps onto PDB
+# Map protection/deprotection heatmaps onto PDB
 
 ```{r}
 source("../R/pdb-visualisation.R")
@@ -123,7 +123,7 @@ NGLVieweR(pdb_filepath) %>%
   addRepresentation("cartoon", param = list(color=mycolor_parameters, backgroundColor="white")) #%>%
   #setSpin()
 ```
-Map Epitope data
+# Map Epitope data
 
 
 ```{r}
