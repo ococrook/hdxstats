@@ -1,4 +1,4 @@
-##' A manhatten plot for a multi-level testing prodcedure based on the 
+##' A manhattan plot for a multi-level testing prodcedure based on the 
 ##' haromonic mean p-value
 ##' @title hmpWindow (Currently in development and not used)
 ##' @param params An object of class HdxStatRes
@@ -57,7 +57,9 @@ hmpWindow <- function(params,
     return(plot.list = plot.list)
     
 }
-##' A manhattan plot for epitope mapping
+##' A manhattan plot for epitope mapping. This plots the -log10(FDR) as a function
+##' of peptide from N-C terminus. The points are coloured by protection 
+##' or deprotection. 
 ##' @title manhattan plot
 ##' @param params An object of class `HdxStatRes`
 ##' @param sequences A character vector containing the measured peptides sequences,
