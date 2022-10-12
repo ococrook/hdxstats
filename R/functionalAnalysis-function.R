@@ -11,6 +11,7 @@
 ##' @param formula The nonlinear formula used. Default is NULL, in which a weibull model is used.
 ##' @param start The initial guess for the parameters
 ##' @param mycolours A colour palette default uses `brewer.pal`.
+##' @param maxAttempts The number of attempts to try restarting fit in a self-starting model
 ##' @return Returns an instance of class `HdxStatmodel`
 ##' @md 
 ##' 
@@ -268,7 +269,18 @@ hdxEbayes <- function(RSS0,
     # compute FDR
     fdr <- p.adjust(pvalues, method = "BH")
     
-    return(list(pvalues = pvalues, fdr = fdr))
+    # empirical FDR
+    d1 <- fitdistr(numerator[numerator > 0], densfun = "chi-squared", start = list(df = 1))
+    d2 <- fitdistr(denomenator[denomenator > 0], densfun = "chi-squared", start = list(df = 1))
+    
+    # compute empirical F-statistic
+    F_Emp <- (numerator/d1$estimate)/(denomenator/d2$estimate)
+    
+    # compute p-values and FDR
+    pvals_emp <- pf(F_Emp, df1 = d1$estimate, df2 = d2$estimate, lower.tail = FALSE)
+    fdr_emp <- p.adjust(p = pvals_emp, method = "BH")
+    
+    return(list(pvalues = pvalues, fdr = fdr, empirical_fdr = fdr_emp))
 }
 
 ##' This is the main function for using t-tests for hdx-ms data.
@@ -449,7 +461,7 @@ processFunctional <- function(object,
                            d2 = sapply(res_filtered, function(x) x$d2))
 
     # get names for emprical bayes    
-    names(ebayesres$fdr) <- names(ebayesres$pvalues) <- rw
+    names(ebayesres$fdr) <- names(ebayesres$pvalues) <- names(ebayesres$empirical_fdr) <- rw
 
     Fstatres <- lapply(Fstats, unlist)
     names(Fstatres) <- rw
@@ -461,6 +473,7 @@ processFunctional <- function(object,
                       fdr = fdr,
                       ebayes.pvals = ebayesres$pvalues,
                       ebayes.fdr = ebayesres$fdr,
+                      empirical.fdr = ebayesres$empirical_fdr,
                       fitcomplete = which(!sapply(res, function(x) class(x)) == "try-error"), row.names = rw)
     
     .res <- .hdxstatres(results = .out, method = "Functional model") 

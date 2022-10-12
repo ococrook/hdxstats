@@ -184,8 +184,8 @@ plotEpitopeMap <- function(AAString,
     
     ncov <- max(coverage)
     
-    start <- sapply(allPatterns, function(x) x@start) - 1
-    end <- start + sapply(allPatterns, function(x) x@width)
+    start <- sapply(allPatterns, function(x) x@start)
+    end <- start + sapply(allPatterns, function(x) x@width) - 1
     
     
     peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
@@ -226,8 +226,13 @@ plotEpitopeMap <- function(AAString,
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + 
                     scale_fill_manual(breaks = c(0, 1), values = c("white", alpha("#1B7837", 0.7))) +
-                    theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + 
+                    scale_x_discrete(breaks = seq.int(n), 
+                                     labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                     seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                                     )) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                    ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             } else {
                 mygrid <- expand.grid(X = factor(1:(ncol(peptideMap)%%n + 1)), Y = rownames(peptideMap[, (n * (i-1)):ncol(peptideMap), drop = FALSE]))
@@ -235,15 +240,18 @@ plotEpitopeMap <- function(AAString,
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + 
                     scale_fill_manual(breaks = c(0,1), values = c("white", alpha("#1B7837", 0.7)))  +
-                    theme_classic() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1), labels = colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                                  labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                                  seq.int(n*(i-1), ncol(peptideMap)))) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                    ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             }
         }
     } else{
         
         sc <- scale_fill_manual(name, 
-                                values = c("white", brewer.pal(n = 2, name = "Set2")),
+                                values = c("white", brewer.pal(n = 3, name = "Set2")),
                                 labels = c(" ", "Not Signifcant", "Significant"),
                                 breaks = levels(factor(peptideMap))[seq(1, nlevels(factor(peptideMap)), by = by)], drop = FALSE)
         
@@ -255,15 +263,25 @@ plotEpitopeMap <- function(AAString,
                 mygrid$Z <- factor(c(t(peptideMap[, n * (i - 1) + 1:n])), levels = levels(factor(peptideMap)))
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc +
-                    theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + 
+                    scale_x_discrete(breaks = seq.int(n), 
+                                     labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                                       seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                        )) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + 
+                    ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y)))) + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
+
             } else {
                 mygrid$Z <- factor(c(t(peptideMap[, (n * (i-1)):ncol(peptideMap)])), levels = levels(factor(peptideMap)))
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc + 
-                    theme_classic() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1), labels = colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                                  labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                                  seq.int(n*(i-1), ncol(peptideMap)))) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                    ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             }
         }
@@ -324,8 +342,8 @@ plotEpitopeMapFdr <- function(AAString,
     
     ncov <- max(coverage)
     
-    start <- sapply(allPatterns, function(x) x@start) - 1
-    end <- start + sapply(allPatterns, function(x) x@width)
+    start <- sapply(allPatterns, function(x) x@start)
+    end <- start + sapply(allPatterns, function(x) x@width) - 1
     
     
     peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
@@ -366,8 +384,13 @@ plotEpitopeMapFdr <- function(AAString,
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + 
                     scale_fill_manual(breaks = c(0, 1), values = c("white", alpha("#1B7837", 0.7))) +
-                    theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + 
+                    scale_x_discrete(breaks = seq.int(n), 
+                                     labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                     seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                                     )) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                    ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             } else {
                 mygrid <- expand.grid(X = factor(1:(ncol(peptideMap)%%n + 1)), Y = rownames(peptideMap[, (n * (i-1)):ncol(peptideMap), drop = FALSE]))
@@ -375,8 +398,10 @@ plotEpitopeMapFdr <- function(AAString,
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + 
                     scale_fill_manual(breaks = c(0,1), values = c("white", alpha("#1B7837", 0.7)))  +
-                    theme_classic() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1), labels = colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                                  labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                                  seq.int(n*(i-1), ncol(peptideMap)))) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             }
         }
@@ -395,15 +420,22 @@ plotEpitopeMapFdr <- function(AAString,
                 mygrid$Z <- factor(c(t(peptideMap[, n * (i - 1) + 1:n])), levels = levels(factor(peptideMap)))
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc +
-                    theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + 
+                    scale_x_discrete(breaks = seq.int(n), 
+                                     labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                     seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                                     )) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                    ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             } else {
                 mygrid$Z <- factor(c(t(peptideMap[, (n * (i-1)):ncol(peptideMap)])), levels = levels(factor(peptideMap)))
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc + 
-                    theme_classic() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1), labels = colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)])) +
-                    theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                    theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                                  labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                                  seq.int(n*(i-1), ncol(peptideMap)))) +
+                    theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
             }
         }
@@ -513,16 +545,23 @@ plotEpitopeMapResidue <- function(AAString,
             mygrid$Z <- factor(c(t(averageMap[, n * (i - 1) + 1:n])), levels = levels(factor(averageMap)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc +
-                theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(averageMap[, n * (i - 1) + 1:n, drop = FALSE])) +
-                theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                theme_bw() + 
+                scale_x_discrete(breaks = seq.int(n), 
+                                 labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                 seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                                 )) +
+                theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                 scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
         } else {
             mygrid$Z <- factor(c(t(averageMap[, (n * (i-1)):ncol(averageMap)])), levels = levels(factor(averageMap)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc + 
-                theme_classic() + 
-                scale_x_discrete(breaks = 1:(ncol(averageMap)%%n + 1), labels = colnames(averageMap[, (n * (i-1)):ncol(averageMap), drop = FALSE])) +
-                theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
+                theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                              labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                              seq.int(n*(i-1), ncol(peptideMap)))) +
+                theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                 scale_y_discrete(breaks = 1:length(levels(mygrid$Y)), labels = rep("", length(levels(mygrid$Y))))
         }
     }
@@ -658,15 +697,22 @@ plotAverageMaps <- function(averageMaps,
             mygrid$Z <- factor(c(t(map[, n * (i - 1) + 1:n])), levels = levels(factor(map)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc +
-                theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(map[, n * (i - 1) + 1:n, drop = FALSE])) +
-                theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
+                theme_bw() + 
+                scale_x_discrete(breaks = seq.int(n), 
+                                 labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                 seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                                 )) +
+                theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                ylim(c(0, max(coverage) + 1)) + scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
                 ylab("dAb") + xlab("AA sequence")
         } else {
             mygrid$Z <- factor(c(t(map[, (n * (i-1)):ncol(map)])), levels = levels(factor(map)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc + 
-                theme_classic() + theme(legend.position = "none") + 
-                scale_x_discrete(breaks = 1:(ncol(map)%%n + 1), labels = colnames(map[, (n * (i-1)):ncol(map), drop = FALSE])) +
+                theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                              labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                              seq.int(n*(i-1), ncol(peptideMap)))) +
+                theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
                 scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
                 ylab("dAb") + xlab("AA sequence")
                 
@@ -900,15 +946,23 @@ hdxheatmap <- function(averageMaps,
             mygrid$Z <- factor(c(t(map[, n * (i - 1) + 1:n])), levels = levels(factor(map)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc +
-                theme_classic() + scale_x_discrete(breaks = 1:n, labels = colnames(map[, n * (i - 1) + 1:n, drop = FALSE])) +
+                theme_bw() + 
+                scale_x_discrete(breaks = seq.int(n), 
+                                 labels = paste0(colnames(peptideMap[, n * (i - 1) + 1:n, drop = FALSE]), "-",
+                                                 seq.int(from = n* (i - 1) + 1, to = n *(i - 1)  + n, by = 1)
+                                 )) +
+                theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
+                ylim(c(0, max(coverage) + 1)) +
                 theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
                 ylab("dAb") + xlab("AA sequence")
         } else {
             mygrid$Z <- factor(c(t(map[, (n * (i-1)):ncol(map)])), levels = levels(factor(map)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc + 
-                theme_classic() + theme(legend.position = "none") + 
-                scale_x_discrete(breaks = 1:(ncol(map)%%n + 1), labels = colnames(map[, (n * (i-1)):ncol(map), drop = FALSE])) +
+                theme_bw() + scale_x_discrete(breaks = 1:(ncol(peptideMap)%%n + 1),
+                                              labels = paste0(colnames(peptideMap[, (n * (i-1)):ncol(peptideMap)]), "-",
+                                                              seq.int(n*(i-1), ncol(peptideMap)))) +
+                theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
                 scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
                 ylab("dAb") + xlab("AA sequence")
             

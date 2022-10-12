@@ -114,6 +114,7 @@ setMethod("summary", "HdxStatModel",
 ##' @param design The design defining conditions and replicates. Default is NULL.
 ##' @param formula The formula for the non-linear fit.
 ##' @param start The initial guess for the parameters. Parameters must match formula
+##' @param maxAttempts The number of attempts in a self-starting model
 ##' @return Returns an instance of `HdxStatModels`
 ##' 
 ##' @rdname hdxstat-methods

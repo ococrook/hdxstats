@@ -50,6 +50,8 @@
 \item{formula}{The formula for the non-linear fit.}
 
 \item{start}{The initial guess for the parameters. Parameters must match formula}
+
+\item{maxAttempts}{The number of attempts in a self-starting model}
 }
 \value{
 The variance-covariance matrix of the parameters

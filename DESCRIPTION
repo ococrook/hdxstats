@@ -4,7 +4,7 @@ Version: 0.99.1
 Authors@R: c(person(family = "Crook", given = "Oliver M.",
 		                email = "oliver.crook@stats.ox.ac.uk",
 		                comment = c(ORCID = "0000-0001-5669-8506"),
-		                role = c("aut", "cre"))
+		                role = c("aut", "cre")),
 		      person(family = "Sanjuan", given = "Broncio A.", 
 		      email = "broncio.aguilarsanjuan@stats.ox.ac.uk",
 		      comment = c(ORCID = "0000-0001-8068-6417"),
@@ -34,15 +34,22 @@ Imports: Rcpp (>= 1.0.4.6),
     limma,
     lmerTest,
     harmonicmeanp,
-    stats
+    stats,
+    Biostrings,
+    NGLVieweR,
+    bio3d,
+    comprehenr,
+    patchwork,
+    readr,
+    tidyr,
+    xfun,
+    tools,
+    grDevices,
+    utils
 Suggests: pheatmap,
     viridis,
-    scales,
-    patchwork,
-    tidyr,
-    Biostrings
+    scales
 VignetteBuilder: knitr
-LinkingTo: Rcpp, RcppArmadillo
 Roxygen: list(markdown=TRUE)
 RoxygenNote: 7.1.2
 biocViews: Infrastructure, MassSpectrometry, Proteomics, Metabolomics

@@ -53,6 +53,8 @@ chargestates, timepoints ete. Default is NULL and design is extract from column 
 
 \item{mycolours}{A colour palette default uses \code{brewer.pal}.}
 
+\item{maxAttempts}{The number of attempts to try restarting fit in a self-starting model}
+
 \item{RSS0}{Residual sum of squares for null model}
 
 \item{RSS1}{Residual sum of squares for altenative model}

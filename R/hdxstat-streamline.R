@@ -15,7 +15,8 @@ analyse_kinetics <- function(data,
                              peptide_selection = NULL,
                              method = NULL,
                              starting_parameters = list(a = NULL, b = 0.001,  d = NULL, p = 1),
-                             formula = NULL){
+                             formula = NULL,
+                             maxAttempts = 5){
   
   if (method == "fit"){
     print("INFO: Performing fitting of Deuterium uptake kinetics. Method: 'hdxstats::fitUptakeKinetics' ")
@@ -24,7 +25,8 @@ analyse_kinetics <- function(data,
     fitted_models <- fitting_method(object = data,
                                     feature = peptide_selection,
                                     start = starting_parameters,
-                                    formula = formula)#,
+                                    formula = formula,
+                                    maxAttempts = maxAttempts)#,
     #maxAttempts = 1)
     functional_analysis <- processFunctional(object = data,
                                              params = fitted_models)
