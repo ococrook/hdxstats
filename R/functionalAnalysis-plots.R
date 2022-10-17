@@ -357,20 +357,20 @@ plotEpitopeMapFdr <- function(AAString,
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- 1
+                peptideMap[1, seq.int(start[i], end[i])] <- 1
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- 1
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- 1
             }
         }
     } else {
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- scores[i]
+                peptideMap[1, seq.int(start[i], end[i])] <- scores[i]
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- scores[i]
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- scores[i]
             }
         }
     }
@@ -511,20 +511,20 @@ plotEpitopeMapResidue <- function(AAString,
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- 1
+                peptideMap[1, seq.int(start[i], end[i])] <- 1
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- 1
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- 1
             }
         }
     } else {
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- scores[i]
+                peptideMap[1, seq.int(start[i], end[i])] <- scores[i]
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- scores[i]
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- scores[i]
             }
         }
     }
@@ -636,20 +636,20 @@ ComputeAverageMap <- function(AAString,
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- 1
+                peptideMap[1, seq.int(start[i], end[i])] <- 1
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- 1
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- 1
             }
         }
     } else {
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- scores[i]
+                peptideMap[1, seq.int(start[i], end[i])] <- scores[i]
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- scores[i]
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- scores[i]
             }
         }
     }
@@ -852,10 +852,10 @@ hdxdifference <- function(object,
     for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- diff[i]
+                peptideMap[1, seq.int(start[i], end[i])] <- diff[i]
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- diff[i]
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- diff[i]
             }
     }
     
@@ -863,20 +863,20 @@ hdxdifference <- function(object,
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- 1
+                peptideMap[1, seq.int(start[i], end[i])] <- 1
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- 1
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- 1
             }
         }
     } else {
         for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, start[i]:end[i]] <- scores[i]
+                peptideMap[1, seq.int(start[i], end[i])] <- scores[i]
             } else {
-                j <- which.min(rowSums(peptideMap[, start[i]:end[i]] > 0))
-                peptideMap[j, start[i]:end[i]] <- scores[i]
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                peptideMap[j, seq.int(start[i], end[i])] <- scores[i]
             }
         }
     }
