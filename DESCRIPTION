@@ -45,7 +45,8 @@ Imports: Rcpp (>= 1.0.4.6),
     xfun,
     tools,
     grDevices,
-    utils
+    utils,
+    MASS
 Suggests: pheatmap,
     viridis,
     scales

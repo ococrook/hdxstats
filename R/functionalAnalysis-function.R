@@ -123,11 +123,11 @@ differentialUptakeKinetics <- function(object,
                 return(nlmod)
             }
             
-            myPredict <- lapply(1:length(nlmod), function(j)
+            myPredict <- lapply(seq_len(length(nlmod)), function(j)
                 expand.grid(timepoint = seq(min(data$timepoint, 0), max(data$timepoint), 0.5)))  
             #expand.grid here in case your model has more than one variable
             #Caution, extrapolating well beyond the data
-            myPredict <- lapply(1:length(nlmod), function(j){
+            myPredict <- lapply(seq_len(length(nlmod)), function(j){
                 myPredict[[j]] <- predict(nlmod[[j]], newdata = myPredict[[j]])
                 return(myPredict[[j]])}) 
             
@@ -135,7 +135,7 @@ differentialUptakeKinetics <- function(object,
             colnames(myPredictjoin) <- sapply(datalist, function(x) x$condition[1])
             myPredictjoin <- data.frame(myPredictjoin)
             myPredictjoin$timepoint <- unlist(expand.grid(timepoint = seq(min(data$timepoint, 0), max(data$timepoint), 0.5)))
-            myPredict_long <- myPredictjoin %>% pivot_longer(cols = 1:length(datalist))
+            myPredict_long <- myPredictjoin %>% pivot_longer(cols = seq_len(length(datalist)))
             colnames(myPredict_long) <- c("timepoint", "condition", "fit")
             df <- data.frame(myPredict_long)
             

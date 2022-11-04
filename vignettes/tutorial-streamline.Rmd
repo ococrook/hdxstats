@@ -10,7 +10,7 @@ output:
     toc_float: yes
 abstract: "This vignette describes the essential HDX-MS data curation, analysis, and visualisation functions from `hdxstats-streamline`, a module with routines using functions from `hdxstats`, an R package to analyse a mass-spectrometry based  hydrogen deuterium exchange (HDX) experiment, with focus on empirical Bayes functional models and visualisations. \n"
 vignette: |
-  %\VignetteIndexEntry{Analysing differential hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteIndexEntry{hdxstat-streamline}
   %\VignetteEngine{knitr::rmarkdown}
   %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
 ---

@@ -18,5 +18,6 @@ exportPattern("^[[:alpha:]]+")
        "BiocStyle", "stringi", "xfun", "comprehenr", "bio3d", "NGLVieweR", "Biostrings", "patchwork")    
         importFrom("grDevices", "colorRamp", "colorRampPalette")
     importFrom("utils", "file_test")
+    importFrom("MASS", "fitdistr")
 exportMethods(logLik, residuals, vcov, likRatio, coef, deviance, summary, wilk)
 

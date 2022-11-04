@@ -97,7 +97,7 @@ visualise_hdx_data <- function(results,
     print("INFO: You selected 'kinetics' to visualise from your results")
     
     graphics = list()
-    for (i in 1:n_models){graphics[[i]] = results$fitted_models@statmodels[[i]]@vis}
+    for (i in seq_len(n_models)){graphics[[i]] = results$fitted_models@statmodels[[i]]@vis}
     return(graphics)
     print("INFO: I appended all ggplot output objects to a list")
   }
@@ -119,7 +119,7 @@ visualise_hdx_data <- function(results,
     print("INFO: You selected 'forest' to visualise from your results")
     
     graphics = list()
-    for (i in 1:n_models){graphics[[i]] = forestPlot(params = results$fitted_models@statmodels[[i]])}
+    for (i in seq_len(n_models)){graphics[[i]] = forestPlot(params = results$fitted_models@statmodels[[i]])}
     return(graphics)
     print("INFO: I appended all 'forestPlot' output objects to a list")
   }
@@ -129,13 +129,13 @@ visualise_hdx_data <- function(results,
     
     message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
     print(message)
-    print(colnames(assay(data_selection)[,1:(n_cols/2)]))
-    print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+    print(colnames(assay(data_selection)[,seq_len((n_cols/2))]))
+    print(colnames(assay(data_selection)[,seq.int((1+n_cols/2), n_cols)]))
     
     data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
     
     graphics <- list()
-    for (i in 1:(n_cols/2)){
+    for (i in seq_len((n_cols/2))){
       graphics[i] <- manhattanplot(params = results$functional_analysis,
                                    sequences = rownames(results$functional_analysis@results), 
                                    region = as.data.frame(data_selection@metadata)[, c("Start", "End")],
@@ -233,8 +233,8 @@ visualise_hdx_data <- function(results,
       
       message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
       print(message)
-      print(colnames(assay(data_selection)[,1:(n_cols/2)]))
-      print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+      print(colnames(assay(data_selection)[, seq_len(n_cols/2)]))
+      print(colnames(assay(data_selection)[, seq.int((1+n_cols/2), n_cols)]))
       
       hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
                                        peptideSeqs = unique(peptide_sequences),
@@ -272,8 +272,8 @@ visualise_hdx_data <- function(results,
       
       message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
       print(message)
-      print(colnames(assay(data_selection)[,1:(n_cols/2)]))
-      print(colnames(assay(data_selection)[,(1+n_cols/2):n_cols]))
+      print(colnames(assay(data_selection)[, seq_len((n_cols/2))]))
+      print(colnames(assay(data_selection)[, seq.int((1+n_cols/2),n_cols)]))
       
       hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
                                        peptideSeqs = unique(peptide_sequences),
@@ -285,7 +285,7 @@ visualise_hdx_data <- function(results,
       hdx_diff <- list()
       graphics <- list()
       qDF <- data_selection
-      for (i in 1:(n_cols/2)){
+      for (i in seq.int((n_cols/2))){
         hdx_diff[[i]] <- hdxdifference(object = data_selection,
                                        AAString = fasta_data[[1]],
                                        peptideSeqs = unique(peptide_sequences),
@@ -293,12 +293,12 @@ visualise_hdx_data <- function(results,
                                        maxmismatch = 1,
                                        by = 10,
                                        scores = scores[unique(peptide_charge_names)],
-                                       cols = c(i,(n_cols/2 + i)),
+                                       cols = c(i, (n_cols/2 + i)),
                                        name = "-log10 p value (signed)")
       }
       
       graphics <- list()
-      for (i in 1:(n_cols/2)){
+      for (i in seq.int((n_cols/2))){
         graphics_data <- hdx_average + sign(hdx_diff[[i]]$diffMap)
         mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb, cmap_name="ProtDeprot")
         graphics[[i]] <- NGLVieweR(pdb_filepath) %>%

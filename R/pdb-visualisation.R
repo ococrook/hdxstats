@@ -97,7 +97,7 @@ hdx_to_pdb_colours <- function(dataset,
     
     residue_selections <- pdb_viewer_data$residues
     df <- data.frame(x=unlist(lapply(pdb_viewer_data$values, color_function)), y=residue_selections)
-    color_parameters <- to_list(for(i in 1:length(residue_selections)) c(df$x[i], df$y[i]))
+    color_parameters <- to_list(for(i in seq_len(length(residue_selections))) c(df$x[i], df$y[i]))
 
     return(color_parameters)
 }
