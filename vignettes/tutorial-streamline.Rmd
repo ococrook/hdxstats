@@ -376,7 +376,7 @@ results$functional_analysis@results
 
 ```{r}
 graphics_kinetics <- visualise_hdx_data(results, type = "kinetics")
-graphics_forest <- visualise_hdx_data(results, type="forest")
+#graphics_forest <- visualise_hdx_data(results, type="forest")
 ```
 
 ```{r, fig.height = 2, fig.width = 10, fig.align = "center"}
