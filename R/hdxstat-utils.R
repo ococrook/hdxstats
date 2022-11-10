@@ -10,9 +10,9 @@ exchangeableAmides <- function(sequence) {
     n <- length(sequence)
     x <- vector(mode = "numeric", length = n)
     
-    for(i in 1:n) {
+    for(i in seq.int(n)) {
         seq_vector <- strsplit(as.character(sequence[i]), split = "")[[1]]
-        x[i] <- length(na.omit(sub("P", NA, seq_vector))) - 2
+        x[i] <- length(na.omit(sub("P", NA, seq_vector[-seq.int(2)])))
     }
     
     return(x)	
@@ -46,7 +46,7 @@ normalisehdx <- function(object,
     
     if (method == "pc"){
         num_exch_sites <- exchangeableAmides(sequences)
-        x <- t(vapply(1:nrow(assay(object)),
+        x <- t(vapply(seq.int(nrow(assay(object))),
                       function(n) assay(object)[n,]/max(num_exch_sites[n], 1),
                       FUN.VALUE = numeric(ncol(assay(object)))))
         
@@ -132,8 +132,8 @@ normalisehdx <- function(object,
         
     } else if (method == "bc"){
         
-        x <- t(vapply(1:nrow(assay(object)),
-                      function(n) assay(object)[n,]/correction[n],
+        x <- t(vapply(seq.int(nrow(assay(object))),
+                      function(n) assay(object)[n, ]/correction[n],
                       FUN.VALUE = numeric(ncol(assay(object)))))
         
         # parse as qFeatures object

@@ -81,7 +81,9 @@ differentialUptakeKinetics <- function(object,
                                       trace = FALSE, 
                                       lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude), silent = TRUE)
                 # reset b
-                start["b"] <- list(NULL)
+                if (("b" %in% names(start))){
+                    start["b"] <- list(NULL)
+                }
             }
             
             # find best starting parameters for analysis
