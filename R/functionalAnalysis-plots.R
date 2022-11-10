@@ -237,8 +237,8 @@ plotEpitopeMap <- function(AAString,
                     ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                     scale_y_discrete(breaks = seq.int(length(levels(mygrid$Y))), labels = rep("", length(levels(mygrid$Y))))
             } else {
-                mygrid <- expand.grid(X = factor(seq.int((ncol(peptideMap)%%n + 1)),
-                                                 Y = rownames(peptideMap[, seq.int((n * (i-1)), ncol(peptideMap)), drop = FALSE])))
+                mygrid <- expand.grid(X = factor(seq.int((ncol(peptideMap)%%n + 1))),
+                                                 Y = rownames(peptideMap[, seq.int((n * (i-1)), ncol(peptideMap)), drop = FALSE]))
                 mygrid$Z <- as.factor(c(t(peptideMap[, seq.int((n * (i-1)), ncol(peptideMap))])))
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + 

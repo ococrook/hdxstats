@@ -16,7 +16,7 @@ exportPattern("^[[:alpha:]]+")
     importFrom("methods", "is")
     import("Rcpp", "ggplot2", "dplyr", "plyr", "knitr", "BiocParallel", "robustbase", "tidyr", "readr", "tools",
        "BiocStyle", "stringi", "xfun", "comprehenr", "bio3d", "NGLVieweR", "Biostrings", "patchwork")    
-        importFrom("grDevices", "colorRamp", "colorRampPalette")
+    importFrom("grDevices", "colorRamp", "colorRampPalette")
     importFrom("utils", "file_test")
     importFrom("MASS", "fitdistr")
 exportMethods(logLik, residuals, vcov, likRatio, coef, deviance, summary, wilk)

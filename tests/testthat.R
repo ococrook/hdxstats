@@ -3,8 +3,6 @@
 # https://github.com/hadley/testthat/issues/144
 # We should remove it when the issue is resolved.
 Sys.setenv("R_TESTS" = "")
-
 library("testthat")
 library("hdxstats")
-
 test_check("hdxstats")

@@ -8,6 +8,7 @@
 ##' @param starting_parameters To optimise for kinetic model based on 'formula'
 ##' @param formula Functional form or the fitting curve to optimise its parameters given 'starting_parameters'
 ##'                e.g., `formula = value ~ a * (1 - exp(-0.07*(timepoint))))`
+##' @param maxAttempts The number of restarts attempts to get better model fits. Default is 5.               
 ##' @return Results from Empirical Bayes on fitted kinetic functionals or curves of Deuterium uptake
 ##' @md
 ##'  

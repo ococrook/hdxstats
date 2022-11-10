@@ -115,6 +115,7 @@ setMethod("summary", "HdxStatModel",
 ##' @param formula The formula for the non-linear fit.
 ##' @param start The initial guess for the parameters. Parameters must match formula
 ##' @param maxAttempts The number of attempts in a self-starting model
+##' @param ... Additional arguments to `differentialUptakeKinetics`
 ##' @return Returns an instance of `HdxStatModels`
 ##' 
 ##' @rdname hdxstat-methods
