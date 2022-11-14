@@ -26,6 +26,8 @@ analyse_kinetics(
 
 \item{formula}{Functional form or the fitting curve to optimise its parameters given 'starting_parameters'
 e.g., \verb{formula = value ~ a * (1 - exp(-0.07*(timepoint))))}}
+
+\item{maxAttempts}{The number of restarts attempts to get better model fits. Default is 5.}
 }
 \value{
 Results from Empirical Bayes on fitted kinetic functionals or curves of Deuterium uptake

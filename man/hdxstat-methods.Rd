@@ -37,7 +37,8 @@
   design = NULL,
   formula = NULL,
   start = list(a = NULL, b = 0.001, d = NULL, p = 1),
-  maxAttempts = 5
+  maxAttempts = 5,
+  ...
 )
 }
 \arguments{
@@ -52,6 +53,8 @@
 \item{start}{The initial guess for the parameters. Parameters must match formula}
 
 \item{maxAttempts}{The number of attempts in a self-starting model}
+
+\item{...}{Additional arguments to \code{differentialUptakeKinetics}}
 }
 \value{
 The variance-covariance matrix of the parameters

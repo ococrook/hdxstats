@@ -34,8 +34,7 @@ test_that("statistics", {
     expect_equal(length(vcov(results2$fitted_models)), 2)
     expect_true(likRatio(results2$fitted_models) > 0 )
     expect_true(wilk(results2$fitted_models) <= 1)
-    expect_equal(ncol(coef(results2$fitted_models)), length(starting_parameters))
-    expect_equal(deviance(results2$fitted_models), 3)
+    expect_equal(length(deviance(results2$fitted_models)), 3)
     
     # check default formula
     formula <- value ~ a * (1 - exp(-b * (timepoint)^p)) + d

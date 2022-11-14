@@ -61,8 +61,4 @@ Extract data provided a CSV filepath
 }
 \author{
 Broncio Aguilar-Sanjuan and Oliver Crook
-
-Broncio Aguilar-Sanjuan and Oliver Crook
-
-Broncio Aguilar-Sanjuan and Oliver Crook
 }

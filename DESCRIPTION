@@ -46,12 +46,12 @@ Imports: Rcpp (>= 1.0.4.6),
     tools,
     grDevices,
     utils,
-    MASS
+    MASS,
+    viridis
 Suggests: pheatmap,
-    viridis,
     scales,
     testthat
 VignetteBuilder: knitr
 Roxygen: list(markdown=TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.1
 biocViews: Infrastructure, MassSpectrometry, Proteomics, Metabolomics

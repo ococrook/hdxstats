@@ -17,7 +17,7 @@ setOldClass("gg")
                      slots = c(nlsmodels = "list"),
                      validity = function(object){
                         msg <- validMsg(NULL, NULL)
-                        if (class(object[[1]]) != "nls")
+                        if (!is(class(object[[1]]), "nls"))
                             mgs <- validMsg(msg, "Not an nls object")
                         if (is.null(msg)) TRUE
                         else msg

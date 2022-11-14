@@ -25,7 +25,7 @@ test_that("functional fits", {
                                 peptide_selection = all_peptides[1],
                                 start = starting_parameters)
     expect_equal(results, results2)
-    expect_equal(class(results$fitted_models), "HdxStatModel")
+    expect_equal(class(results$fitted_models)[1], "HdxStatModel")
     
     # correct number of models fitted
     num_models <- length(unique(sub(".*cond", "",colnames(data_selection)[[1]])))
@@ -33,7 +33,6 @@ test_that("functional fits", {
     expect_equal("Functional Model", results$fitted_models@method)
     
     # did plotting work
-    expect_equal("gg", class(class(results$fitted_models@vis)))
-    
+    expect_equal("gg", class(results$fitted_models@vis)[1])
     
 })

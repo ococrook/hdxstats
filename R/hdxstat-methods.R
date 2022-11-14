@@ -65,7 +65,7 @@ setMethod("wilk", "HdxStatModel",
 ##' @rdname hdxstat-methods
 setMethod("coef", "HdxStatModel",
           function(object) {
-              .out <- t(sapply(c(list(object@nullmodel), object@alternative@nlsmodels), coef))
+              .out <- t(sapply(c(list(object@nullmodel), object@alternative@nlsmodels), stats::coef))
               if(dim(.out)[1] == 1){
                   nm <- colnames(.out)[1]
                   .out <- t(.out)

@@ -415,7 +415,7 @@ preprocess_data <- function(data,
         print("INFO: Normalising data ... Method: normalisehdx")
         
         data_qDF <- normalisehdx(data_qDF,
-                                 sequence = unique(data[[parameters$Sequence]]),
+                                 sequences = unique(data[[parameters$Sequence]]),
                                  method = "pc")
     }
     else{

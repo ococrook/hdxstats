@@ -34,6 +34,4 @@ Map estimated (de)protection values to Blue-White-Red colormap values
 }
 \author{
 Broncio Aguilar-Sanjuan and Oliver Crook
-
-Broncio Aguilar-Sanjuan and Oliver Crook
 }

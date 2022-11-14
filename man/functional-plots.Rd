@@ -144,10 +144,12 @@ use for side effect which returns manhatten plot
 Side effect produces a forest plot
 }
 \description{
-A manhatten plot for a multi-level testing prodcedure based on the
+A manhattan plot for a multi-level testing prodcedure based on the
 haromonic mean p-value
 
-A manhattan plot for epitope mapping
+A manhattan plot for epitope mapping. This plots the -log10(FDR) as a function
+of peptide from N-C terminus. The points are coloured by protection
+or deprotection.
 
 Generate an epitope map by plotting the signifcantly changed peptides
 with respect to a differential HDX-MS experiment
