@@ -120,7 +120,11 @@ visualise_hdx_data <- function(results,
     print("INFO: You selected 'forest' to visualise from your results")
     
     graphics = list()
-    for (i in seq_len(n_models)){graphics[[i]] = forestPlot(params = results$fitted_models@statmodels[[i]])}
+    for (i in seq_len(n_models)){
+      tryCatch({
+        graphics[[i]] <- forestPlot(params = results$fitted_models@statmodels[[i]])
+      }, error = function(e){cat("ERROR:",conditionMessage(e), ". Failed for model number: ", i, "\n")})
+    }
     return(graphics)
     print("INFO: I appended all 'forestPlot' output objects to a list")
   }
@@ -130,18 +134,24 @@ visualise_hdx_data <- function(results,
     
     message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
     print(message)
+    print("INFO: First half")
     print(colnames(assay(data_selection)[,seq_len((n_cols/2))]))
+    print("INFO: Second half")
     print(colnames(assay(data_selection)[,seq.int((1+n_cols/2), n_cols)]))
     
     data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
+    successful_results<- data_selection@metadata$Peptides %in% rownames(results$functional_analysis@results)
+    region <- unique(as.data.frame(data_selection@metadata)[, c("Start", "End")][successful_results,])
     
     graphics <- list()
     for (i in seq_len((n_cols/2))){
-      graphics[i] <- manhattanplot(params = results$functional_analysis,
-                                   sequences = rownames(results$functional_analysis@results), 
-                                   region = as.data.frame(data_selection@metadata)[, c("Start", "End")],
-                                   difference = data_diff[,i],
-                                   nrow = 1)
+      tryCatch({
+        graphics[i] <- manhattanplot(params = results$functional_analysis,
+                                     sequences = rownames(results$functional_analysis@results), 
+                                     region = region,
+                                     difference = data_diff[,i],
+                                     nrow = 1)
+      }, error = function(e){cat("ERROR:",conditionMessage(e), ". Failed for model number: ", i, "\n")})
     }
     
     message <- paste("INFO: You have ", length(graphics), "Manhattan plots")

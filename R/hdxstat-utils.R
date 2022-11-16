@@ -386,6 +386,7 @@ preprocess_data <- function(data,
                              names_sep = "<>")
     
     # Remove NA values
+    print("INFO: Removing NA values from your data")
     data_wide <- data_wide[, colSums(is.na(data_wide)) != nrow(data_wide)]
     # Take all column names except 'columns_fixed'
     columns_to_remove <- 1:length(columns_fixed) # Remove columns_fixed
@@ -408,7 +409,8 @@ preprocess_data <- function(data,
                               charge = parameters$Charge)
     
     print("INFO: Saving a list of 'Start' and 'End' residue numbers into the @metadata slot of output qDF object")
-    data_qDF@metadata <- list("Start" = data[[parameters$Start]], "End" = data[[parameters$End]])
+    peptide_names = paste0(data[[parameters$Sequence]], "_", data[[parameters$Charge]])
+    data_qDF@metadata <- list("Start" = data[[parameters$Start]], "End" = data[[parameters$End]], "Peptides" = peptide_names)
     
     # Normalise data 
     if (normalise) {
