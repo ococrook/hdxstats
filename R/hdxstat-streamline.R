@@ -1,3 +1,27 @@
+##' Accessor for vis slot.
+##' @author Broncio Aguilar-Sanjuan and Oliver Crook
+##' @param object of class "HdxStatModel"
+##' @return "ggplot2" object
+##' @md
+##'
+get_graphics_object <- function(object){ return(object@vis) }
+
+##' Accessor for statmodels slot. Use: get_statmodels(results$fitted_models)
+##' @author Broncio Aguilar-Sanjuan and Oliver Crook
+##' @param object of class "HdxStatModel"
+##' @return "list" of objects of class "HdxStatModel"
+##' @md
+##'
+get_statmodels <- function(object){ return(object@statmodels) }
+
+##' Accessor for results slot. Use: get_ebayes_results(results$functional_analysis)
+##' @author Broncio Aguilar-Sanjuan and Oliver Crook
+##' @param object of class "HdxStatModel"
+##' @return "DataFrame" of results from Empirical Bayes functional analysis
+##' @md
+##'
+get_ebayes_results <- function(object){ object@results }
+
 ##' Fit and apply Empirical Bayes (functional analysis) to an input QFeatures data object
 ##' @author Broncio Aguilar-Sanjuan and Oliver Crook
 ##' @param data Input QFeatures data object or a selection 
@@ -92,13 +116,13 @@ visualise_hdx_data <- function(results,
                                pdb = NULL){
   
   if (type == "kinetics" & results$method == "fitUptakeKinetics"){
-    n_models <- length(results$fitted_models@statmodels)
+    n_models <- length(get_statmodels(results$fitted_models))
     message <- paste("INFO: I found ", n_models, " models in your results data", sep = " ")
     print(message)
     print("INFO: You selected 'kinetics' to visualise from your results")
     
     graphics = list()
-    for (i in seq_len(n_models)){graphics[[i]] = results$fitted_models@statmodels[[i]]@vis}
+    for (i in seq_len(n_models)){graphics[[i]] = get_graphics_object(get_statmodels(results$fitted_models)[[i]])}
     return(graphics)
     print("INFO: I appended all ggplot output objects to a list")
   }
@@ -108,13 +132,13 @@ visualise_hdx_data <- function(results,
     message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
     print(message)
     
-    graphics = results$fitted_models@vis
+    graphics = get_graphics_object(results$fitted_models)
     return(graphics)
     print("INFO: I appended all ggplot output objects to a list")
   }
   
   else if (type == "forest"){
-    n_models <- length(results$fitted_models@statmodels)
+    n_models <- length(get_statmodels(results$fitted_models))
     message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
     print(message)
     print("INFO: You selected 'forest' to visualise from your results")
@@ -122,7 +146,7 @@ visualise_hdx_data <- function(results,
     graphics = list()
     for (i in seq_len(n_models)){
       tryCatch({
-        graphics[[i]] <- forestPlot(params = results$fitted_models@statmodels[[i]])
+        graphics[[i]] <- forestPlot(params = get_statmodels(results$fitted_models)[[i]])
       }, error = function(e){cat("ERROR:",conditionMessage(e), ". Failed for model number: ", i, "\n")})
     }
     return(graphics)
@@ -140,14 +164,14 @@ visualise_hdx_data <- function(results,
     print(colnames(assay(data_selection)[,seq.int((1+n_cols/2), n_cols)]))
     
     data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
-    successful_results<- rownames(data_selection)[["incoperation"]] %in% rownames(results$functional_analysis@results)
+    successful_results<- rownames(data_selection)[["incoperation"]] %in% rownames(get_ebayes_results(results$functional_analysis))
     region_def <- as.data.frame(unique(rowData(data_selection)[["incoperation"]][, c("Start", "End")][successful_results,]))
     
     graphics <- list()
     for (i in seq_len((n_cols/2))){
       tryCatch({
         graphics[i] <- manhattanplot(params = results$functional_analysis,
-                                     sequences = rownames(results$functional_analysis@results), 
+                                     sequences = rownames(get_ebayes_results(results$functional_analysis)), 
                                      region = region_def,
                                      difference = data_diff[,i],
                                      nrow = 1)
@@ -165,8 +189,8 @@ visualise_hdx_data <- function(results,
     
     print("INFO: You selected 'epitope' to visualise from your results")
     
-    scores <- results$functional_analysis@results$ebayes.fdr
-    peptide_charge_names <- rownames(results$functional_analysis@results)
+    scores <- get_ebayes_results(results$functional_analysis)$ebayes.fdr
+    peptide_charge_names <- rownames(get_ebayes_results(results$functional_analysis))
     peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
     # NOTE: What about the charged states? Do they get usually ignored?
     
@@ -233,8 +257,8 @@ visualise_hdx_data <- function(results,
     
     print("INFO: You selected 'protection' to visualise from your results")
     
-    scores <- results$functional_analysis@results$ebayes.fdr
-    peptide_charge_names <- rownames(results$functional_analysis@results)
+    scores <- get_ebayes_results(results$functional_analysis)$ebayes.fdr
+    peptide_charge_names <- rownames(get_ebayes_results(results$functional_analysis))
     peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
     
     if (level == "residue" & !is.null(fasta) & is.null(pdb)){

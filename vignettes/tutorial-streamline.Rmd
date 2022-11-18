@@ -78,7 +78,7 @@ parameter_file <- system.file("extdata", "MBP_qDF.hdxp", package = "hdxstats") #
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
 ```
 
-```{r, fig.height = 22, fig.width = 24, fig.align = "center"}
+```{r, fig.align = "center"}
 pheatmap(t(assay(hdx_data)),
          cluster_rows = FALSE, 
          cluster_cols = FALSE,
@@ -214,7 +214,7 @@ results <- analyse_kinetics(data = data_selection,
                             maxAttempts = 1)
 ```
 
-```{r, fig.width= 22, fig.height = 15}
+```{r}
 graphics <- visualise_hdx_data(results, type="kinetics")
 
 graphics[[36]] + 
@@ -230,7 +230,7 @@ plot_layout(guides = 'collect')
 
 ## Visualise Functional Analysis Results
 
-```{r, fig.width= 14, fig.height = 6}
+```{r}
 graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
 
 graphics_manhattan[[2]] / graphics_manhattan[[3]] + plot_layout(guides = 'collect')
