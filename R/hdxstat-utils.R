@@ -54,8 +54,8 @@ normalisehdx <- function(object,
         x <- DataFrame(x)
         x$rownames <- rownames(object)[[1]]
         qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
-        qFeat@metadata <- object@metadata
-        
+        rowData(qFeat)[["incoperation"]] <- rowData(object)[["incoperation"]]
+
         return(qFeat)
     }
     
@@ -67,8 +67,8 @@ normalisehdx <- function(object,
         x <- DataFrame(x)
         x$rownames <- rownames(object)[[1]]
         qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
-        qFeat@metadata <- object@metadata
-        
+        rowData(qFeat)[["incoperation"]] <- rowData(object)[["incoperation"]]
+
         return(qFeat)
         
     }
@@ -126,8 +126,8 @@ normalisehdx <- function(object,
         x_wide_df <- DataFrame(x_wide)
         x_wide_df$rownames <- x_wide$rowname
         qFeat <- readQFeatures(data.frame(x_wide_df), ecol = 2:ncol(assay(object)), name = names(object), fnames = "rownames")
-        qFeat@metadata <- object@metadata
-        
+        rowData(qFeat)[["incoperation"]] <- rowData(object)[["incoperation"]]
+
         return(qFeat)
         
     } else if (method == "bc"){
@@ -140,8 +140,8 @@ normalisehdx <- function(object,
         x <- DataFrame(x)
         x$rownames <- rownames(object)[[1]]
         qFeat <- readQFeatures(data.frame(x), ecol = 1:ncol(assay(object)), name = names(object), fnames = "rownames")
-        qFeat@metadata <- object@metadata
-        
+        rowData(qFeat)[["incoperation"]] <- rowData(object)[["incoperation"]]
+
         return(qFeat)
     }
 }
@@ -408,10 +408,13 @@ preprocess_data <- function(data,
                               sequence = parameters$Sequence,
                               charge = parameters$Charge)
     
-    print("INFO: Saving a list of 'Start' and 'End' residue numbers into the @metadata slot of output qDF object")
-    peptide_names = paste0(data[[parameters$Sequence]], "_", data[[parameters$Charge]])
-    data_qDF@metadata <- list("Start" = data[[parameters$Start]], "End" = data[[parameters$End]], "Peptides" = peptide_names)
-    
+    print("INFO: Saving a list of 'Start' and 'End' residue numbers as part of qDF object rowData")
+    peptide_names_original <- paste0(data[[parameters$Sequence]], "_", data[[parameters$Charge]])
+    peptide_names_qDF <- rownames(assay(data_qDF))
+    first_matches <- match(unique(peptide_names_qDF), peptide_names_original)
+    rowData(data_qDF)[["incoperation"]][["Start"]] <- data[[parameters$Start]][first_matches]
+    rowData(data_qDF)[["incoperation"]][["End"]] <- data[[parameters$End]][first_matches]
+
     # Normalise data 
     if (normalise) {
         print("INFO: Normalising data ... Method: normalisehdx")

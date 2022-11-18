@@ -295,7 +295,7 @@ pdb_filepath <- system.file("extdata", "5edv_chainA_clean_renumbered.pdb", packa
 # OUTPUT
 graphics_protection_pdbview <- visualise_hdx_data(results, 
                                        data_selection=data_selection,
-                                       type="epitope", 
+                                       type="protection", 
                                        level="residue", 
                                        fasta=fasta_filepath,
                                        pdb=pdb_filepath)

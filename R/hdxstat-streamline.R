@@ -140,15 +140,15 @@ visualise_hdx_data <- function(results,
     print(colnames(assay(data_selection)[,seq.int((1+n_cols/2), n_cols)]))
     
     data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
-    successful_results<- data_selection@metadata$Peptides %in% rownames(results$functional_analysis@results)
-    region <- unique(as.data.frame(data_selection@metadata)[, c("Start", "End")][successful_results,])
+    successful_results<- rownames(data_selection)[["incoperation"]] %in% rownames(results$functional_analysis@results)
+    region_def <- as.data.frame(unique(rowData(data_selection)[["incoperation"]][, c("Start", "End")][successful_results,]))
     
     graphics <- list()
     for (i in seq_len((n_cols/2))){
       tryCatch({
         graphics[i] <- manhattanplot(params = results$functional_analysis,
                                      sequences = rownames(results$functional_analysis@results), 
-                                     region = region,
+                                     region = region_def,
                                      difference = data_diff[,i],
                                      nrow = 1)
       }, error = function(e){cat("ERROR:",conditionMessage(e), ". Failed for model number: ", i, "\n")})
