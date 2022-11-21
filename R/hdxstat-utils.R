@@ -74,8 +74,9 @@ normalisehdx <- function(object,
     }
     
     if (method == "intercept"){
-        message <-paste("INFO: You have", length(rownames(assay(object))), "peptide-charge paired values")
-        print(message)
+        mssg <-paste("INFO: You have", length(rownames(assay(object))), "peptide-charge paired values")
+        message(mssg)
+        
         ldf_new <- rbind()
         for (peptide_charge in rownames(assay(object))){
             peptide_charge_data <- as.data.frame(assay(object))[peptide_charge, ]
@@ -85,8 +86,8 @@ normalisehdx <- function(object,
             Deu_min_global <- apply(assay(object), 1, function(x) min(x, na.rm = TRUE))[[peptide_charge]]
             
             peptide_charge_conditions <- unique(peptide_charge_data$condition)
-            message <- paste("INFO: For ", peptide_charge, ", you have", length(peptide_charge_conditions), "conditions")
-            print(message)
+            mssg <- paste("INFO: For ", peptide_charge, ", you have", length(peptide_charge_conditions), "conditions")
+            message(mssg)
             
             #ldf_new <- rbind()
             for (state in peptide_charge_conditions){
@@ -95,27 +96,28 @@ normalisehdx <- function(object,
                 ldf$replicates <- as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])
                 
                 ldf$replicates <- unlist(lapply(strsplit(as.vector(as.factor(str_match(ldf$colname, "rep\\s*(.*)\\s*cond")[, 2])), split="_"), function(x) tail(x, n=1)))
+                
                 # Subtract Deu uptake value at 0 timepoint
-                message <- paste("INFO: You have", length(unique(ldf$replicates)), "replicates, for", state)
-                print(message)
+                mssg <- paste("INFO: You have", length(unique(ldf$replicates)), "replicates, for", state)
+                message(mssg)
                 
                 for (n_replicate in unique(ldf$replicates)){
                     single_replicate_data <- ldf %>% subset(replicates == n_replicate)
                     x <- single_replicate_data %>% subset(timepoint == 0)
                     
                     if (all(is.na(x$value))){
-                        message <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
-                        print(message)
+                        mssg <- "INFO: All Deu uptake values for the zero timepoint are NA. I will take the minimum across all conditions."
+                        message(mssg)
                         single_replicate_data$value <- single_replicate_data$value - Deu_min_global
-                        #print(single_replicate_data)
                         ldf_new <- rbind(ldf_new, single_replicate_data)
+                        
                     }else{
-                        message <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
-                        print(message)
+                        mssg <- "INFO: At least one Deu uptake values for the zero timepoint is NA. I will take the minimum of all zero timepoints"
+                        message(mssg)
                         Deu_min <- min(x$value, na.rm = TRUE)
                         single_replicate_data$value <- single_replicate_data$value - Deu_min
-                        #print(single_replicate_data)
                         ldf_new <- rbind(ldf_new, single_replicate_data)
+                        
                     }
                 }
             }
@@ -158,25 +160,25 @@ make_parameter_file <- function(data,
                                 save_parameters = FALSE) {
     
     #Print column names
-    print("INFO: I found these columns in your input CSV file")
+    message("INFO: I found these columns in your input CSV file")
     data_columns <- colnames(data)
     column_message <- paste(colnames(data))
-    print(column_message)
+    message(column_message)
     
     
     print("INFO: Specify the column name indicating the starting peptide residue numbers... OR, enter NA")
     Start <- readline(prompt = "Start (residue number) = ")
     while (is.null(data[[Start]]) & Start != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Start <- readline(prompt = "Start (residue number) = ")
     }
     
-    print("INFO: Specify the column name indicating the ending peptide residue numbers... OR, enter NA")
+    message("INFO: Specify the column name indicating the ending peptide residue numbers... OR, enter NA")
     End <- readline(prompt = "End (residue number) = ")
     while (is.null(data[[End]]) & End != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         End <- readline(prompt = "End (residue number) = ")
@@ -185,7 +187,7 @@ make_parameter_file <- function(data,
     print("INFO: Specify the column name indicating the peptide sequences... OR, enter NA")
     Sequence <- readline(prompt = "Sequence (peptide) = " )
     while (is.null(data[[Sequence]]) & Sequence != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Sequence <- readline(prompt = "Sequence (peptide) = " )
@@ -194,7 +196,7 @@ make_parameter_file <- function(data,
     print("INFO: Specify the column name indicating the peptide charge state... OR, enter NA")
     Charge <- readline(prompt = "Charge = ")
     while (is.null(data[[Charge]]) & Charge != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Charge <- readline(prompt = "Charge = ")
@@ -203,7 +205,7 @@ make_parameter_file <- function(data,
     print("INFO: Specify the column name indicating the Deuterium uptake values ... OR, enter NA")
     Deu_Uptake <- readline(prompt = "Deu_Uptake = ")
     while (is.null(data[[Deu_Uptake]]) & Deu_Uptake != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Deu_Uptake <- readline(prompt = "Deu_Uptake = ")
@@ -212,7 +214,7 @@ make_parameter_file <- function(data,
     print("INFO: Specify the column name indicating the Deuterium exposure timepoints... OR, enter NA")
     Exposure_Time <- readline(prompt = "Exposure_Time = ")
     while (is.null(data[[Exposure_Time]]) & Exposure_Time != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Exposure_Time <- readline(prompt = "Exposure_Time = ")
@@ -223,7 +225,7 @@ make_parameter_file <- function(data,
     Conditions <- readline(prompt = "Conditions = ")
     column_in_set <- unlist(strsplit(toString(gsub(" ", "", Conditions, fixed = TRUE)), split=",")) %in% data_columns
     while (!all(column_in_set) & Conditions != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Conditions <- readline(prompt = "Conditions = ")
@@ -232,7 +234,7 @@ make_parameter_file <- function(data,
     print("INFO: Specify the column name indicating experimental replicates ... OR, enter NA")
     Replicate <- readline(prompt = "Replicate = ")
     while (is.null(data[[Replicate]]) & Replicate != "NA"){
-        print("ERROR: Not a valid column name in your input CSV data. Try again.")
+        warning("Not a valid column name in your input CSV data. Try again.")
         print(column_message)
         
         Replicate <- readline(prompt = "Replicate = ")
@@ -252,7 +254,7 @@ make_parameter_file <- function(data,
         
         original_time_units <- readline(prompt = "original_time_units = ")
         while (!original_time_units %in% c("s", "m", "h")) {
-            print("ERROR: Not a valid time unit. Available units: h (Hours), m (Minutes), s (Seconds).")
+            warning("Not a valid time unit. Available units: h (Hours), m (Minutes), s (Seconds).")
             original_time_units <- readline(prompt = "original_time_units = ")
         }
     }
@@ -278,12 +280,12 @@ make_parameter_file <- function(data,
         if (file.exists(dirname(save_parameters))) {
             saveRDS(parameters, file = save_parameters)
             
-            message = paste("INFO: Saved your parameters in ", save_parameters)
-            print(message)
+            mssg = paste("INFO: Saved your parameters in ", save_parameters)
+            message(mssg)
         }
         
     } else{
-        print("WARNING: Your parameters were not saved. Provide a valid output path with 'save_parameters = outfile_path'")
+        warning("Your parameters were not saved. Provide a valid output path with 'save_parameters = outfile_path'")
     }
     
     return(parameters)
@@ -314,12 +316,12 @@ preprocess_data <- function(data,
         print("INFO: You chose 'interactive' mode to parse the columns from your CSV content and define parameters to format your output QFeatures data object.")
         parameters <- make_parameter_file(data, save_parameters = save_parameters)
         if (!is.null(parameter_file)){
-            print("WARNING: You enabled 'interactive' as TRUE. This will override any 'parameter_file' or 'parameters' you provided.")
+            warning("You enabled 'interactive' as TRUE. This will override any 'parameter_file' or 'parameters' you provided.")
         }
     }
     
     if (!is.null(parameter_file)){
-        print("INFO: You provided a 'parameter_file', I will extract parameters from this to format your output QFeatures data object.")
+        message("INFO: You provided a 'parameter_file', I will extract parameters from this to format your output QFeatures data object.")
         if (file_test("-f", parameter_file)){
             parameters <- readRDS(parameter_file)
         }
@@ -327,44 +329,44 @@ preprocess_data <- function(data,
     
     if (!is.null(parameters)){
         if (is.list(parameters)){
-            print("INFO: You provided a list of 'parameters', I will extract parameters from this to format your output QFeatures data object.")
+            message("INFO: You provided a list of 'parameters', I will extract parameters from this to format your output QFeatures data object.")
         }
     }
     
     if (is.null(parameter_file) & is.null(parameters)) {
-        print("ERROR: You either provided a invalid 'parameter_file' or list of 'parameters'. I will quit pre-processing.")
+        stop("You either provided a invalid 'parameter_file' or list of 'parameters'. I will quit pre-processing.")
     }
     
-    print("INFO: Stripped your 'Exposure_Time' values from non-numeric characters.")
+    message("INFO: Stripped your 'Exposure_Time' values from non-numeric characters.")
     data[[parameters$Exposure_Time]] <- as.numeric(gsub("[^0-9.-]", "", data[[parameters$Exposure_Time]]))
     
     if (parameters$convert_time){
         if (parameters$original_time_units == 'h') {
-            print("INFO: Your original_time_units == 'h'. I will convert your 'Exposure_Time' values to seconds (s).")
+            message("INFO: Your original_time_units == 'h'. I will convert your 'Exposure_Time' values to seconds (s).")
             data[[parameters$Exposure_Time]] <- 3600*data[[parameters$Exposure_Time]]
         }
         else if (parameters$original_time_units == 'm') {
-            print("INFO: Your original_time_units == 'm'. I will convert your 'Exposure_Time' values to seconds (s).")
+            message("INFO: Your original_time_units == 'm'. I will convert your 'Exposure_Time' values to seconds (s).")
             data[[parameters$Exposure_Time]] <- 60*data[[parameters$Exposure_Time]]
         }
         else if (parameters$original_time_units == 's') {
-            print("INFO: Your original_time_units == 's'. I will not convert your 'Exposure_Time' values.")
+            message("INFO: Your original_time_units == 's'. I will not convert your 'Exposure_Time' values.")
         }
     }
     
     if (parameters$Replicate == "NA"){
-        print("INFO: Your 'Replicate' column appears to be NA. I will add this column with 1 values just to label your data.")
+        message("INFO: Your 'Replicate' column appears to be NA. I will add this column with 1 values just to label your data.")
         data$Replicate <- 1
         parameters$Replicate <- "Replicate"
     }
     
     if (parameters$Charge == "NA"){
-        print("INFO: Your 'Charge' column appears to be NA. I will add this column with 0 values just to label your data.")
+        message("INFO: Your 'Charge' column appears to be NA. I will add this column with 0 values just to label your data.")
         data$Charge <- 0
         parameters$Charge <- "Charge"
     }
     
-    print("INFO: Reformatting your data to a wide format...")
+    message("INFO: Reformatting your data to a wide format...")
     # Set default delimiters: X, rep, cond.
     delimiter.Exposure_Time <- "X" # <T>
     delimiter.Replicate <- "rep" # <R>
@@ -386,7 +388,7 @@ preprocess_data <- function(data,
                              names_sep = "<>")
     
     # Remove NA values
-    print("INFO: Removing NA values from your data")
+    message("INFO: Removing NA values from your data")
     data_wide <- data_wide[, colSums(is.na(data_wide)) != nrow(data_wide)]
     # Take all column names except 'columns_fixed'
     columns_to_remove <- 1:length(columns_fixed) # Remove columns_fixed
@@ -397,7 +399,7 @@ preprocess_data <- function(data,
     new_object.colnames <- gsub(" .*", "", new_object.colnames) # ?
     
     # Parse data for selected columns
-    print("INFO: Parsing your data as a qDF object class instance. Method: parseDeutData")
+    message("INFO: Parsing your data as a qDF object class instance. Method: parseDeutData")
     
     initial_column <- length(columns_fixed)+1 # Fixed value by default
     last_column <- length(columns_fixed)+length(new_object.colnames) # Change to length value
@@ -408,7 +410,7 @@ preprocess_data <- function(data,
                               sequence = parameters$Sequence,
                               charge = parameters$Charge)
     
-    print("INFO: Saving a list of 'Start' and 'End' residue numbers as part of qDF object rowData")
+    message("INFO: Saving a list of 'Start' and 'End' residue numbers as part of qDF object rowData")
     peptide_names_original <- paste0(data[[parameters$Sequence]], "_", data[[parameters$Charge]])
     peptide_names_qDF <- rownames(assay(data_qDF))
     first_matches <- match(unique(peptide_names_qDF), peptide_names_original)
@@ -417,14 +419,14 @@ preprocess_data <- function(data,
 
     # Normalise data 
     if (normalise) {
-        print("INFO: Normalising data ... Method: normalisehdx")
+        message("INFO: Normalising data ... Method: normalisehdx")
         
         data_qDF <- normalisehdx(data_qDF,
                                  sequences = unique(data[[parameters$Sequence]]),
                                  method = "pc")
     }
     else{
-        print("WARNING: Your output data is not normalised.")
+        warning("Your output data is not normalised.")
     }
     
     # Save data
@@ -432,11 +434,11 @@ preprocess_data <- function(data,
         if (file.exists(dirname(save_qDF))) {
             
             saveRDS(data_qDF, file = save_qDF)
-            print(paste("INFO: Saved output data in ", save_qDF))
+            message(paste("INFO: Saved output data in ", save_qDF))
             
         }
     } else {
-        print("WARNING: Your output data was not saved. You can provide an output path with 'save = my_path'")
+        warning("Your output data was not saved. You can provide an output path with 'save = my_path'")
     }
     
     return(data_qDF)
@@ -465,32 +467,33 @@ extract_hdx_data <- function(data_path,
     
     if (file.exists(data_path)){
         if (file_ext(data_path) == "csv") {
-            print("INFO: You gave me a CSV file of your HDX-MSM data")
+            message("INFO: You gave me a CSV file of your HDX-MSM data")
             
             data <- read_csv(data_path, show_col_types = FALSE)
             data.type <- "csv"
         }
         else if (file_ext(data_path) == "rsd"){
-            print("INFO: You gave me a RSD file for your HDX-MSM data")
-            print("INFO: I will assume your input data has alreayd been pre-processed")
+            message("INFO: You gave me a RSD file for your HDX-MSM data")
+            message("INFO: I will assume your input data has alreayd been pre-processed")
             
             data <- readRDS(data_path)
             return(data)
         }
         else{
-            print("ERROR: You provided an input file format that I cannot recognise")
-            print("ERROR: Provide a valid input. I will provide a NULL output")
             return(NULL)
+            stop("ERROR: You provided an input file format that I cannot recognise")
+            
         }
     }
     else{
-        print("ERROR: This is not a valid path. Try again.")
         return(NULL)
+        stop("ERROR: This is not a valid path. Try again.")
+        
     }
     
     # Pre-process data
     if (data.type == "csv"){
-        print("INFO: I will pre-process your data parse it using QFeatures ...")
+        message("INFO: I will pre-process your data parse it using QFeatures ...")
         data <- preprocess_data(data, 
                                 normalise = normalise, 
                                 save_qDF = save_qDF, 
@@ -499,7 +502,7 @@ extract_hdx_data <- function(data_path,
                                 save_parameters = save_parameters,
                                 interactive = interactive)
         
-        print("INFO: I pre-processed you input CSV data content and now it's available as a QFeatures instance")
+        message("INFO: I pre-processed you input CSV data content and now it's available as a QFeatures instance")
         
         return(data)
     }
