@@ -32,6 +32,7 @@ library("Biostrings")
 library("scales")
 library("dplyr")
 library("NGLVieweR")
+Sys.setenv("LOG_LEVEL" = "ERROR")
 ```
 
 # Data curation pipeline
@@ -193,7 +194,7 @@ graphics_kinetics + custom_colors
 
 Remove intercept Deu uptake values 
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
+```{r}
 hdx_data_nointercept <- normalisehdx(hdx_data, method = "intercept")
 ```
 
@@ -232,7 +233,6 @@ plot_layout(guides = 'collect')
 
 ```{r}
 graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
-
 graphics_manhattan[[2]] / graphics_manhattan[[3]] + plot_layout(guides = 'collect')
 ```
 
@@ -331,7 +331,7 @@ Post-process the data, remove undeuterated values an normalise by exchangable am
 ```{r}
 hdx_data_undeuterated <- normalisehdx(hdx_data, method = "undeuterated")
 sequences <- unique(rownames(hdx_data_undeuterated)[[1]])
-hdx_data_normalised <- normalisehdx(hdx_data_undeuterated, sequences = sequences, method = "pc")
+hdx_data_normalised <- hdxstats::normalisehdx(hdx_data_undeuterated, sequences = sequences, method = "pc")
 ```
 
 Select data for conditions (states) of interest: `secA` (APO state) and `secA_ADP` (bound state)
@@ -353,17 +353,20 @@ pheatmap(t(assay(data_selection)),
 
 ## Analyse Deuterium Uptake Kinetics
 
-```{r}
+```{r, message=FALSE}
 # INPUT
 all_peptides <- rownames(data_selection)[[1]] # get all peptides
 starting_parameters <- list(a = NULL, b = NULL,  d = NULL, p = 1)
 
-# OUTPUT
+
 results <- analyse_kinetics(data = data_selection,
-                            method = "fit",
-                            peptide_selection = all_peptides, 
-                            start = starting_parameters)
+                           method = "fit",
+                           peptide_selection = all_peptides,
+                           start = starting_parameters)
+
 ```
+
+
 ```{r}
 results$functional_analysis@results
 ```

@@ -16,10 +16,10 @@ define_color_function <- function(dataset,
                         max(dataset[!is.na(dataset)]))
     }
   
-    message(paste("INFO: Your scale limits are ", round(scale_limits, 2)))
+    rlog::log_info(paste(" Your scale limits are ", round(scale_limits, 2)))
   
     if (!is.null(cmap_name) && cmap_name == "ProtDeprot") {
-        message("INFO: Negative values will be coloured in Blue, and positive ones on Red")
+        rlog::log_info(" Negative values will be coloured in Blue, and positive ones on Red")
         
         colormap <- colorRamp(brewer.pal(8, "Blues"))
         domain <- c(0.0, abs(scale_limits[1]))
@@ -37,16 +37,16 @@ define_color_function <- function(dataset,
           }
         }
         
-        warning("WARNING: NA values will be coloured in grey")
+        rlog::log_warn("NA values will be coloured in grey")
         
     }else if (is.null(cmap_name) || cmap_name == "viridis") {
-        message("INFO: Your values will be coloured using Viridis")
+        rlog::log_info(" Your values will be coloured using Viridis")
       
         n_values <- length(unique(sort(dataset)))
         col_pal = c("white", viridis(n_values))
         output_function <- col_bin(col_pal, scale_limits, na.color="#808080")
         
-        warning("WARNING: NA values will be coloured in grey")
+        rlog::log_warn("NA values will be coloured in grey")
     }
     
     return(output_function)
@@ -69,7 +69,7 @@ hdx_to_pdb_colours <- function(dataset,
                                cmap_name = NULL){
   
     if (!file.exists(pdb_filepath)){
-      stop(paste("ERROR: PDB filepath does not exist:", pdb_filepath))
+      stop(paste(" PDB filepath does not exist:", pdb_filepath))
     }
   
     # Extract residue numbers from available residues in PDB coordinates ---
@@ -81,9 +81,9 @@ hdx_to_pdb_colours <- function(dataset,
     # Report available data ---
     
     n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
-    message(paste("INFO: Your HDX input dataset has", length(colnames(dataset)), "entries"))
-    message(paste("INFO: And excluding NA data you only have", length(dataset[!is.na(dataset)]), "entries"))
-    message(paste("INFO: However, your input PDB has only", n_residues_from_pdb, "residues in total"))
+    rlog::log_info(paste(" Your HDX input dataset has", length(colnames(dataset)), "entries"))
+    rlog::log_info(paste(" And excluding NA data you only have", length(dataset[!is.na(dataset)]), "entries"))
+    rlog::log_info(paste(" However, your input PDB has only", n_residues_from_pdb, "residues in total"))
     
     # Work out residues and (de)protection values that can be mapped onto PDB ---
     # Note: some residues are likely to be missing in the PDB

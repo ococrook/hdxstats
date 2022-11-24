@@ -100,7 +100,7 @@ differentialUptakeKinetics <- function(object,
             nonlin_mod <- nonlin_mod[[jj]]
             
             if(inherits(nonlin_mod, "try-error")){
-                print("model fit failed, likely exessive missing values")
+                rlog::log_error(" hdxstats::differentialUptakeKinetics() model fit failed, likely exessive missing values")
                 return(nonlin_mod)
             }
             
@@ -121,7 +121,7 @@ differentialUptakeKinetics <- function(object,
                         lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))})
             
             if (any(sapply(nlmod, function(x) inherits(x, "try-error")))){
-                print("Could not fit model, likely exessive missing values")
+                rlog::log_error(" hdxstats::differentialUptakeKinetics() could not fit model, likely exessive missing values")
                 return(nlmod)
             }
             
