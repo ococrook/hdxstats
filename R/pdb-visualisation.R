@@ -89,7 +89,7 @@ hdx_to_pdb_colours <- function(dataset,
     # Note: some residues are likely to be missing in the PDB
     
     sequence_residue_numbers_hdx <- seq(length(dataset)) # NEED TO TWEAK THIS!!!
-    residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+    residue_numbers_hdx_pdb <- dplyr::intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
     
     dataset_for_pdb_mapping <- dataset[residue_numbers_hdx_pdb]
     

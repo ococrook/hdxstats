@@ -32,7 +32,7 @@ library("Biostrings")
 library("scales")
 library("dplyr")
 library("NGLVieweR")
-Sys.setenv("LOG_LEVEL" = "ERROR")
+Sys.setenv("LOG_LEVEL" = "ERROR") # set log level
 ```
 
 # Data curation pipeline
@@ -78,6 +78,7 @@ csv_filepath <- system.file("extdata", "MBP.csv", package = "hdxstats")
 parameter_file <- system.file("extdata", "MBP_qDF.hdxp", package = "hdxstats") # parameter file
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
 ```
+
 
 ```{r, fig.align = "center"}
 pheatmap(t(assay(hdx_data)),
@@ -156,6 +157,7 @@ parameter_file <- system.file("extdata", "N64184_1a2_state.hdxp", package = "hdx
 hdx_data <- extract_hdx_data(csv_filepath, parameter_file = parameter_file)
 ```
 
+
 ```{r, fig.height = 6, fig.width = 12, fig.align = "center"}
 pheatmap(t(assay(hdx_data)),
          cluster_rows = FALSE, 
@@ -215,6 +217,7 @@ results <- analyse_kinetics(data = data_selection,
                             maxAttempts = 1)
 ```
 
+
 ```{r}
 graphics <- visualise_hdx_data(results, type="kinetics")
 
@@ -254,6 +257,7 @@ graphics_epitope_heatmap[[1]]/(graphics_epitope_heatmap[[2]]) +
 plot_layout(guides = 'collect') & theme(legend.position = "right")
 ```
 
+
 ```{r}
 # INPUT
 pdb_filepath <- system.file("extdata", "5edv_chainA_clean_renumbered.pdb", package = "hdxstats")
@@ -268,6 +272,7 @@ graphics_epitope_pdbview <- visualise_hdx_data(results,
 graphics_epitope_pdbview #%>% setSpin()
 ```
 
+
 ```{r}
 # INPUT
 fasta_filepath <- system.file("extdata", "HOIP.txt", package = "hdxstats", mustWork = TRUE)
@@ -280,6 +285,7 @@ graphics_protection_heatmap <- visualise_hdx_data(results,
                                           level="residue",
                                           fasta = fasta_filepath)
 ```
+
 
 ```{r, fig.width= 12, fig.height = 4}
 graphics_protection_heatmap[[3]][[1]] / graphics_protection_heatmap[[3]][[2]] +

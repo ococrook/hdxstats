@@ -328,9 +328,9 @@ ttestUptakeKinetics <- function(object,
     tres <- list()
     for (j in seq_along(datalist)){
         
-        data <- na.omit(datalist[[j]]) %>% group_by(timepoint) %>% filter(n() > 3)
+        data <- na.omit(datalist[[j]]) %>% group_by(timepoint) %>% dplyr::filter(n() > 3)
         if (nrow(data) > 0){
-            tres[[j]] <- na.omit(datalist[[j]]) %>% group_by(timepoint) %>% filter(n() > 3) %>% do(tidy(t.test(value ~ condition, data = .)))
+            tres[[j]] <- na.omit(datalist[[j]]) %>% group_by(timepoint) %>% dplyr::filter(n() > 3) %>% do(tidy(t.test(value ~ condition, data = .)))
             tres[[j]]$rownames <- datalist[[j]]$rowname[1]  
         }
     }

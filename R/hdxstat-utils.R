@@ -466,13 +466,13 @@ extract_hdx_data <- function(data_path,
                              interactive = FALSE) {
     
     if (file.exists(data_path)){
-        if (file_ext(data_path) == "csv") {
+        if (xfun::file_ext(data_path) == "csv") {
             rlog::log_info(" You gave me a CSV file of your HDX-MSM data")
             
             data <- read_csv(data_path, show_col_types = FALSE)
             data.type <- "csv"
         }
-        else if (file_ext(data_path) == "rsd"){
+        else if (xfun::file_ext(data_path) == "rsd"){
             rlog::log_info(" You gave me a RSD file for your HDX-MSM data")
             rlog::log_info(" I will assume your input data has alreayd been pre-processed")
             
