@@ -153,7 +153,7 @@ n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
 Work out residues and values to map onto PDB
 
 ```{r}
-residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+residue_numbers_hdx_pdb <- dplyr::intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
 is_residue_numbers_hdx_in_pdb <- sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb
 geometric_mean_values_pdb <- geometric_mean_values[is_residue_numbers_hdx_in_pdb]
 ```
@@ -220,7 +220,7 @@ n_residues_from_pdb <- nchar(paste(sequence_from_pdb, collapse=""))
 Work out residues and values to map onto PDB
 
 ```{r}
-residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+residue_numbers_hdx_pdb <- dplyr::intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
 is_residue_numbers_hdx_in_pdb <- sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb
 geometric_mean_values_pdb <- geometric_mean_values[is_residue_numbers_hdx_in_pdb]
 ```
@@ -311,7 +311,7 @@ sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
 
 Work out residues and protection values to map onto PDB
 ```{r}
-residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+residue_numbers_hdx_pdb <- dplyr::intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
 geometric_mean_values_pdb <- geometric_mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
 ```
 
@@ -346,7 +346,7 @@ sequence_residue_numbers_hdx <- strtoi(sub("residue-", "", names(output_list)))
 
 Work out residues and deprotection values to map onto PDB
 ```{r}
-residue_numbers_hdx_pdb <- intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
+residue_numbers_hdx_pdb <- dplyr::intersect(sequence_residue_numbers_hdx, sequence_residue_numbers_pdb)
 geometric_mean_values_pdb <- geometric_mean_values[sequence_residue_numbers_hdx %in% sequence_residue_numbers_pdb]
 ```
 
@@ -432,7 +432,7 @@ pdb_viewer_df <- as.data.frame(pdb_viewer_data)
 
 # data sanity checks
 # 1. test if list of resdiue numbers are equal
-setequal(pdb_viewer_df$protection.residues, pdb_viewer_df$deprotection.residues)
+dplyr::setequal(pdb_viewer_df$protection.residues, pdb_viewer_df$deprotection.residues)
 # 2. check if protection and deprotection values are equal, and if so, find out values
 pdb_viewer_df$protection.values[pdb_viewer_df$protection.values == pdb_viewer_df$deprotection.values]
 

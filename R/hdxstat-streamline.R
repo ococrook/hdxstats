@@ -44,29 +44,33 @@ analyse_kinetics <- function(data,
                              maxAttempts = 5){
   
   if (method == "fit"){
-    print("INFO: Performing fitting of Deuterium uptake kinetics. Method: 'hdxstats::fitUptakeKinetics' ")
+    rlog::log_info(" Performing fitting of Deuterium uptake kinetics. Method: 'hdxstats::fitUptakeKinetics' ")
     
     fitting_method <- fitUptakeKinetics
-    fitted_models <- fitting_method(object = data,
-                                    feature = peptide_selection,
-                                    start = starting_parameters,
-                                    formula = formula,
-                                    maxAttempts = maxAttempts)#,
-    #maxAttempts = 1)
-    functional_analysis <- processFunctional(object = data,
-                                             params = fitted_models)
+    tryCatch({
+      fitted_models <- fitting_method(object = data,
+                                      feature = peptide_selection,
+                                      start = starting_parameters,
+                                      formula = formula,
+                                      maxAttempts = maxAttempts)
+      }, error = function(e){ rlog::log_error(paste(conditionMessage(e), ". 'hdxstats::fitUptakeKinetics' returned some errors", collapse=" ")) })
+    
+    tryCatch({
+      functional_analysis <- processFunctional(object = data,
+                                               params = fitted_models)
+      }, error = function(e){ rlog::log_error(paste(conditionMessage(e), ". 'hdxstats::processFunctional' returned some errors", collapse=" ")) })
     
     results <- list("fitted_models" = fitted_models, "functional_analysis" = functional_analysis, "method" = "fitUptakeKinetics")
   }
   
   if (method == "dfit"){
-    print("INFO: Performing differential fitting of Deuterium uptake kinetics. Method: 'hdxstats::differentialUptakeKinetics' ")
+    rlog::log_info(" Performing differential fitting of Deuterium uptake kinetics. Method: 'hdxstats::differentialUptakeKinetics' ")
     
     fitting_method <- differentialUptakeKinetics
     
     if (is.null(formula)){
-      print("INFO: You did not specify a 'formula' for your fitting model.")
-      print("INFO: Fitting will be performed for (default): 'formula <- value ~ a * (1 - exp(-b*(timepoint)^p)) + d' ")
+      rlog::log_info(" You did not specify a 'formula' for your fitting model.")
+      rlog::log_info(" Fitting will be performed for (default): 'formula <- value ~ a * (1 - exp(-b*(timepoint)^p)) + d' ")
       
       fitted_models <- fitting_method(object = data,
                                       feature = peptide_selection,
@@ -75,7 +79,7 @@ analyse_kinetics <- function(data,
     }
     
     else{
-      print("INFO: You specified your own 'formula' for your fitting model.")
+      rlog::log_info(" You specified your own 'formula' for your fitting model.")
       
       fitted_models <- fitting_method(object = data,
                                       feature = peptide_selection,
@@ -117,51 +121,53 @@ visualise_hdx_data <- function(results,
   
   if (type == "kinetics" & results$method == "fitUptakeKinetics"){
     n_models <- length(get_statmodels(results$fitted_models))
-    message <- paste("INFO: I found ", n_models, " models in your results data", sep = " ")
-    print(message)
-    print("INFO: You selected 'kinetics' to visualise from your results")
+    mssg <- paste(" I found ", n_models, " models in your results data", collapse = " ")
+    rlog::log_info(mssg)
+    rlog::log_info(" You selected 'kinetics' to visualise from your results")
     
     graphics = list()
     for (i in seq_len(n_models)){graphics[[i]] = get_graphics_object(get_statmodels(results$fitted_models)[[i]])}
     return(graphics)
-    print("INFO: I appended all ggplot output objects to a list")
+    rlog::log_info(" I appended all ggplot output objects to a list")
   }
   
   else if (type == "kinetics" & results$method == "differentialUptakeKinetics"){
     n_models <- length(results$fitted_models)
-    message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
-    print(message)
+    mssg <- paste(" I found ", n_models, " models in your results data.", collapse = " ")
+    rlog::log_info(mssg)
     
     graphics = get_graphics_object(results$fitted_models)
     return(graphics)
-    print("INFO: I appended all ggplot output objects to a list")
+    rlog::log_info(" I appended all ggplot output objects to a list")
   }
   
   else if (type == "forest"){
     n_models <- length(get_statmodels(results$fitted_models))
-    message <- paste("INFO: I found ", n_models, " models in your results data.", sep = " ")
-    print(message)
-    print("INFO: You selected 'forest' to visualise from your results")
+    mssg <- paste(" I found ", n_models, " models in your results data.", collapse = " ")
+    rlog::log_info(mssg)
+    rlog::log_info(" You selected 'forest' to visualise from your results")
     
     graphics = list()
     for (i in seq_len(n_models)){
       tryCatch({
         graphics[[i]] <- forestPlot(params = get_statmodels(results$fitted_models)[[i]])
-      }, error = function(e){cat("ERROR:",conditionMessage(e), ". Failed for model number: ", i, "\n")})
+      }, error = function(e){ rlog::log_error(paste(conditionMessage(e), ". hdxstats::forestPlot() failed for model number: ", i, collapse=" ")) })
     }
     return(graphics)
-    print("INFO: I appended all 'forestPlot' output objects to a list")
+    rlog::log_info(" I appended all 'forestPlot' output objects to a list")
   }
   
   else if (type == "manhattan"){
     n_cols <- length(as.vector(colnames(data_selection))$incoperation)
     
-    message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
-    print(message)
-    print("INFO: First half")
-    print(colnames(assay(data_selection)[,seq_len((n_cols/2))]))
-    print("INFO: Second half")
-    print(colnames(assay(data_selection)[,seq.int((1+n_cols/2), n_cols)]))
+    mssg <- paste(" I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+    rlog::log_info(mssg)
+    
+    rlog::log_info(" First half")
+    rlog::log_info(paste(colnames(assay(data_selection)[, seq_len((n_cols/2))]), collapse=" "))
+    
+    rlog::log_info(" Second half")
+    rlog::log_info(paste(colnames(assay(data_selection)[, seq.int((1+n_cols/2), n_cols)]), collapse=" "))
     
     data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
     successful_results<- rownames(data_selection)[["incoperation"]] %in% rownames(get_ebayes_results(results$functional_analysis))
@@ -175,30 +181,34 @@ visualise_hdx_data <- function(results,
                                      region = region_def,
                                      difference = data_diff[,i],
                                      nrow = 1)
-      }, error = function(e){cat("ERROR:",conditionMessage(e), ". Failed for model number: ", i, "\n")})
+      }, error = function(e){ rlog::log_error(paste(conditionMessage(e), ". hdxstats::manhattanplot() failed for model number: ", i)) })
     }
     
-    message <- paste("INFO: You have ", length(graphics), "Manhattan plots")
-    print(message)
-    print("INFO: You selected 'manhattan' to visualise from your results")
+    mssg <- paste(" You have ", length(graphics), "Manhattan plots")
+    rlog::log_info(mssg)
+    rlog::log_info(" You selected 'manhattan' to visualise from your results")
     
     return(graphics)
-    print("INFO: I appended all ggplot output objects to a list")
+    rlog::log_info(" I appended all ggplot output objects to a list")
   }
   else if (type == "epitope"){
     
-    print("INFO: You selected 'epitope' to visualise from your results")
+    rlog::log_info(" You selected 'epitope' to visualise from your results")
     
     scores <- get_ebayes_results(results$functional_analysis)$ebayes.fdr
     peptide_charge_names <- rownames(get_ebayes_results(results$functional_analysis))
     peptide_sequences <- unlist(lapply(strsplit(peptide_charge_names, split="_"), function(x) head(x,n=1)))
     # NOTE: What about the charged states? Do they get usually ignored?
     
+    if (!file.exists(fasta)){
+      stop(paste(" FASTA file does not exist: ", fasta))
+    }
+    
     if (level == "peptide" & !is.null(fasta)){
       
       fasta_data <- readAAStringSet(filepath = fasta, "fasta")
-      message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
-      print(message)
+      mssg <- paste(" You input FASTA file contains", length(fasta_data), " sequences. I will take the first entry by default.")
+      rlog::log_info(mssg)
       
       graphics <- plotEpitopeMap(AAString = fasta_data[[1]],
                                  peptideSeqs = peptide_sequences,
@@ -208,16 +218,16 @@ visualise_hdx_data <- function(results,
                                  scores = 1 * (-log10(scores[unique(peptide_charge_names)])  > -log10(0.05)) + 0.0001,
                                  name = "significant")
       
-      message <- paste("INFO: You have ", length(graphics), "parts for your Epitope map")
-      print(message)
+      mssg <- paste(" You have ", length(graphics), "parts for your Epitope map")
+      rlog::log_info(mssg)
       return(graphics)
-      print("INFO: I appended all ggplot output objects to a list")
+      rlog::log_info(" I appended all ggplot output objects to a list")
       
     }else if (level == "residue" & !is.null(fasta) & is.null(pdb)){
       
       fasta_data <- readAAStringSet(filepath = fasta, "fasta")
-      message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
-      print(message)
+      mssg <- paste(" You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+      rlog::log_info(mssg)
       
       graphics <- plotEpitopeMapResidue(AAString = fasta_data[[1]],
                                         peptideSeqs = peptide_sequences,
@@ -227,16 +237,16 @@ visualise_hdx_data <- function(results,
                                         scores = scores[unique(peptide_charge_names)],
                                         name = "-log10 p value")
       
-      message <- paste("INFO: You have ", length(graphics), "parts for your Epitope map")
-      print(message)
+      mssg <- paste(" You have ", length(graphics), "parts for your Epitope map")
+      rlog::log_info(mssg)
       return(graphics)
-      print("INFO: I appended all ggplot output objects to a list")
+      rlog::log_info(" I appended all ggplot output objects to a list")
       
     }else if (level == "residue" & !is.null(fasta) & !is.null(pdb)){
       
       fasta_data <- readAAStringSet(filepath = fasta, "fasta")
-      message <- paste("INFO: You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
-      print(message)
+      mssg <- paste(" You input FASTA file contains", length(fasta_data), ". I will take the first entry by default.")
+      rlog::log_info(mssg)
       
       graphics_data <- ComputeAverageMap(AAString = fasta_data[[1]],
                                          peptideSeqs = unique(peptide_sequences),
@@ -255,7 +265,7 @@ visualise_hdx_data <- function(results,
   }
   else if (type == "protection"){
     
-    print("INFO: You selected 'protection' to visualise from your results")
+    rlog::log_info(" You selected 'protection' to visualise from your results")
     
     scores <- get_ebayes_results(results$functional_analysis)$ebayes.fdr
     peptide_charge_names <- rownames(get_ebayes_results(results$functional_analysis))
@@ -266,10 +276,14 @@ visualise_hdx_data <- function(results,
       fasta_data <- readAAStringSet(filepath = fasta, "fasta")
       n_cols <- length(as.vector(colnames(data_selection))$incoperation)
       
-      message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
-      print(message)
-      print(colnames(assay(data_selection)[, seq_len(n_cols/2)]))
-      print(colnames(assay(data_selection)[, seq.int((1+n_cols/2), n_cols)]))
+      mssg <- paste(" I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+      rlog::log_info(mssg)
+      
+      rlog::log_info(" First half")
+      rlog::log_info(paste(colnames(assay(data_selection)[, seq_len(n_cols/2)]), collapse=" "))
+      
+      rlog::log_info(" Second half")
+      rlog::log_info(paste(colnames(assay(data_selection)[, seq.int((1+n_cols/2), n_cols)]), collapse=" "))
       
       hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
                                        peptideSeqs = unique(peptide_sequences),
@@ -295,20 +309,24 @@ visualise_hdx_data <- function(results,
         graphics[[i]] <- hdxheatmap(averageMaps = list(hdx_average), diffMaps = list(hdx_diff[[i]]$diffMap)) 
       }
       
-      message <- paste("INFO: You have ", length(graphics), "Protection/Deprotection heatmaps")
-      print(message)
+      mssg <- paste(" You have ", length(graphics), "Protection/Deprotection heatmaps")
+      rlog::log_info(mssg)
       return(graphics)
-      print("INFO: I appended all output heatmaps to a list")
+      rlog::log_info(" I appended all output heatmaps to a list")
     }
     if (level == "residue" & !is.null(fasta) & !is.null(pdb)){
       
       fasta_data <- readAAStringSet(filepath = fasta, "fasta")
       n_cols <- length(as.vector(colnames(data_selection))$incoperation)
       
-      message <- paste("INFO: I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
-      print(message)
-      print(colnames(assay(data_selection)[, seq_len((n_cols/2))]))
-      print(colnames(assay(data_selection)[, seq.int((1+n_cols/2),n_cols)]))
+      mssg <- paste(" I found",n_cols,"columns in your data selection. I will split your data selection into two and take their difference.")
+      rlog::log_info(mssg)
+      
+      rlog::log_info(" First half")
+      rlog::log_info(paste(colnames(assay(data_selection)[, seq_len(n_cols/2)]), collapse=" "))
+      
+      rlog::log_info(" Second half")
+      rlog::log_info(paste(colnames(assay(data_selection)[, seq.int((1+n_cols/2), n_cols)]), collapse=" "))
       
       hdx_average <- ComputeAverageMap(AAString = fasta_data[[1]],
                                        peptideSeqs = unique(peptide_sequences),
@@ -346,7 +364,7 @@ visualise_hdx_data <- function(results,
     }
     
   }else {
-    print("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhattan', 'epitope', 'protection' ")
     return(NULL)
+    stop("FATAL: Specify what 'type' of visualiation you want. Available options: 'kinetics', 'forest', 'manhattan', 'epitope', 'protection' ")
   }
 }
