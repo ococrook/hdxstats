@@ -19,6 +19,6 @@ exportPattern("^[[:alpha:]]+")
     importFrom("grDevices", "colorRamp", "colorRampPalette")
     importFrom("utils", "file_test")
     importFrom("MASS", "fitdistr")
-    importFrom("viridis", scale_color_viridis)
+    importFrom("viridis", "scale_color_viridis")
 exportMethods(logLik, residuals, vcov, likRatio, coef, deviance, summary, wilk)
 
