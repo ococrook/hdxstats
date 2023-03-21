@@ -509,8 +509,8 @@ plotEpitopeMapResidue <- function(AAString,
     
     ncov <- max(coverage)
     
-    start <- sapply(allPatterns, function(x) x@start) - 1
-    end <- start + sapply(allPatterns, function(x) x@width)
+    start <- sapply(allPatterns, function(x) x@start) + 2
+    end <- start + sapply(allPatterns, function(x) x@width) - 3
     
     
     peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
@@ -567,12 +567,15 @@ plotEpitopeMapResidue <- function(AAString,
                 ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                 scale_y_discrete(breaks = seq_len(length(levels(mygrid$Y))), labels = rep("", length(levels(mygrid$Y))))
         } else {
-            mygrid$Z <- factor(c(t(averageMap[, seq.int((n * (i-1)), ncol(averageMap))])), levels = levels(factor(averageMap)))
             
+            breaks <- seq.int((n * (i-1)), ncol(averageMap))
+            mygrid <- expand.grid(X = factor(seq_along(breaks)), Y = rownames(averageMap[, breaks, drop = FALSE]))
+            mygrid$Z <- factor(c(t(averageMap[, breaks])), levels = levels(factor(averageMap)))
+
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc + 
-                theme_bw() + scale_x_discrete(breaks = seq_len((ncol(peptideMap)%%n + 1)),
-                                              labels = paste0(colnames(peptideMap[, seq.int((n * (i-1)), ncol(peptideMap))]), "-",
-                                                              seq.int(n*(i-1), ncol(peptideMap)))) +
+                theme_bw() + scale_x_discrete(breaks = breaks - breaks[1] + 1,
+                                              labels = paste0(colnames(averageMap[, seq.int((n * (i-1)), ncol(averageMap)), drop = FALSE]), "-",
+                                                              seq.int(n*(i-1), ncol(averageMap)))) +
                 theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
                 ylim(c(0, max(coverage) + 1)) + ylab("") + xlab("AA sequence") + 
                 scale_y_discrete(breaks = seq_len(length(levels(mygrid$Y))), labels = rep("", length(levels(mygrid$Y))))
@@ -634,8 +637,8 @@ ComputeAverageMap <- function(AAString,
     
     ncov <- max(coverage)
     
-    start <- sapply(allPatterns, function(x) x@start) - 1
-    end <- start + sapply(allPatterns, function(x) x@width)
+    start <- sapply(allPatterns, function(x) x@start) + 2
+    end <- start + sapply(allPatterns, function(x) x@width) - 3
     
     
     peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
@@ -719,11 +722,15 @@ plotAverageMaps <- function(averageMaps,
                 ylim(c(0, max(coverage) + 1)) + scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
                 ylab("dAb") + xlab("AA sequence")
         } else {
-            mygrid$Z <- factor(c(t(map[, seq.int((n * (i-1)), ncol(map))])), levels = levels(factor(map)))
+
+            breaks <- seq.int((n * (i-1)), ncol(map))
+            mygrid <- expand.grid(X = factor(seq_along(breaks)), Y = rownames(map[, breaks, drop = FALSE]))
+            mygrid$Z <- factor(c(t(map[, breaks])), levels = levels(factor(map)))
+            
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc + 
-                theme_bw() + scale_x_discrete(breaks = seq_len((ncol(map)%%n + 1)),
-                                              labels = paste0(colnames(map[, seq.int((n * (i-1)), ncol(map))]), "-",
+                theme_bw() + scale_x_discrete(breaks = breaks - breaks[1] + 1,
+                                              labels = paste0(colnames(map[, seq.int((n * (i-1)), ncol(map)), drop = FALSE]), "-",
                                                               seq.int(n*(i-1), ncol(map)))) +
                 theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
                 scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
@@ -968,11 +975,14 @@ hdxheatmap <- function(averageMaps,
                 theme(legend.position = "none") + ylim(c(0, max(coverage) + 1)) + scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
                 ylab("dAb") + xlab("AA sequence")
         } else {
-            mygrid$Z <- factor(c(t(map[, seq.int((n * (i-1)), ncol(map))])), levels = levels(factor(map)))
+            
+            breaks <- seq.int((n * (i-1)), ncol(map))
+            mygrid <- expand.grid(X = factor(seq_along(breaks)), Y = rownames(map[, breaks, drop = FALSE]))
+            mygrid$Z <- factor(c(t(map[, breaks])), levels = levels(factor(map)))
             
             plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 1) + sc + 
-                theme_bw() + scale_x_discrete(breaks = seq_len((ncol(map)%%n + 1)),
-                                              labels = paste0(colnames(map[, seq.int((n * (i-1)), ncol(map))]), "-",
+                theme_bw() + scale_x_discrete(breaks = breaks - breaks[1] + 1,
+                                              labels = paste0(colnames(map[, seq.int((n * (i-1)), ncol(map)), drop = FALSE]), "-",
                                                               seq.int(n*(i-1), ncol(map)))) +
                 theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
                 scale_y_discrete(breaks = levels(mygrid$Y), labels = levels(mygrid$Y)) + 
