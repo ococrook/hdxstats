@@ -16,7 +16,7 @@ Description: The hdxstats package enables the analysis and visualisation
     functional models for hydrogen deuterium exchange data.
 License: Artistic-2.0
 Encoding: UTF-8
-Depends: R (>= 4.1), S4Vectors, Biobase, QFeatures
+Depends: R (>= 4.2.0), S4Vectors, Biobase, QFeatures
 Imports: Rcpp (>= 1.0.4.6),
     ggplot2,
     dplyr,

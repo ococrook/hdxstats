@@ -63,7 +63,7 @@ differentialUptakeKinetics <- function(object,
                 start$a <- max(data$value)
             }
             
-            if (is.null(start$d) & length(start) > 2){
+            if (is.null(start$d) & length(start) > 2 & "d" %in%  names(start)){
                 start$d <- min(data$value)
             }
             
@@ -87,7 +87,16 @@ differentialUptakeKinetics <- function(object,
             }
             
             # find best starting parameters for analysis
-            jj <- which.min(as.numeric(sapply(nonlin_mod, function(x) try(deviance(x), silent = TRUE))))
+            # a bit verbose but avoids coercions to NAs
+            deviance <- lapply(nonlin_mod, function(x) try(deviance(x), silent = TRUE))
+            out <- vapply(deviance, function(x) {if(inherits(x, "try-error")){
+                out <- NA
+            }else{
+                out <- x
+            }
+            return(out)}, numeric(1))
+            
+            jj <- which.min(out)
             # if all models fail.
             if (length(jj) == 0){
                 jj <- maxAttempts
@@ -100,7 +109,8 @@ differentialUptakeKinetics <- function(object,
             nonlin_mod <- nonlin_mod[[jj]]
             
             if(inherits(nonlin_mod, "try-error")){
-                rlog::log_error(" hdxstats::differentialUptakeKinetics() model fit failed, likely exessive missing values")
+                rlog::log_error(" hdxstats::differentialUptakeKinetics() model fit failed, likely exessive missing values
+                                or model needs expanding")
                 return(nonlin_mod)
             }
             
@@ -112,6 +122,20 @@ differentialUptakeKinetics <- function(object,
             
             datalist <- group_split(data, condition)
             
+            # use start parameters from null fit
+            if("a" %in% names(coef(nonlin_mod))){
+                start$a <- coef(nonlin_mod)["a"]
+            }
+            
+            if("b" %in% names(coef(nonlin_mod))){
+                start$b <- coef(nonlin_mod)["b"]
+            }
+            
+            if("p" %in% names(coef(nonlin_mod))){
+                start$p <- coef(nonlin_mod)["p"]
+            }
+            
+            
             nlmod <- lapply(datalist,  function(x){nonlin_mod <- 
                 try(nlsLM(data = x, 
                         formula = formula, 
@@ -120,7 +144,7 @@ differentialUptakeKinetics <- function(object,
                         trace = FALSE, 
                         lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))})
             
-            if (any(sapply(nlmod, function(x) inherits(x, "try-error")))){
+            if (any(vapply(nlmod, function(x) inherits(x, "try-error"), logical(1)))){
                 rlog::log_error(" hdxstats::differentialUptakeKinetics() could not fit model, likely exessive missing values")
                 return(nlmod)
             }
@@ -148,7 +172,7 @@ differentialUptakeKinetics <- function(object,
                                    color = condition)) + geom_point(size = 4) + theme_classic() + 
                 geom_line(data = myPredict1, aes(x = timepoint, y = fit),
                           inherit.aes = FALSE, size = 2, col = mycolours[2]) + 
-                geom_line(data = df, aes(x = timepoint, y = fit, color = condition), inherit.aes = FALSE,  size = 2) + 
+                geom_line(data = df, aes(x = timepoint, y = fit, color = condition), inherit.aes = FALSE,  lwd = 2) + 
                 labs(x = "Exposure", y = "Deuterium Incoperation", color = "condition",
                      title = paste0(data$rowname[1])) + 
                 scale_color_viridis(alpha = 0.7, discrete = TRUE)
@@ -179,7 +203,7 @@ differentialUptakeKinetics <- function(object,
 computeRSS <- function(object){
     
     # checks
-    stopifnot("Object is not an instance of HdxStatModel"=class(object) == "HdxStatModel")
+    stopifnot("Object is not an instance of HdxStatModel"=is(object, "HdxStatModel"))
     
     # extract
     nlmod_null <- object@nullmodel
@@ -187,7 +211,7 @@ computeRSS <- function(object){
     
     # compute residual sum of squares
     RSS0 <- sum(resid(nlmod_null)^2)
-    RSS1 <- sum(unlist(sapply(nlmod_alt, function(x) resid(x)))^2)
+    RSS1 <- sum(unlist(lapply(nlmod_alt, function(x) resid(x)))^2)
     
     # compute number of parameters
     p_null <- length(summary(nlmod_null)$parameters[,1])
@@ -424,32 +448,32 @@ lmUptakeKinetics <- function(object,
 processFunctional <- function(object,
                               params){
     
-    stopifnot("Object in not an instance of Qfeatures"=class(object) == "QFeatures")
-    stopifnot("Object is not an insance of HdxStatModels"=class(params) == "HdxStatModels")
+    stopifnot("Object in not an instance of Qfeatures"=is(object, "QFeatures"))
+    stopifnot("Object is not an insance of HdxStatModels"=is(params, "HdxStatModels"))
 
     
     
     # object compute from running non-linear models models
-    res <- lapply(1:length(params),
+    res <- lapply(seq.int(length(params)),
                   function(z) try(computeRSS(object = params@statmodels[[z]])))
     
     # get rownames
     #rw <- rownames(object)[[1]][which(!sapply(res, function(x) class(x)) == "try-error")]
     rw <- sapply(params@statmodels, function(xx) xx@vis$data$rowname[1])
-    rw <- rw[which(!sapply(res, function(x) class(x)) == "try-error")]
+    rw <- rw[which(!vapply(res, function(x) is(x, "try-error"), logical(1)))]
     
     # remove data with error
-    res_filtered <- res[which(!sapply(res, function(x) class(x)) == "try-error")]
+    res_filtered <- res[which(!vapply(res, function(x) is(x, "try-error"), logical(1)))]
     
     # Compute F Statistics
-    Fstats <- lapply(1:length(res_filtered),
+    Fstats <- lapply(seq.int(length(res_filtered)),
                      function(z) computeFstat(RSS0 = res_filtered[[z]]$RSS0,
                                               RSS1 = res_filtered[[z]]$RSS1,
                                               d1 = res_filtered[[z]]$d1,
                                               d2 = res_filtered[[z]]$d2))
     
     # Compute p-values
-    pvals <- lapply(1:length(Fstats), function(z) computePval(Fstat = Fstats[[z]]$Fstat, 
+    pvals <- lapply(seq.int(length(Fstats)), function(z) computePval(Fstat = Fstats[[z]]$Fstat, 
                                                               d1 = res_filtered[[z]]$d1, 
                                                               d2 = res_filtered[[z]]$d2))
 
@@ -457,10 +481,10 @@ processFunctional <- function(object,
     fdr <- p.adjust(unlist(pvals), method = "BH")
 
     # empirical Bayes analysis
-    ebayesres <- hdxEbayes(RSS0 = sapply(res_filtered, function(x) x$RSS0),
-                           RSS1 = sapply(res_filtered, function(x) x$RSS1),
-                           d1 = sapply(res_filtered, function(x) x$d1),
-                           d2 = sapply(res_filtered, function(x) x$d2))
+    ebayesres <- hdxEbayes(RSS0 = vapply(res_filtered, function(x) x$RSS0, numeric(1)),
+                           RSS1 = vapply(res_filtered, function(x) x$RSS1, numeric(1)),
+                           d1 = vapply(res_filtered, function(x) x$d1, numeric(1)),
+                           d2 = vapply(res_filtered, function(x) x$d2, numeric(1)))
 
     # get names for emprical bayes    
     names(ebayesres$fdr) <- names(ebayesres$pvalues) <- names(ebayesres$empirical_fdr) <- rw
@@ -476,7 +500,7 @@ processFunctional <- function(object,
                       ebayes.pvals = ebayesres$pvalues,
                       ebayes.fdr = ebayesres$fdr,
                       empirical.fdr = ebayesres$empirical_fdr,
-                      fitcomplete = which(!sapply(res, function(x) class(x)) == "try-error"), row.names = rw)
+                      fitcomplete = which(!vapply(res, function(x) is(x, "try-error"), logical(1)), row.names = rw))
     
     .res <- .hdxstatres(results = .out, method = "Functional model") 
     

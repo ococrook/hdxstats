@@ -1,6 +1,7 @@
 ##' Generics for hdxstats package
 ##' @param object An object of class `HdxStatModel`
 ##' @param ... Additional arguments to `likRatio`
+##' @return Summary statistics for `HdxStatModel`
 ##' @rdname hidden_aliases
 setGeneric("likRatio", function(object, ...)
     standardGeneric("likRatio"))

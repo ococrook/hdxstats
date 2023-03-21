@@ -27,6 +27,8 @@ setOldClass("gg")
 ##' @slot vis A `ggplot` object visualising the fitted objects
 ##' @slot method A `character` string indicating the model fitted
 ##' @slot formula An instance of `formula` class
+##' @return An object of class `HdxStateModel`
+##' 
 ##' @md
 ##' @rdname hdxstat-class
 .hdxstatmodel <- setClass("HdxStatModel",
@@ -137,3 +139,4 @@ setMethod("[", "nlsList",
               x@nlsmodels <- x@nlsmodels[i]
               x
           })
+

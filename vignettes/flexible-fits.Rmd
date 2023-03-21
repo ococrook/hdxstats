@@ -278,3 +278,7 @@ of freedom of each model. Each model has 4 degrees of freedom so in this
 case there is no need to apply any theoretical results. The second model is 
 preferred, as it as higher log-likelihood
 
+```{r,}
+sessionInfo()
+```
+

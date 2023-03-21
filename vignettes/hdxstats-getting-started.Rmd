@@ -244,12 +244,12 @@ the underlying fitted models. The `method` and `formula` slots provide vital
 information about what analysis was performed. The `vis` slot provides a `ggplot`
 object so that we can visualise the functional fits.
 ```{r,}
-res@vis
+visualise_uptake(res)
 ```
 
 Since this is a ggplot object, we can customise in the usual grammatical ways.
 ```{r,}
-res@vis + scale_color_manual(values = brewer.pal(n = 8, name = "Set2"))
+visualise_uptake(res) + scale_color_manual(values = brewer.pal(n = 8, name = "Set2"))
 ```
 A number of standard methods are available and can be applied to a `HdxStatModels`,
 these extend the usual `base` stats methods. These include
@@ -733,4 +733,6 @@ write.csv(funresdAb25_1@results, file = "myhdxresuts.csv")
 
 ```
 
-
+```{r,}
+sessionInfo()
+```

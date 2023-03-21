@@ -169,7 +169,7 @@ visualise_hdx_data <- function(results,
     rlog::log_info(" Second half")
     rlog::log_info(paste(colnames(assay(data_selection)[, seq.int((1+n_cols/2), n_cols)]), collapse=" "))
     
-    data_diff <- assay(data_selection)[,(1+n_cols/2):n_cols] - assay(data_selection)[,1:(n_cols/2)]
+    data_diff <- assay(data_selection)[, seq.int((1+n_cols/2), n_cols)] - assay(data_selection)[, seq.int(n_cols/2)]
     successful_results<- rownames(data_selection)[["incoperation"]] %in% rownames(get_ebayes_results(results$functional_analysis))
     region_def <- as.data.frame(unique(rowData(data_selection)[["incoperation"]][, c("Start", "End")][successful_results,]))
     
@@ -295,7 +295,7 @@ visualise_hdx_data <- function(results,
       hdx_diff <- list()
       graphics <- list()
       qDF <- data_selection
-      for (i in 1:(n_cols/2)){
+      for (i in seq.int(n_cols/2)){
         hdx_diff[[i]] <- hdxdifference(object = data_selection,
                                        AAString = fasta_data[[1]],
                                        peptideSeqs = unique(peptide_sequences),

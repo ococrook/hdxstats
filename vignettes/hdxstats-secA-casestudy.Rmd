@@ -332,4 +332,6 @@ sigplots <- manhattanplot(params = out,
                           nrow = 1)
 sigplots[[1]] + plot_layout(guides = 'collect')
 ```
-
+```{r,}
+sessionInfo()
+```
