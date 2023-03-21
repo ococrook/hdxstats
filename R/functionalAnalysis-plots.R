@@ -253,10 +253,16 @@ plotEpitopeMap <- function(AAString,
         }
     } else{
         
+        breaks <- levels(factor(peptideMap))[seq(1, nlevels(factor(peptideMap)), by = by)]
+        if(length(breaks) != 3){
+            breaks <- c(0, 10^-threshold, 1)
+        }
+        
+        
         sc <- scale_fill_manual(name, 
                                 values = c("white", brewer.pal(n = 3, name = "Set2")),
                                 labels = c(" ", "Not Signifcant", "Significant"),
-                                breaks = levels(factor(peptideMap))[seq(1, nlevels(factor(peptideMap)), by = by)], drop = FALSE)
+                                breaks = , drop = FALSE)
         
         for (i in seq_len(ceiling(length(coverage)/n))) {
             
@@ -277,10 +283,14 @@ plotEpitopeMap <- function(AAString,
                     scale_y_discrete(breaks = seq_len(length(levels(mygrid$Y))), labels = rep("", length(levels(mygrid$Y))))
 
             } else {
-                mygrid$Z <- factor(c(t(peptideMap[, seq.int((n * (i-1)), ncol(peptideMap))])), levels = levels(factor(peptideMap)))
+                breaks <- seq.int((n * (i-1)), ncol(peptideMap))
+                tog <- (ncol(peptideMap) %% numlines) == 0
+                #mygrid <- expand.grid(X = factor(seq.int(n + 1*tog)), Y = rownames(peptideMap[, breaks]))
+                mygrid <- expand.grid(X = factor(seq_along(breaks)), Y = rownames(peptideMap[, breaks]))
+                mygrid$Z <- factor(c(t(peptideMap[, breaks])), levels = levels(factor(peptideMap)))
                 
                 plot.list[[i]] <- ggplot(mygrid, aes(x = X, y = Y, fill = Z), show.legend = FALSE) + geom_tile(height = 0.7) + sc + 
-                    theme_bw() + scale_x_discrete(breaks = seq_len((ncol(peptideMap)%%n) + 1),
+                    theme_bw() + scale_x_discrete(breaks = breaks - breaks[1] + 1,
                                                   labels = paste0(colnames(peptideMap[, seq.int((n * (i-1)), ncol(peptideMap))]), "-",
                                                                   seq.int(n*(i-1), ncol(peptideMap)))) +
                     theme(legend.position = "none", axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) +
