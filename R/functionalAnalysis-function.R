@@ -500,7 +500,7 @@ processFunctional <- function(object,
                       ebayes.pvals = ebayesres$pvalues,
                       ebayes.fdr = ebayesres$fdr,
                       empirical.fdr = ebayesres$empirical_fdr,
-                      fitcomplete = which(!vapply(res, function(x) is(x, "try-error"), logical(1)), row.names = rw))
+                      fitcomplete = which(!vapply(res, function(x) is(x, "try-error"), logical(1))), row.names = rw)
     
     .res <- .hdxstatres(results = .out, method = "Functional model") 
     
