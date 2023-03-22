@@ -86,6 +86,17 @@ differentialUptakeKinetics <- function(object,
                 }
             }
             
+            # fall back model
+            plateau_mod <- try(nlsLM(data = data, 
+                                         formula = value ~ a * (1 - exp(- timepoint)), 
+                                         start = start[1],
+                                         control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
+                                         trace = FALSE, 
+                                         lower = 0, algorithm = "LM", na.action = na.exclude), silent = TRUE)
+            
+            nonlin_mod <- c(nonlin_mod, list(plateau_mod))
+            
+            
             # find best starting parameters for analysis
             # a bit verbose but avoids coercions to NAs
             deviance <- lapply(nonlin_mod, function(x) try(deviance(x), silent = TRUE))
@@ -135,14 +146,31 @@ differentialUptakeKinetics <- function(object,
                 start$p <- coef(nonlin_mod)["p"]
             }
             
+            if (jj <= maxAttempts){
+                
+                nlmod <- lapply(datalist,  function(x){nonlin_mod <- 
+                    try(nlsLM(data = x, 
+                              formula = formula, 
+                              start = start,
+                              control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
+                              trace = FALSE, 
+                              lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))})
+                
+            } else{
+                
+                # force to fit plateau model
+                
+                nlmod <- lapply(datalist,  function(x){nonlin_mod <- 
+                    try(nlsLM(data = x, 
+                              formula = value ~ a * (1 - exp(- timepoint)), 
+                              start = start[1],
+                              control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
+                              trace = FALSE, 
+                              lower = 0, algorithm = "LM", na.action = na.exclude))})
+                
+            }
             
-            nlmod <- lapply(datalist,  function(x){nonlin_mod <- 
-                try(nlsLM(data = x, 
-                        formula = formula, 
-                        start = start,
-                        control = nls.lm.control(maxiter = 500, ftol = 10^{-8}),
-                        trace = FALSE, 
-                        lower = rep(0, length(start)), algorithm = "LM", na.action = na.exclude))})
+
             
             if (any(vapply(nlmod, function(x) inherits(x, "try-error"), logical(1)))){
                 rlog::log_error(" hdxstats::differentialUptakeKinetics() could not fit model, likely exessive missing values")
@@ -171,7 +199,7 @@ differentialUptakeKinetics <- function(object,
                                    x = timepoint,
                                    color = condition)) + geom_point(size = 4) + theme_classic() + 
                 geom_line(data = myPredict1, aes(x = timepoint, y = fit),
-                          inherit.aes = FALSE, size = 2, col = mycolours[2]) + 
+                          inherit.aes = FALSE, lwd = 2, col = mycolours[2]) + 
                 geom_line(data = df, aes(x = timepoint, y = fit, color = condition), inherit.aes = FALSE,  lwd = 2) + 
                 labs(x = "Exposure", y = "Deuterium Incoperation", color = "condition",
                      title = paste0(data$rowname[1])) + 
