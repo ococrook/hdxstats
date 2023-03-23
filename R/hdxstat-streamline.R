@@ -352,7 +352,7 @@ visualise_hdx_data <- function(results,
       
       graphics <- list()
       for (i in seq.int((n_cols/2))){
-        graphics_data <- hdx_average + sign(hdx_diff[[i]]$diffMap)
+        graphics_data <- hdx_average * sign(hdx_diff[[i]]$diffMap)
         mycolor_parameters <- hdx_to_pdb_colours(graphics_data, pdb, cmap_name="ProtDeprot")
         graphics[[i]] <- NGLVieweR(pdb_filepath) %>%
           stageParameters(backgroundColor = "white", zoomSpeed = 1) %>%

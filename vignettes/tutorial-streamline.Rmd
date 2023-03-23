@@ -234,7 +234,7 @@ plot_layout(guides = 'collect')
 
 ## Visualise Functional Analysis Results
 
-```{r}
+```{r, eval = FALSE}
 graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
 graphics_manhattan[[2]] / graphics_manhattan[[3]] + plot_layout(guides = 'collect')
 ```
