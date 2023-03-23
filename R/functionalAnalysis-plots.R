@@ -853,27 +853,30 @@ hdxdifference <- function(object,
     
     ncov <- max(coverage)
     
-    start <- sapply(allPatterns, function(x) x@start) - 1
-    end <- start + sapply(allPatterns, function(x) x@width)
+    start <- sapply(allPatterns, function(x) x@start) + 2
+    end <- start + sapply(allPatterns, function(x) x@width) - 3
     
     
     peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
+    diffMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
     colnames(peptideMap) <- strsplit(as.character(AAString), "")[[1]]
     rownames(peptideMap) <- seq.int(nrow(peptideMap))
     
     ## compute differences
     diff <- assay(object)[, cols[2]] - assay(object)[, cols[1]]
     
+    # compute diff map
     for (i in seq_along(start)){
             
             if (i == 1) {
-                peptideMap[1, seq.int(start[i], end[i])] <- diff[i]
+                diffMap[1, seq.int(start[i], end[i])] <- diff[i]
             } else {
                 j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
-                peptideMap[j, seq.int(start[i], end[i])] <- diff[i]
+                diffMap[j, seq.int(start[i], end[i])] <- diff[i]
             }
     }
     
+    # compute p-value map
     if (is.null(scores) == TRUE){
         for (i in seq_along(start)){
             
@@ -904,8 +907,8 @@ hdxdifference <- function(object,
     
     
     
-    peptideMap[peptideMap == 0] <- NA
-    diffMap <- apply(peptideMap, 2, function(x) mean(x, na.rm = TRUE))
+    diffMap[diffMap == 0] <- NA
+    diffMap <- apply(diffMap, 2, function(x) mean(x, na.rm = TRUE))
     diffMap[is.nan(diffMap)] <- 0
     diffMap <- t(as.matrix(diffMap))
     rownames(diffMap) <- paste0(seq.int(nrow(diffMap)))
