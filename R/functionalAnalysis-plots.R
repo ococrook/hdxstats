@@ -98,13 +98,13 @@ manhattanplot <- function(params,
     butterfly <- params@results$ebayes.fdr[unique(sequences)]
     butterflydf <- as.data.frame(butterfly)
     butterflydf$Sequence <- rownames(butterflydf)
-    butterflydf$protection <- 1*(difference[butterflydf$Sequence] > 0)
+    butterflydf$protection <- 1*(difference[butterflydf$Sequence,] > 0)
     butterflydf$protection[is.na(butterflydf$protection)] <- 0
     colnames(butterflydf)[1] <- "p_value"
     butterfly_long <- butterflydf
     butterfly_long$position <- rep(seq.int(nrow(butterfly_long)/1), each = 1)
     
-    butterfly_long$region <-  unique(region[sequences %in% unique(sequences), c("Start", "End")])
+    butterfly_long$region <-  unique(region[sequences %in% rownames(params@results), c("Start", "End")])
     
     
     
@@ -123,7 +123,7 @@ manhattanplot <- function(params,
             scale_color_manual(values = brewer.pal(n = 3, name = "Set2")[seq.int(2)], labels = c("protected","deprotected")) + 
             theme_classic() + ylim(c(0, max(-log10(butterfly_long$p_value)))) + 
             ylab("-log10 pvalue") + xlab("Peptide") + xlim(c((i - 1)*nrow(butterfly_long)/r + 1, i*nrow(butterfly_long)/r )) + 
-            scale_x_continuous(breaks = seq.int(c((i - 1)*nrow(butterfly_long)/r + 1),c(i*nrow(butterfly_long)/r ), labels = xannot)) + 
+            scale_x_continuous(breaks = seq.int(c((i - 1)*nrow(butterfly_long)/r + 1),c(i*nrow(butterfly_long)/r )), labels = xannot) + 
             ggtitle("Manhatten plot") + geom_hline(yintercept = 1.301, linetype = "dashed", colour = "red") + 
             theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1), text = element_text(size = 15)) + 
             labs(color = "Protection")
