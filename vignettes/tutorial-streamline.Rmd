@@ -386,17 +386,6 @@ graphics_kinetics <- visualise_hdx_data(results, type = "kinetics")
 ```{r, fig.height = 2, fig.width = 10, fig.align = "center"}
 graphics_kinetics[[4]] + graphics_kinetics[[24]] + graphics_kinetics[[25]]
 ```
-## Visualise Functional Analysis Results
-
-```{r}
-graphics_manhattan <- visualise_hdx_data(results, data_selection= data_selection, type="manhattan")
-```
-
-
-```{r}
-graphics_manhattan[[17]]
-```
-
 ```{r,}
 sessionInfo()
 ```
