@@ -871,7 +871,7 @@ hdxdifference <- function(object,
             if (i == 1) {
                 diffMap[1, seq.int(start[i], end[i])] <- diff[i]
             } else {
-                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+                j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] != 0))
                 diffMap[j, seq.int(start[i], end[i])] <- diff[i]
             }
     }
@@ -915,7 +915,135 @@ hdxdifference <- function(object,
     
     
     return(list(averageMap = averageMap, diffMap = diffMap))
-}    
+} 
+##' Underlying computation for compute residue level differences plots. Uses
+##' average across residues for a whole time course
+##' @param object An object of class `QFeatures` contains the hdx data.
+##' @param AAString An object of class `AAString` for the protein of interest
+##' @param peptideSeqs A character vector of peptide sequences
+##' @param numlines The number of lines to plot the protein over. Useful for larger
+##'  proteins. Default is 5.
+##' @param maxmismatch A numeric indicating if incorrect mapping is allowed. Number 
+##'  indicated the number of mismatched amino acids. Default is 0.
+##' @param by A value to indicate the legend breaks. Default is NULL.
+##' @param scores A numeric vector indicating score to be used for plotting. Most 
+##'  likely adjusted p-values.
+##' @param ref_cols Reference columns of the time couse
+##' @param comp_cols Columns indicated the comparison time course
+##' @param name The name of the legend for the score plotting. 
+##'  Default is "-log10 p values".
+##' @param threshold The threshold used to determine significance. Default is
+##' `-log10(0.05)`. Note the log scale.
+##' @md
+##' 
+##' @rdname functional-plots
+hdxdifference2 <- function(object, 
+                           AAString, 
+                           peptideSeqs,
+                           numlines = 5,
+                           maxmismatch = 0,
+                           by = 5,
+                           ref_cols = c(1:3),
+                           comp_cols = c(4:6),
+                           scores = NULL,
+                           name = "-log10 p value"){
+  
+  # Test
+  #stopifnot("AAString must be an object of class AAString"= class(AAString) == "AAString")
+  #stopifnot("peptideSeqs must be a character vector"= is.character(peptideSeqs) == "TRUE")
+  #stopifnot("cols must be length 2"=length(cols) == 2)
+  
+  # Storage and global variables
+  plot.list <- list()
+  coverage <- matrix(0, ncol = length(AAString), nrow = 1)
+  n <- ceiling(length(coverage)/numlines)
+  colnames(coverage) <- strsplit(as.character(AAString), "")[[1]]
+  
+  # Compute AA stringset and match to dictionary
+  peptideset <- AAStringSet(x = peptideSeqs)
+  allPatterns <- matchPDict(pdict = peptideset,
+                            subject = AAString,
+                            max.mismatch = maxmismatch)  
+  
+  # Compute coverage numbers
+  for (i in seq_along(allPatterns)) {
+    
+    begin <- allPatterns[[i]]@start[1]
+    end <- allPatterns[[i]]@start[1] - 1 + allPatterns[[i]]@width[1]
+    coverage[, seq.int(begin, end)] <- coverage[, seq.int(begin, end)] + 1
+  }
+  
+  ncov <- max(coverage)
+  
+  start <- sapply(allPatterns, function(x) x@start) + 2
+  end <- start + sapply(allPatterns, function(x) x@width) - 3
+  
+  
+  peptideMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
+  diffMap <- matrix(0, ncol = length(AAString), nrow = ncov + 3)
+  colnames(peptideMap) <- strsplit(as.character(AAString), "")[[1]]
+  rownames(peptideMap) <- seq.int(nrow(peptideMap))
+  
+  ## compute differences
+  diff <- rowSums(assay(object)[,comp_cols], na.rm = TRUE)/length(comp_cols) - rowSums(assay(object)[,ref_cols], na.rm = TRUE)/length(comp_cols)
+  
+  
+  # compute diff map
+  for (i in seq_along(start)){
+    
+    if (i == 1) {
+      diffMap[1, seq.int(start[i], end[i])] <- diff[i]
+    } else {
+      j <- which.min(rowSums(diffMap[, seq.int(start[i], end[i])] != 0))
+      diffMap[j, seq.int(start[i], end[i])] <- diff[i]
+    }
+  }
+  
+  # compute p-value map
+  if (is.null(scores) == TRUE){
+    for (i in seq_along(start)){
+      
+      if (i == 1) {
+        peptideMap[1, seq.int(start[i], end[i])] <- 1
+      } else {
+        j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+        peptideMap[j, seq.int(start[i], end[i])] <- 1
+      }
+    }
+  } else {
+    for (i in seq_along(start)){
+      
+      if (i == 1) {
+        peptideMap[1, seq.int(start[i], end[i])] <- scores[i]
+      } else {
+        j <- which.min(rowSums(peptideMap[, seq.int(start[i], end[i])] > 0))
+        peptideMap[j, seq.int(start[i], end[i])] <- scores[i]
+      }
+    }
+  }
+  peptideMap[peptideMap == 0] <- NA
+  averageMap <- apply(peptideMap, 2, function(x) 1/mean(1/x, na.rm = TRUE))
+  averageMap[is.nan(averageMap)] <- 1
+  averageMap <- -log10(averageMap)
+  averageMap <- t(as.matrix(averageMap))
+  rownames(averageMap) <- paste0(seq.int(nrow(averageMap)))
+  
+  
+  
+  diffMap[diffMap == 0] <- NA
+  diffMap <- apply(diffMap, 2, function(x) mean(x, na.rm = TRUE))
+  diffMap[is.nan(diffMap)] <- 0
+  diffMap <- t(as.matrix(diffMap))
+  rownames(diffMap) <- paste0(seq.int(nrow(diffMap)))
+  
+  
+  return(list(averageMap = averageMap, diffMap = diffMap))
+}   
+
+
+
+
+
 ##' Plotting for comparing difference maps. This function will simultaneous plot
 ##'  several difference barcodes on top of each other so the comparison is easier
 ##' @param averageMaps A list of average maps generated by the `computeAverageMaps`
