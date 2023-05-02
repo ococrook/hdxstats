@@ -98,7 +98,7 @@ manhattanplot <- function(params,
     butterfly <- params@results$ebayes.fdr[unique(sequences)]
     butterflydf <- as.data.frame(butterfly)
     butterflydf$Sequence <- rownames(butterflydf)
-    butterflydf$protection <- 1*(difference[butterflydf$Sequence,] > 0)
+    butterflydf$protection <- 1*(difference[butterflydf$Sequence] > 0)
     butterflydf$protection[is.na(butterflydf$protection)] <- 0
     colnames(butterflydf)[1] <- "p_value"
     butterfly_long <- butterflydf
