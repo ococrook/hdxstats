@@ -985,7 +985,7 @@ hdxdifference2 <- function(object,
   rownames(peptideMap) <- seq.int(nrow(peptideMap))
   
   ## compute differences
-  diff <- rowSums(assay(object)[,comp_cols], na.rm = TRUE)/length(comp_cols) - rowSums(assay(object)[,ref_cols], na.rm = TRUE)/length(comp_cols)
+  diff <- rowSums(assay(object)[,comp_cols], na.rm = TRUE)/(length(comp_cols) - rowSums(is.na(assay(object)[,comp_cols]))) - rowSums(assay(object)[,ref_cols], na.rm = TRUE)/(length(ref_cols) - rowSums(is.na(assay(object)[,ref_cols])))
   
   
   # compute diff map
