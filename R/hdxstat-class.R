@@ -32,7 +32,7 @@ setOldClass("gg")
 .hdxstatmodel <- setClass("HdxStatModel",
                           slots = c(nullmodel = "nls",
                                     alternative = "nlsList",
-                                    vis = "ggplot",
+                                    vis = "gg",
                                     method = "character",
                                     formula = "formula"),
                           validity = function(object){
