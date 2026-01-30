@@ -1,6 +1,6 @@
 Package: hdxstats
 Title: Statistical analysis of hydrogen deuterium exchange mass spectrometry
-Version: 0.99.1
+Version: 1.0.1
 Authors@R: c(person(family = "Crook", given = "Oliver M.",
 		                email = "oliver.crook@stats.ox.ac.uk",
 		                comment = c(ORCID = "0000-0001-5669-8506"),
