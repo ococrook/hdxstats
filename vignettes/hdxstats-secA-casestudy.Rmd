@@ -1,0 +1,313 @@
+---
+title: "SecA hydrogen deuterium exchange mass spectrometry data"
+author:
+- name: Oliver M. Crook
+package: hdxstats
+output:
+  BiocStyle::html_document:
+    toc_float: yes
+abstract: "This vignette describes how to analyse a mass-spectrometry based  hydrogen
+  deuterium exchange experiment, in particular we focus on empirical Bayes functional
+  models and visualisations. This vignette descibes a case-study for analysing
+  secA protein \n"
+vignette: |
+  %\VignetteIndexEntry{SecA hydrogen deuterium exchange mass spectrometry data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %%\VignetteKeywords{Mass Spectrometry, MS, MSMS, Proteomics, Metabolomics, Infrastructure, Quantitative} %\VignetteEncoding{UTF-8}
+---
+
+```{r style, echo = FALSE, results = 'asis'}
+BiocStyle::markdown()
+knitr::opts_chunk$set(dpi=300)
+```
+
+# Introduction
+
+Ahdash et al. performed HDX-MS on the baceterial sec translocon, a multi-protein
+complex responsible for translocating diverse proteins across the plasma
+membrane. Here we analyse this experiment using our functional data analysis
+approaches
+
+# loading packges
+
+We will first load the packages required in the analysis of this approach.
+Please install these packages if you do not have them.
+
+```{r env, message = FALSE, warning = FALSE, echo = FALSE}
+library("hdxstats")
+library("dplyr")
+library("ggplot2")
+library("RColorBrewer")
+library("tidyr")
+library("pheatmap")
+library("scales")
+library("viridis")
+library("patchwork")
+library("Biostrings")
+library("knitr")
+```
+
+# Data
+
+The data is stored as a .csv, we need to covert it to an object of class
+`QFeatures`. This is performed in a number of steps which we detail below. The
+data is contained within the package and so can be loaded by specificy 
+the correct path.
+
+```{r,}
+secApath <- system.file("extdata", "Project_2_SecA_Cluster_Data.csv",
+                        package = "hdxstats")
+```
+
+We can now read in the .csv file and have a quick look at the .csv.
+```{r,}
+secA <- read.csv(secApath)
+head(secA) # have a look
+length(unique(secA$Sequence)) # peptide sequences
+unique(secA$State) # States
+```
+Let us have a quick visualisation of some the data so that we can see some of
+the features
+
+```{r,}
+filter(secA, Sequence == unique(secA$Sequence[1]), z == 1) %>%
+    ggplot(aes(x = Exposure, y = Center, color = factor(State))) + 
+    theme_classic() + geom_point(size = 2) + 
+    scale_color_manual(values = brewer.pal(n = 7, name = "Set2")) + 
+    labs(color = "experiment", x = "Deuterium Exposure", y = "Peptide Mass")
+```
+# Parsing to an object of class QFeatures
+
+Working from a .csv is likely to cause issues downstream. Indeed, we run
+the risk of accidently changing the data or corrupting the file in some way.
+Secondly, all .csvs will be formatted slightly different and so making extensible
+tools for these files will be inefficient. Furthermore, working with a generic
+class used in other mass-spectrometry fields can speed up analysis and adoption
+of new methods. We will work the class `QFeatures` from the `QFeatures` class
+as it is a powerful and scalable way to store quantitative mass-spectrometry data.
+
+Firstly, the data is storted in long format rather than wide format. We first 
+switch the data to wide format. 
+```{r,}
+secA <- pivot_wider(data.frame(secA),
+                        values_from = "Center",
+                        names_from = c("Exposure", "File", "State"),
+                        id_cols = c("Sequence", "z"))
+head(secA)
+
+```
+
+We notice that there are many columns with `NA`s. The follow code chunk removes
+these columns.
+```{r,}
+secA <- secA[, colSums(is.na(secA)) != nrow(secA)]
+```
+
+We also note that the colnames are not very informative. We are going to format
+in a very specific way so that later functions can automatically infer the design
+from the column names. We provide in the format X(time)rep(replicate)cond(condition)
+```{r,}
+colnames(secA[-c(1,2)])
+
+new.colnames <- gsub("0_", "0rep", paste0("X", colnames(secA)[-c(1,2)]))
+new.colnames <- gsub("X0.25_", "X15rep", new.colnames) # convert to seconds too
+new.colnames <- gsub("X1_", "X60rep", new.colnames) # convert to seconds too
+new.colnames <- gsub("X5_", "X300rep", new.colnames) # convert to seconds too
+new.colnames <- gsub("X30.000002_", "X1800rep", new.colnames) # convert to seconds too
+new.colnames <- gsub(new.colnames, pattern = "rep.*?SecA_", replacement = "rep")
+new.colnames <- gsub(new.colnames, pattern = "rep.*?_[0-9]_", replacement = "repcond")
+repnumber <- c(seq.int(5), rep(c(1,2,3), times = 19),
+               seq.int(5), rep(c(1,2,3), times = 4),
+               seq.int(5), rep(c(1,2,3), times = 4), rep(c(4,5,6), each = 3))
+new.colnames <- stringr::str_replace_all(string = new.colnames,
+                                pattern = "rep",
+                                replacement = paste0("rep", repnumber))
+new.colnames
+```
+We will now parse the data into an object of class `QFeatures`, we have provided
+a function to assist with this in the package. If you want to do this yourself
+use the `readQFeatures` function from the `QFeatures` package.
+```{r,}
+secAqDF <- parseDeutData(object = DataFrame(secA),
+                        design = new.colnames,
+                        quantcol = 3:105, sequence = "Sequence", charge = "z")
+```
+
+# normalisation
+
+We normalise the data to uptake values based on the "undeuterated" mass of the 
+peptide
+
+```{r,}
+secA_newdf <- DataFrame(data.frame(assay(secAqDF) - apply(assay(secAqDF), 1, function(x) min(x, na.rm = TRUE))))
+secA_newdf <- cbind(DataFrame(secA)[,1:2], secA_newdf)
+
+secAqDF_norm <- parseDeutData(secA_newdf, design = new.colnames, quantcol = 3:105, sequence = "Sequence", charge = "z")
+```
+
+
+Normalised by exchange amides
+
+```{r,}
+secAqDF_norm1 <- normalisehdx(secAqDF_norm,
+                             sequence = unique(secA$Sequence),
+                             method = "pc")
+
+```
+
+# Heatmap visualisations of HDX data
+
+To help us get used to the `QFeatures` we show how to generate a heatmap
+of these data from this object:
+
+```{r, fig.height = 16, fig.width = 20, fig.align = "center"}
+pheatmap(t(assay(secAqDF_norm1)),
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         color = brewer.pal(n = 9, name = "BuPu"),
+         main = "secA heatmap", 
+         fontsize = 14,
+         legend_breaks = c(0, 1, 2, 3, 4, 5, 6, max(assay(secAqDF))),
+         legend_labels = c("0", "1", "2", "3", "4", "5", "6", "Incorporation"))
+```
+# Analysis
+
+To simplify the analysis, we subset to examine the protein secA and seA bound
+to ADP.
+
+```{r,}
+secAqDF_norm1_sub <- secAqDF_norm1[,c(1:17, 63:79)]
+```
+
+# Functional data analysis of HDX-MS data
+
+The `hdxstats` package uses an empirical Bayes functional approach to analyse
+the data. We explain this idea in steps so that we can get an idea of the approach.
+First we fit the parametric model to the data. This will allow us to explore
+the `HdxStatModel` class. 
+
+```{r,}
+res <- differentialUptakeKinetics(object = secAqDF_norm1_sub, #provide a QFeature object
+                                  feature = rownames(secAqDF_norm1_sub)[[1]][5], # which peptide to do we fit
+                                  start = list(a = NULL, b = NULL,  d = NULL, p = 1)) # what are the starting parameter guesses
+```
+Here, we see the `HdxStatModel` class, and that a Functional Model was applied
+to the data and a total of 2 models were fitted.
+```{r,}
+res
+```
+The `nullmodel` and `alternative` slots of an instance of `HdxStatModel` provide
+the underlying fitted models. The `method` and `formula` slots provide vital 
+information about what analysis was performed. The `vis` slot provides a `ggplot`
+object so that we can visualise the functional fits.
+```{r,}
+res@vis
+```
+
+Since this is a ggplot object, we can customise in the usual grammatical ways.
+```{r,}
+res@vis + scale_color_manual(values = brewer.pal(n = 8, name = "Set2")[-c(1,2)])
+```
+
+# Analysis of secA HDX-MS experiment
+
+We have seen the basic aspects of our functional modelling approach. We now
+wish to roll out our method across all peptides in the experiment. The
+`fitUptakeKinetics` function allows us to apply our modelling approach across
+all the peptide in the experiment. We need to provide a `QFeatures` object 
+and the features for which we are fitting the model. The design will be extracted
+from the column names or you can provide a design yourself. The parameter 
+initilisation should also be provided. Sometimes the model can't be fit on the
+kinetics. This is either because there is not enough data or through lack of 
+convergence. An error will be reported in these cases but this should not 
+perturb the user. You may wish to try a few starting values if there 
+excessive models that fail fitting. 
+
+```{r,}
+res <- fitUptakeKinetics(object = secAqDF_norm1_sub,
+                         feature = rownames(secAqDF_norm1_sub)[[1]],
+                         start = list(a = NULL, b = NULL,  d = NULL, p = 1))
+
+```
+
+The code chunk above returns a class `HdxStatModels` indicating that a number
+of models for peptide have been fit. This is simply a holder for a list
+of `HdxStatModel` instances.
+```{r,}
+res
+```
+
+We can easily examine individual fits by going to the underyling `HdxStatModel`
+class:
+```{r,}
+res@statmodels[[4]]@vis
+```
+
+
+We now wish to apply statistical analysis to these fitted curves. Our approach
+is an empirical Bayes testing procedure, which borrows information across peptides
+to stablise variance estimates. Here, we need to provide the original data
+that was analysed and the `HdxStatModels` class. The following code chunk
+returns an object of class `HdxStatRes`. This object tell us that statistical
+analysis was performed using our Functional model.
+
+```{r,}
+out <- processFunctional(object = secAqDF_norm1_sub, params = res)
+out
+```
+
+The main slot of interest is the `results` slot which returns quantities of 
+interest such as `p-values` and `fdr` corrected p-values because of multiple testing.
+The following is the `DataFrame` of interest.
+```{r,}
+out@results
+```
+
+We can now examine the peptides for which the false discovery rate is less
+than 0.01
+
+```{r,}
+which(out@results$ebayes.fdr < 0.01)
+```
+Let us visualise some of these examples:
+```{r,}
+res@statmodels[[24]]@vis + res@statmodels[[25]]@vis
+
+```
+
+We an use a forest plot to examine the differneces
+
+```{r,}
+fp <- forestPlot(params = res@statmodels[[25]], condition = c(1, 2))
+```
+
+
+We can produce a table to actual numbers. We see that at all 4 timepoints
+the deuterium difference is negative, though the confidence intervals overlap
+with 0. Our functional approach is picking up this small but reproducible difference.
+```{r,}
+knitr::kable(fp$data)
+```
+
+We can make a Manhattan plot to better spatially visualize what's happening.
+
+```{r, fig.width= 22, fig.height = 15}
+#We need to provide an indication of "difference" so we can examine deprotected
+# or prected regions
+diffdata <- assay(secAqDF_norm1_sub)[,34] - assay(secAqDF_norm1_sub)[,17]
+secA <- read.csv(secApath)
+
+#carefully subset regions and sequences
+region = secA[, c("Start", "End")]
+region <- unique(region[paste0(secA$Sequence, "_", secA$z) %in% rownames(out@results),])
+sequences = rownames(out@results)
+
+
+sigplots <- manhattanplot(params = out,
+                          sequences = sequences, 
+                          region = region,
+                          difference = diffdata,
+                          nrow = 1)
+sigplots[[1]] + plot_layout(guides = 'collect')
+```
+

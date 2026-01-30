@@ -693,7 +693,7 @@ forestPlot <- function(params, condition = c(1,2)) {
     model2 <- params@alternative@nlsmodels[[2]]
     
     tmp <- summary(model1)$parameters
-    tmp2 <- summary(model1)$parameters
+    tmp2 <- summary(model2)$parameters
     
     df <- data.frame(tmp)
     df$rownames <- rownames(df)
@@ -729,7 +729,7 @@ forestPlot <- function(params, condition = c(1,2)) {
         scale_color_viridis(discrete = TRUE, begin = 0.2, direction = 1) + theme(text = element_text(size = 16)) + 
         geom_vline(xintercept = 0, linetype = "dashed")
     
-    print(gg)
+    return(gg)
 }
 ##' Underlying computation for compute residue level differences plots. Uses
 ##' average differences at each residue. 
